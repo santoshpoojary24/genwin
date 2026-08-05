@@ -2416,10 +2416,26 @@ export default function AdminDashboard() {
                   onChange={e => setEditingProduct({ ...editingProduct, category: e.target.value })}
                   className="w-full bg-zinc-950 border border-zinc-800 p-3 text-white text-xs font-mono uppercase"
                 >
-                  <option value="t-shirts">t-shirts</option>
-                  <option value="hoodies">hoodies</option>
-                  <option value="jackets">jackets</option>
-                  <option value="accessories">accessories</option>
+                  {(() => {
+                    const optionMap = new Map();
+                    ['t-shirts', 'hoodies', 'jackets', 'accessories'].forEach(slug => {
+                      optionMap.set(slug, { slug, name: slug });
+                    });
+                    (categories || []).forEach(cat => {
+                      const slug = cat.slug || cat.name?.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+                      if (slug) {
+                        optionMap.set(slug, { slug, name: cat.name || slug });
+                      }
+                    });
+                    if (editingProduct?.category && !optionMap.has(editingProduct.category)) {
+                      optionMap.set(editingProduct.category, { slug: editingProduct.category, name: editingProduct.category });
+                    }
+                    return Array.from(optionMap.values()).map(cat => (
+                      <option key={cat.slug} value={cat.slug}>
+                        {cat.name.toUpperCase()} ({cat.slug})
+                      </option>
+                    ));
+                  })()}
                 </select>
               </div>
 
