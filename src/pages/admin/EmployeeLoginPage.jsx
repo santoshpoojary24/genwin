@@ -65,7 +65,7 @@ export default function EmployeeLoginPage() {
       <header className="p-6 border-b border-zinc-800/80 flex items-center justify-between relative z-10">
         <div>
           <span className="font-display font-black text-2xl tracking-tighter text-white">
-            जेनwin.
+            जेनwin.clothing
           </span>
           <span className="block text-[9px] font-bold tracking-widest text-zinc-500 uppercase mt-0.5">
             STAFF &amp; EMPLOYEE CONSOLE
@@ -215,7 +215,7 @@ export default function EmployeeLoginPage() {
 
       {/* Footer */}
       <footer className="p-4 text-center text-[10px] text-zinc-600 border-t border-zinc-800/80">
-        © 2026 जेनwin. · ALL RIGHTS RESERVED
+        © 2026 जेनwin.clothing · ALL RIGHTS RESERVED
       </footer>
 
     </div>

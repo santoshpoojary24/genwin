@@ -25,7 +25,7 @@ export default function LoadingScreen({ message = "LOADING ARCHIVAL SPECIFICATIO
         {/* Brand Text */}
         <div>
           <span className="font-display font-black text-3xl uppercase tracking-tighter text-black block">
-            जेनwin.
+            जेनwin.clothing
           </span>
           <span className="block text-[9px] font-black tracking-[0.3em] text-zinc-400 uppercase mt-0.5">
             STUDIO ARCHIVE

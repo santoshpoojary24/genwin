@@ -172,7 +172,7 @@ export default function Checkout() {
         key: 'rzp_test_TM0e930fFxpDsE',
         amount: orderData.amount,
         currency: orderData.currency,
-        name: 'जेनwin.',
+        name: 'जेनwin.clothing',
         description: 'Apparel Purchase',
         order_id: orderData.id,
         handler: async function (response) {

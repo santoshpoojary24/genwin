@@ -177,7 +177,7 @@ export default function AdminDashboard() {
 
   // Settings State
   const [settings, setSettings] = useState({
-    storeName: 'जेनwin.',
+    storeName: 'जेनwin.clothing',
     tagline: 'Oversized Streetwear & Custom DTG Prints',
     supportEmail: 'support@genwin.studio',
     supportPhone: '+91 98765 43210',
@@ -518,7 +518,7 @@ export default function AdminDashboard() {
           <div className="p-5 lg:p-6 border-b border-zinc-800 flex items-center justify-between">
             <div>
               <span className="font-display font-black text-2xl tracking-tighter text-white">
-                {settings.storeName || 'जेनwin.'}
+                {settings.storeName || 'जेनwin.clothing'}
               </span>
               <span className="block text-[9px] font-bold tracking-widest text-zinc-500 uppercase mt-0.5">
                 ADMIN CONSOLE
