@@ -181,18 +181,24 @@ export default function QuickViewModal({ product, onClose }) {
           </div>
 
           {/* CTAs */}
-          <div className="p-5 border-t border-zinc-100 space-y-2">
-            <button
-              onClick={handleAddToCart}
-              className={`w-full py-3 font-mono font-bold text-xs uppercase tracking-widest flex items-center justify-center gap-2 transition-all ${
-                added
-                  ? 'bg-zinc-100 text-black border border-black'
-                  : 'bg-black text-white hover:bg-zinc-800'
-              }`}
-            >
-              <ShoppingBag className="w-4 h-4" />
-              {added ? 'ADDED TO BAG ✓' : 'ADD TO BAG'}
-            </button>
+          <div className="p-5 border-t border-zinc-100 space-y-2 font-mono">
+            {((product.stockQty !== undefined && product.stockQty <= 0) || product.isSoldOut) ? (
+              <button disabled className="w-full py-3 bg-zinc-200 text-zinc-500 font-bold text-xs uppercase tracking-widest cursor-not-allowed border border-zinc-300">
+                SOLD OUT
+              </button>
+            ) : (
+              <button
+                onClick={handleAddToCart}
+                className={`w-full py-3 font-mono font-bold text-xs uppercase tracking-widest flex items-center justify-center gap-2 transition-all ${
+                  added
+                    ? 'bg-zinc-100 text-black border border-black'
+                    : 'bg-black text-white hover:bg-zinc-800'
+                }`}
+              >
+                <ShoppingBag className="w-4 h-4" />
+                {added ? 'ADDED TO BAG ✓' : 'ADD TO BAG'}
+              </button>
+            )}
 
             <Link
               to={`/product/${product.slug || product.id}`}

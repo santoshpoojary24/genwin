@@ -152,7 +152,9 @@ export default function CartDrawer() {
                         <span className="px-2 text-xs font-bold text-black">{item.quantity}</span>
                         <button
                           onClick={() => updateQuantity(item.cartItemId, item.quantity + 1)}
-                          className="px-2 py-0.5 hover:bg-zinc-200 text-black font-bold"
+                          disabled={item.stockQty !== undefined && item.quantity >= item.stockQty}
+                          className="px-2 py-0.5 hover:bg-zinc-200 text-black font-bold disabled:opacity-30 disabled:cursor-not-allowed"
+                          title={item.stockQty !== undefined && item.quantity >= item.stockQty ? "Max available stock reached" : "Increase quantity"}
                         >
                           +
                         </button>

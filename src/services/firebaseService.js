@@ -191,6 +191,30 @@ export const FirebaseService = {
 
     const all = ls.get(KEYS.orders, []);
     ls.set(KEYS.orders, [order, ...all]);
+
+    // First Come, First Served Stock Reduction & Sold Out Trigger
+    if (payload.items && Array.isArray(payload.items)) {
+      const currentProducts = ls.get(KEYS.products, INITIAL_PRODUCTS);
+      const updatedProducts = currentProducts.map(p => {
+        const orderedItem = payload.items.find(item => item.productId === p.id || item.id === p.id || item.slug === p.slug);
+        if (orderedItem) {
+          const qtyToDeduct = parseInt(orderedItem.quantity) || 1;
+          const currentStock = p.stockQty !== undefined ? p.stockQty : 10;
+          const newStock = Math.max(0, currentStock - qtyToDeduct);
+          const updatedP = {
+            ...p,
+            stockQty: newStock,
+            isSoldOut: newStock <= 0,
+            updatedAt: new Date().toISOString()
+          };
+          syncCloudDatabases('products', p.id, updatedP);
+          return updatedP;
+        }
+        return p;
+      });
+      ls.set(KEYS.products, updatedProducts);
+    }
+
     return order;
   },
 

@@ -18,6 +18,7 @@ export default function ProductCard({ product, onQuickView }) {
   const [imgLoaded, setImgLoaded] = useState(false);
 
   const isWishlisted = wishlist.includes(product.id);
+  const isSoldOut = (product.stockQty !== undefined && product.stockQty <= 0) || product.isSoldOut;
   const currentPrice = product.discountPrice || product.basePrice;
   const discountPct = product.discountPrice
     ? Math.round(((product.basePrice - product.discountPrice) / product.basePrice) * 100)
@@ -29,11 +30,12 @@ export default function ProductCard({ product, onQuickView }) {
   const handleQuickAdd = (e) => {
     e.preventDefault();
     e.stopPropagation();
+    if (isSoldOut) return;
     if (!user) {
       navigate('/login');
       return;
     }
-    addToCart(product, product.sizes[0], product.colors[0], 1);
+    addToCart(product, product.sizes?.[0] || 'M', product.colors?.[0] || 'Default', 1);
   };
 
   return (
@@ -44,20 +46,28 @@ export default function ProductCard({ product, onQuickView }) {
     >
       {/* Badges */}
       <div className="absolute top-2 left-2 z-10 flex flex-col gap-1 font-mono">
-        {discountPct > 0 && (
-          <span className="text-[9px] font-bold bg-black text-white px-2 py-0.5 uppercase tracking-widest">
-            -{discountPct}%
+        {isSoldOut ? (
+          <span className="text-[9px] font-bold bg-red-600 text-white px-2 py-0.5 uppercase tracking-widest">
+            SOLD OUT
           </span>
-        )}
-        {product.isNew && (
-          <span className="text-[9px] font-bold bg-white text-black border border-zinc-300 px-2 py-0.5 uppercase tracking-widest">
-            NEW
-          </span>
-        )}
-        {product.isBestseller && (
-          <span className="text-[9px] font-bold bg-zinc-100 text-black border border-zinc-300 px-2 py-0.5 uppercase tracking-widest">
-            BESTSELLER
-          </span>
+        ) : (
+          <>
+            {discountPct > 0 && (
+              <span className="text-[9px] font-bold bg-black text-white px-2 py-0.5 uppercase tracking-widest">
+                -{discountPct}%
+              </span>
+            )}
+            {product.isNew && (
+              <span className="text-[9px] font-bold bg-white text-black border border-zinc-300 px-2 py-0.5 uppercase tracking-widest">
+                NEW
+              </span>
+            )}
+            {product.isBestseller && (
+              <span className="text-[9px] font-bold bg-zinc-100 text-black border border-zinc-300 px-2 py-0.5 uppercase tracking-widest">
+                BESTSELLER
+              </span>
+            )}
+          </>
         )}
       </div>
 
@@ -103,10 +113,13 @@ export default function ProductCard({ product, onQuickView }) {
           </button>
           <button
             onClick={handleQuickAdd}
-            className="px-3 py-2 bg-white/90 hover:bg-white text-black text-[9px] font-mono font-bold uppercase border border-zinc-200"
-            title="Add to bag"
+            disabled={isSoldOut}
+            className={`px-3 py-2 text-[9px] font-mono font-bold uppercase border border-zinc-200 ${
+              isSoldOut ? 'bg-zinc-200 text-zinc-400 cursor-not-allowed border-zinc-300' : 'bg-white/90 hover:bg-white text-black'
+            }`}
+            title={isSoldOut ? "Sold Out" : "Add to bag"}
           >
-            +BAG
+            {isSoldOut ? 'SOLD OUT' : '+BAG'}
           </button>
         </div>
       </Link>
@@ -116,9 +129,11 @@ export default function ProductCard({ product, onQuickView }) {
         <div>
           <div className="flex items-center justify-between text-[9px] font-mono font-bold text-zinc-400 uppercase mb-1.5">
             <span>{product.category}</span>
-            {product.stockQty < 5 && (
+            {isSoldOut ? (
+              <span className="text-red-600 font-bold border border-red-200 bg-red-50 px-1">SOLD OUT</span>
+            ) : product.stockQty < 5 ? (
               <span className="text-black border border-black px-1">ONLY {product.stockQty} LEFT</span>
-            )}
+            ) : null}
           </div>
 
           <Link to={`/product/${product.slug || product.id}`}>

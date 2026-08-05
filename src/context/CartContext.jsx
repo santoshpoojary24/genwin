@@ -25,6 +25,12 @@ export const CartProvider = ({ children }) => {
 
   const addToCart = (product, selectedSize = 'M', selectedColor = 'Default', quantity = 1, customization = null) => {
     if (!product) return;
+    const stockLimit = product.stockQty !== undefined ? product.stockQty : 999;
+    if (stockLimit <= 0 || product.isSoldOut) {
+      alert("Sorry! This garment is sold out.");
+      return;
+    }
+
     const colorStr = typeof selectedColor === 'object' && selectedColor !== null
       ? (selectedColor.name || 'Default')
       : (selectedColor || 'Default');
@@ -36,15 +42,17 @@ export const CartProvider = ({ children }) => {
     const extraCustomFee = customization ? (product.customizationFee || 150) : 0;
     const finalUnitPrice = basePrice + extraCustomFee;
 
-    const validQty = Math.max(1, parseInt(quantity) || 1);
+    const requestedQty = Math.max(1, parseInt(quantity) || 1);
+    const validQty = Math.min(stockLimit, requestedQty);
     const validUnitPrice = isNaN(finalUnitPrice) || finalUnitPrice <= 0 ? (basePrice || 999) : finalUnitPrice;
 
     setCartItems(prev => {
       const existing = prev.find(item => item.cartItemId === cartItemId);
       if (existing) {
+        const combinedQty = Math.min(stockLimit, (existing.quantity || 1) + validQty);
         return prev.map(item =>
           item.cartItemId === cartItemId
-            ? { ...item, quantity: (item.quantity || 1) + validQty }
+            ? { ...item, quantity: combinedQty, stockQty: stockLimit }
             : item
         );
       }
@@ -62,6 +70,7 @@ export const CartProvider = ({ children }) => {
           basePrice,
           customizationFee: extraCustomFee,
           quantity: validQty,
+          stockQty: stockLimit,
           customization,
         }
       ];
@@ -76,9 +85,14 @@ export const CartProvider = ({ children }) => {
       return;
     }
     setCartItems(prev =>
-      prev.map(item =>
-        item.cartItemId === cartItemId ? { ...item, quantity: newQty } : item
-      )
+      prev.map(item => {
+        if (item.cartItemId === cartItemId) {
+          const maxAllowed = item.stockQty !== undefined ? item.stockQty : 999;
+          const cappedQty = Math.min(maxAllowed, newQty);
+          return { ...item, quantity: cappedQty };
+        }
+        return item;
+      })
     );
   };
 

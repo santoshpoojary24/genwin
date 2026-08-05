@@ -205,9 +205,15 @@ export default function ProductDetail() {
             <div className="space-y-2 border-b border-zinc-100 pb-5">
               <div className="flex items-center justify-between">
                 <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">{product.category}</span>
-                <span className="text-[10px] font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 border border-emerald-200 uppercase">
-                  IN STOCK · {product.stockQty || 12} UNITS LEFT
-                </span>
+                {(product.stockQty <= 0 || product.isSoldOut) ? (
+                  <span className="text-[10px] font-bold text-red-600 bg-red-50 px-2 py-0.5 border border-red-200 uppercase">
+                    SOLD OUT
+                  </span>
+                ) : (
+                  <span className="text-[10px] font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 border border-emerald-200 uppercase">
+                    IN STOCK · {product.stockQty ?? 10} UNITS LEFT
+                  </span>
+                )}
               </div>
 
               <h1 className="font-display font-black text-black text-2xl sm:text-3xl uppercase tracking-tight leading-tight">
@@ -303,47 +309,64 @@ export default function ProductDetail() {
                   <Minus className="w-3.5 h-3.5" />
                 </button>
                 <span className="px-5 font-bold text-xs">{quantity}</span>
-                <button onClick={() => setQuantity(q => q + 1)} className="px-3.5 py-2.5 hover:bg-zinc-50 text-black font-bold border-l border-zinc-200 transition-colors">
+                <button 
+                  onClick={() => setQuantity(q => Math.min(product.stockQty ?? 999, q + 1))} 
+                  disabled={(product.stockQty !== undefined && quantity >= product.stockQty) || product.stockQty <= 0 || product.isSoldOut}
+                  className="px-3.5 py-2.5 hover:bg-zinc-50 text-black font-bold border-l border-zinc-200 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+                >
                   <Plus className="w-3.5 h-3.5" />
                 </button>
               </div>
             </div>
 
             {/* Action Buttons */}
-            <div className="space-y-3 pt-4 border-t border-zinc-100">
-              {product.isCustomizable && (
-                <Link
-                  to={`/customize/${product.id}`}
-                  className="btn-magnetic press w-full py-4 bg-black text-white font-mono font-black text-xs uppercase tracking-widest flex items-center justify-center gap-2 hover:bg-zinc-800 transition-colors"
-                >
-                  <Sparkles className="w-4 h-4" />
-                  CUSTOMIZE IN DTG STUDIO (+₹{product.customizationFee || 150})
-                </Link>
+            <div className="space-y-3 pt-4 border-t border-zinc-100 font-mono">
+              {(product.stockQty <= 0 || product.isSoldOut) ? (
+                <div className="space-y-3">
+                  <button disabled className="w-full py-4 bg-zinc-200 text-zinc-500 font-black text-xs uppercase tracking-widest cursor-not-allowed border border-zinc-300">
+                    PRODUCT SOLD OUT
+                  </button>
+                  <p className="text-[10px] text-red-500 uppercase text-center font-bold">
+                    This garment is currently out of stock. Check back soon for restocks!
+                  </p>
+                </div>
+              ) : (
+                <>
+                  {product.isCustomizable && (
+                    <Link
+                      to={`/customize/${product.id}`}
+                      className="btn-magnetic press w-full py-4 bg-black text-white font-mono font-black text-xs uppercase tracking-widest flex items-center justify-center gap-2 hover:bg-zinc-800 transition-colors"
+                    >
+                      <Sparkles className="w-4 h-4" />
+                      CUSTOMIZE IN DTG STUDIO (+₹{product.customizationFee || 150})
+                    </Link>
+                  )}
+
+                  <div className="flex gap-3">
+                    <button
+                      onClick={handleAddToCart}
+                      className={`btn-magnetic press flex-1 py-4 font-mono font-black text-xs uppercase tracking-widest flex items-center justify-center gap-2 transition-all ${
+                        addedToCart
+                          ? 'bg-zinc-100 text-black border border-black'
+                          : 'bg-white text-black border border-black hover:bg-black hover:text-white'
+                      }`}
+                    >
+                      <ShoppingBag className="w-4 h-4" />
+                      {addedToCart ? 'ADDED TO BAG ✓' : 'ADD TO BAG'}
+                    </button>
+
+                    <button
+                      onClick={() => toggleWishlist(product.id)}
+                      className={`p-4 border transition-all press ${
+                        isWishlisted ? 'bg-black text-white border-black' : 'border-zinc-200 text-zinc-500 hover:border-black hover:text-black'
+                      }`}
+                      title="Wishlist"
+                    >
+                      <Heart className={`w-4 h-4 ${isWishlisted ? 'fill-white' : ''}`} />
+                    </button>
+                  </div>
+                </>
               )}
-
-              <div className="flex gap-3">
-                <button
-                  onClick={handleAddToCart}
-                  className={`btn-magnetic press flex-1 py-4 font-mono font-black text-xs uppercase tracking-widest flex items-center justify-center gap-2 transition-all ${
-                    addedToCart
-                      ? 'bg-zinc-100 text-black border border-black'
-                      : 'bg-white text-black border border-black hover:bg-black hover:text-white'
-                  }`}
-                >
-                  <ShoppingBag className="w-4 h-4" />
-                  {addedToCart ? 'ADDED TO BAG ✓' : 'ADD TO BAG'}
-                </button>
-
-                <button
-                  onClick={() => toggleWishlist(product.id)}
-                  className={`p-4 border transition-all press ${
-                    isWishlisted ? 'bg-black text-white border-black' : 'border-zinc-200 text-zinc-500 hover:border-black hover:text-black'
-                  }`}
-                  title="Wishlist"
-                >
-                  <Heart className={`w-4 h-4 ${isWishlisted ? 'fill-white' : ''}`} />
-                </button>
-              </div>
             </div>
 
             {/* Product Specifications & Trust Badges */}
