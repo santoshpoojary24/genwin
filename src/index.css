@@ -1,0 +1,425 @@
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ═══════════════════════════════════════════════════════
+   GENWIN STUDIO — DESIGN SYSTEM
+   Editorial Minimalist · Black & White
+   ═══════════════════════════════════════════════════════ */
+
+/* ── Tokens ─────────────────────────────────────────── */
+:root {
+  --black:   #000000;
+  --white:   #FFFFFF;
+  --zinc-50: #FAFAFA;
+  --zinc-100:#F4F4F5;
+  --zinc-200:#E4E4E7;
+  --zinc-300:#D4D4D8;
+  --zinc-400:#A1A1AA;
+  --zinc-500:#71717A;
+  --zinc-600:#52525B;
+  --zinc-700:#3F3F46;
+  --zinc-800:#27272A;
+  --zinc-900:#18181B;
+
+  --ease-expo:  cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-quart: cubic-bezier(0.25, 1, 0.5, 1);
+  --ease-in-out:cubic-bezier(0.4, 0, 0.2, 1);
+
+  --nav-h: 60px;
+}
+
+/* ── Reset ──────────────────────────────────────────── */
+*, *::before, *::after {
+  box-sizing: border-box;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  scroll-behavior: smooth;
+  font-size: 14px;
+}
+
+body {
+  background: var(--white);
+  color: var(--black);
+  font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+  line-height: 1.6;
+  overflow-x: hidden;
+}
+
+/* ── Typography ─────────────────────────────────────── */
+.font-display,
+h1, h2, h3, h4, h5, h6 {
+  font-family: 'Outfit', system-ui, sans-serif;
+  letter-spacing: -0.03em;
+  line-height: 1.05;
+}
+
+.font-mono, code, kbd {
+  font-family: 'DM Mono', monospace;
+}
+
+/* Editorial text sizes */
+.text-display-xl { font-size: clamp(3.5rem, 8vw, 7rem); }
+.text-display-lg { font-size: clamp(2.5rem, 6vw, 5rem); }
+.text-display-md { font-size: clamp(2rem,   4vw, 3.5rem); }
+.text-display-sm { font-size: clamp(1.5rem, 3vw, 2.5rem); }
+
+/* ── Focus ──────────────────────────────────────────── */
+:focus-visible { outline: 2px solid var(--black); outline-offset: 2px; }
+button:focus:not(:focus-visible),
+a:focus:not(:focus-visible),
+input:focus:not(:focus-visible) { outline: none; }
+
+/* ── Scrollbar ──────────────────────────────────────── */
+::-webkit-scrollbar       { width: 4px; height: 4px; }
+::-webkit-scrollbar-track { background: var(--zinc-50); }
+::-webkit-scrollbar-thumb { background: var(--zinc-300); }
+::-webkit-scrollbar-thumb:hover { background: var(--zinc-500); }
+
+/* ── Selection ──────────────────────────────────────── */
+::selection { background: var(--black); color: var(--white); }
+
+/* ═══════════════════════════════════════════════════════
+   KEYFRAMES — only transform + opacity (GPU composite)
+   ═══════════════════════════════════════════════════════ */
+
+@keyframes fade-in {
+  from { opacity:0; transform:translateY(10px); }
+  to   { opacity:1; transform:translateY(0);    }
+}
+@keyframes fade-up {
+  from { opacity:0; transform:translateY(36px); }
+  to   { opacity:1; transform:translateY(0);    }
+}
+@keyframes fade-left {
+  from { opacity:0; transform:translateX(-28px); }
+  to   { opacity:1; transform:translateX(0);     }
+}
+@keyframes fade-right {
+  from { opacity:0; transform:translateX(28px); }
+  to   { opacity:1; transform:translateX(0);    }
+}
+@keyframes scale-in {
+  from { opacity:0; transform:scale(0.95); }
+  to   { opacity:1; transform:scale(1);    }
+}
+@keyframes pop-in {
+  0%   { opacity:0; transform:scale(0.82); }
+  65%  {            transform:scale(1.05); }
+  100% { opacity:1; transform:scale(1);    }
+}
+@keyframes slide-up-reveal {
+  from { opacity:0; transform:translateY(100%); }
+  to   { opacity:1; transform:translateY(0);    }
+}
+@keyframes marquee {
+  from { transform:translateX(0);   }
+  to   { transform:translateX(-50%); }
+}
+@keyframes float {
+  0%,100% { transform:translateY(0);   }
+  50%      { transform:translateY(-5px); }
+}
+@keyframes shimmer {
+  0%   { background-position:-400px 0; }
+  100% { background-position: 400px 0; }
+}
+@keyframes slideAdIn {
+  from { opacity:0; transform:translateX(-16px); }
+  to   { opacity:1; transform:translateX(0);     }
+}
+@keyframes progressBar {
+  from { transform:scaleX(0); }
+  to   { transform:scaleX(1); }
+}
+@keyframes draw-line {
+  from { transform:scaleX(0); }
+  to   { transform:scaleX(1); }
+}
+@keyframes blink {
+  0%,100% { opacity:1; }
+  50%      { opacity:0; }
+}
+
+/* ═══════════════════════════════════════════════════════
+   UTILITY ANIMATION CLASSES
+   ═══════════════════════════════════════════════════════ */
+
+.anim-fade-in    { animation: fade-in  0.45s var(--ease-quart) both; }
+.anim-fade-up    { animation: fade-up  0.6s  var(--ease-expo)  both; }
+.anim-fade-left  { animation: fade-left 0.55s var(--ease-expo) both; }
+.anim-fade-right { animation: fade-right 0.55s var(--ease-expo) both; }
+.anim-scale-in   { animation: scale-in  0.4s  var(--ease-expo) both; }
+.anim-pop-in     { animation: pop-in    0.4s  var(--ease-expo) both; }
+.anim-marquee    { animation: marquee 30s linear infinite; }
+.anim-float      { animation: float  3.5s ease-in-out infinite; }
+
+/* Delay utilities */
+.d-75  { animation-delay:  75ms; }
+.d-100 { animation-delay: 100ms; }
+.d-150 { animation-delay: 150ms; }
+.d-200 { animation-delay: 200ms; }
+.d-250 { animation-delay: 250ms; }
+.d-300 { animation-delay: 300ms; }
+.d-350 { animation-delay: 350ms; }
+.d-400 { animation-delay: 400ms; }
+.d-450 { animation-delay: 450ms; }
+.d-500 { animation-delay: 500ms; }
+.d-600 { animation-delay: 600ms; }
+.d-700 { animation-delay: 700ms; }
+
+/* ── Page & Modal Smooth Transitions ───────────────────── */
+@keyframes smooth-page-enter {
+  0% {
+    opacity: 0;
+    transform: translate3d(0, 16px, 0) scale3d(0.985, 0.985, 1);
+  }
+  100% {
+    opacity: 1;
+    transform: translate3d(0, 0, 0) scale3d(1, 1, 1);
+  }
+}
+
+@keyframes smooth-drawer-enter {
+  0% {
+    opacity: 0;
+    transform: translate3d(100%, 0, 0);
+  }
+  100% {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+.page-enter {
+  animation: smooth-page-enter 0.45s cubic-bezier(0.16, 1, 0.3, 1) both;
+  will-change: transform, opacity;
+  backface-visibility: hidden;
+}
+
+.drawer-enter {
+  animation: smooth-drawer-enter 0.35s cubic-bezier(0.16, 1, 0.3, 1) both;
+  will-change: transform, opacity;
+}
+
+/* ═══════════════════════════════════════════════════════
+   SCROLL-REVEAL (IntersectionObserver adds .is-visible)
+   Only CSS transitions — no JS style mutations
+   ═══════════════════════════════════════════════════════ */
+
+.sr {
+  opacity: 0;
+  transform: translateY(28px);
+  transition: opacity 0.6s var(--ease-expo), transform 0.6s var(--ease-expo);
+  will-change: transform, opacity;
+}
+.sr.is-visible,
+.is-visible .sr { opacity:1; transform:translateY(0); }
+
+.sr-left {
+  opacity: 0;
+  transform: translateX(-24px);
+  transition: opacity 0.6s var(--ease-expo), transform 0.6s var(--ease-expo);
+}
+.sr-left.is-visible,
+.is-visible .sr-left { opacity:1; transform:translateX(0); }
+
+.sr-scale {
+  opacity: 0;
+  transform: scale(0.94);
+  transition: opacity 0.55s var(--ease-expo), transform 0.55s var(--ease-expo);
+}
+.sr-scale.is-visible,
+.is-visible .sr-scale { opacity:1; transform:scale(1); }
+
+/* Child stagger inside .stagger */
+.stagger > .sr:nth-child(1) { transition-delay:   0ms; }
+.stagger > .sr:nth-child(2) { transition-delay:  70ms; }
+.stagger > .sr:nth-child(3) { transition-delay: 140ms; }
+.stagger > .sr:nth-child(4) { transition-delay: 210ms; }
+.stagger > .sr:nth-child(5) { transition-delay: 280ms; }
+.stagger > .sr:nth-child(6) { transition-delay: 350ms; }
+.stagger > .sr:nth-child(7) { transition-delay: 420ms; }
+.stagger > .sr:nth-child(8) { transition-delay: 490ms; }
+
+.stagger > .sr-scale:nth-child(1) { transition-delay:   0ms; }
+.stagger > .sr-scale:nth-child(2) { transition-delay:  70ms; }
+.stagger > .sr-scale:nth-child(3) { transition-delay: 140ms; }
+.stagger > .sr-scale:nth-child(4) { transition-delay: 210ms; }
+
+/* ═══════════════════════════════════════════════════════
+   INTERACTIVE MICRO-EFFECTS (transform only)
+   ═══════════════════════════════════════════════════════ */
+
+.lift {
+  transition: transform 0.22s var(--ease-quart);
+  will-change: transform;
+}
+.lift:hover { transform: translateY(-3px); }
+
+.press {
+  transition: transform 0.12s ease;
+}
+.press:active { transform: scale(0.97); }
+
+/* ── Magnetic button effect (JS-free fallback: simple scale) */
+.btn-magnetic {
+  transition: transform 0.2s var(--ease-quart), background 0.15s ease;
+}
+.btn-magnetic:hover  { transform: scale(1.03); }
+.btn-magnetic:active { transform: scale(0.97); }
+
+/* ── Underline wipe ─────────────────────────────────── */
+.underline-wipe {
+  position: relative;
+  display: inline-block;
+}
+.underline-wipe::after {
+  content: '';
+  position: absolute;
+  bottom: 0; left: 0;
+  width: 100%; height: 1px;
+  background: currentColor;
+  transform: scaleX(0);
+  transform-origin: right center;
+  transition: transform 0.35s var(--ease-quart);
+}
+.underline-wipe:hover::after { transform: scaleX(1); transform-origin: left center; }
+
+/* ── Image zoom container ───────────────────────────── */
+.img-zoom { overflow: hidden; }
+.img-zoom img {
+  transition: transform 0.6s var(--ease-expo);
+  will-change: transform;
+}
+.img-zoom:hover img { transform: scale(1.06); }
+
+/* ═══════════════════════════════════════════════════════
+   EDITORIAL HELPERS
+   ═══════════════════════════════════════════════════════ */
+
+/* Section number label (e.g. "01") */
+.section-num {
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--zinc-400);
+}
+
+/* Thin divider line that draws on hover/visible */
+.draw-line {
+  display: block;
+  height: 1px;
+  background: var(--black);
+  transform: scaleX(0);
+  transform-origin: left center;
+  transition: transform 0.5s var(--ease-expo);
+}
+.draw-line.active,
+.is-visible .draw-line { transform: scaleX(1); }
+
+/* Pill / tag */
+.tag {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  font-family: 'DM Mono', monospace;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  border: 1px solid currentColor;
+}
+
+/* ── Skeleton ────────────────────────────────────────── */
+.skeleton {
+  background: linear-gradient(90deg,#F4F4F5 25%,#E4E4E7 50%,#F4F4F5 75%);
+  background-size: 400px 100%;
+  animation: shimmer 1.5s ease-in-out infinite;
+}
+
+/* ── Canvas editor ──────────────────────────────────── */
+.canvas-container {
+  margin: 0 auto;
+  box-shadow: 0 2px 24px rgba(0,0,0,0.08), 0 0 0 1px rgba(0,0,0,0.05);
+}
+
+/* ── Form controls ──────────────────────────────────── */
+input[type="checkbox"] { accent-color: #000; }
+input[type="radio"]    { accent-color: #000; }
+input[type="range"] {
+  -webkit-appearance: none;
+  appearance: none;
+  height: 2px;
+  background: #E4E4E7;
+  outline: none;
+}
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 14px; height: 14px;
+  background: #000;
+  border-radius: 0;
+  cursor: pointer;
+  border: 2px solid white;
+  box-shadow: 0 0 0 2px #000;
+}
+
+/* ═══════════════════════════════════════════════════════
+   GARMENT SHOWCASE LOW-END DEVICE FRIENDLY GPU ANIMATIONS
+   ═══════════════════════════════════════════════════════ */
+
+@keyframes garmentFloatSlow {
+  0%, 100% { transform: translate3d(0, 0, 0) scale3d(1, 1, 1); }
+  50%      { transform: translate3d(0, -6px, 0) scale3d(1.015, 1.015, 1); }
+}
+
+@keyframes garmentGlowPulse {
+  0%, 100% { opacity: 0.3; transform: scale3d(1, 1, 1); }
+  50%      { opacity: 0.7; transform: scale3d(1.08, 1.08, 1); }
+}
+
+.anim-garment-float {
+  animation: garmentFloatSlow 4s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+  will-change: transform;
+}
+
+.garment-card-gpu {
+  transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.35s ease, border-color 0.35s ease;
+  will-change: transform;
+  transform: translate3d(0, 0, 0);
+  backface-visibility: hidden;
+}
+
+.garment-card-gpu:hover {
+  transform: translate3d(0, -8px, 0) scale3d(1.02, 1.02, 1);
+}
+
+.garment-img-zoom {
+  transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: transform;
+}
+
+.garment-card-gpu:hover .garment-img-zoom {
+  transform: scale3d(1.08, 1.08, 1);
+}
+
+/* ── Reduced motion ─────────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration:        0.01ms !important;
+    animation-iteration-count: 1      !important;
+    transition-duration:       0.01ms !important;
+  }
+  .sr, .sr-left, .sr-scale {
+    opacity: 1 !important;
+    transform: none !important;
+  }
+}
