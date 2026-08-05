@@ -44,12 +44,16 @@ html {
   font-size: 14px;
 }
 
+html, body {
+  min-height: 100%;
+}
 body {
   background: var(--white);
   color: var(--black);
   font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
   line-height: 1.6;
-  overflow-x: hidden;
+  position: relative;
+  -webkit-font-smoothing: antialiased;
 }
 
 /* ── Typography ─────────────────────────────────────── */
