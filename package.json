@@ -17,6 +17,7 @@
     "firebase": "^11.2.0",
     "firebase-admin": "^14.2.0",
     "lucide-react": "^0.474.0",
+    "razorpay": "^2.9.8",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "react-router-dom": "^7.1.5",

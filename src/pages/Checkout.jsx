@@ -5,6 +5,20 @@ import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
 import { FirebaseService } from '../services/firebaseService';
 
+const loadRazorpayScript = () => {
+  return new Promise((resolve) => {
+    if (window.Razorpay) {
+      resolve(true);
+      return;
+    }
+    const script = document.createElement('script');
+    script.src = 'https://checkout.razorpay.com/v1/checkout.js';
+    script.onload = () => resolve(true);
+    script.onerror = () => resolve(false);
+    document.body.appendChild(script);
+  });
+};
+
 export default function Checkout() {
   const navigate = useNavigate();
   
@@ -85,6 +99,33 @@ export default function Checkout() {
     );
   }
 
+  const finalizeFirebaseOrder = async (paymentDetails = null) => {
+    try {
+      const orderPayload = {
+        userId: user?.uid || 'guest_' + Date.now(),
+        customerName: address.name,
+        customerPhone: address.phone,
+        shippingAddress: address,
+        items: cartItems,
+        subtotal,
+        shippingFee,
+        discountAmount,
+        couponCode: appliedCoupon?.code || null,
+        total,
+        paymentMethod,
+        paymentDetails
+      };
+      const newOrder = await FirebaseService.createOrder(orderPayload);
+      clearCart();
+      setSubmitting(false);
+      navigate(`/order-success/${newOrder.id || newOrder.orderNumber}`);
+    } catch (err) {
+      console.error("Failed to place order:", err);
+      alert('Failed to save order. Please contact support.');
+      setSubmitting(false);
+    }
+  };
+
   const handlePlaceOrder = async (e) => {
     e.preventDefault();
     setSubmitting(true);
@@ -100,23 +141,64 @@ export default function Checkout() {
         }
       }
 
-      const orderPayload = {
-        userId: user?.uid || 'guest_' + Date.now(),
-        customerName: address.name,
-        customerPhone: address.phone,
-        shippingAddress: address,
-        items: cartItems,
-        subtotal,
-        shippingFee,
-        discountAmount,
-        couponCode: appliedCoupon?.code || null,
-        total,
-        paymentMethod
+      if (paymentMethod === 'cod') {
+        await finalizeFirebaseOrder();
+        return;
+      }
+
+      // Razorpay Flow
+      const resLoaded = await loadRazorpayScript();
+      if (!resLoaded) {
+        alert('Razorpay SDK failed to load. Are you online?');
+        setSubmitting(false);
+        return;
+      }
+
+      const apiBase = import.meta.env.VITE_API_BASE_URL || (window.location.origin.includes('localhost') ? 'http://localhost:5000' : '/api');
+      const createOrderRes = await fetch(`${apiBase}/create-razorpay-order`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ amount: total })
+      });
+      
+      const orderData = await createOrderRes.json();
+      if (!orderData.id) {
+         alert('Server error. Could not create payment session.');
+         setSubmitting(false);
+         return;
+      }
+
+      const options = {
+        key: import.meta.env.VITE_RAZORPAY_KEY_ID || 'rzp_test_placeholder_key',
+        amount: orderData.amount,
+        currency: orderData.currency,
+        name: 'GenWin Studio',
+        description: 'Apparel Purchase',
+        order_id: orderData.id,
+        handler: async function (response) {
+          await finalizeFirebaseOrder({
+            razorpayPaymentId: response.razorpay_payment_id,
+            razorpayOrderId: response.razorpay_order_id,
+            razorpaySignature: response.razorpay_signature
+          });
+        },
+        prefill: {
+          name: address.name,
+          email: user?.email || '',
+          contact: address.phone
+        },
+        theme: {
+          color: '#000000'
+        }
       };
-      const newOrder = await FirebaseService.createOrder(orderPayload);
-      clearCart();
-      setSubmitting(false);
-      navigate(`/order-success/${newOrder.id || newOrder.orderNumber}`);
+
+      const rzp1 = new window.Razorpay(options);
+      rzp1.on('payment.failed', function (response){
+         alert('Payment failed: ' + response.error.description);
+         setSubmitting(false);
+      });
+      rzp1.open();
+
     } catch (err) {
       console.error("Failed to place order:", err);
       setSubmitting(false);

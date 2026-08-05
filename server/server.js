@@ -3,6 +3,8 @@ import cors from 'cors';
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import Razorpay from 'razorpay';
+import crypto from 'crypto';
 
 import {
   INITIAL_PRODUCTS,
@@ -121,6 +123,57 @@ app.get('/api/health', (req, res) => {
     timestamp: new Date().toISOString(),
     uptime: process.uptime()
   });
+});
+
+// ── RAZORPAY API ─────────────────────────────────────────────────────────────
+const razorpayInstance = new Razorpay({
+  key_id: process.env.RAZORPAY_KEY_ID || 'rzp_test_placeholder_key',
+  key_secret: process.env.RAZORPAY_KEY_SECRET || 'rzp_test_placeholder_secret'
+});
+
+app.post('/api/create-razorpay-order', async (req, res) => {
+  try {
+    const { amount, currency = 'INR', receipt = 'receipt#1' } = req.body;
+    if (!amount) {
+      return res.status(400).json({ error: 'Amount is required' });
+    }
+
+    const options = {
+      amount: Math.round(amount * 100), // Convert to paise
+      currency,
+      receipt
+    };
+
+    const order = await razorpayInstance.orders.create(options);
+    res.json(order);
+  } catch (err) {
+    console.error('Error creating Razorpay order:', err);
+    res.status(500).json({ error: 'Failed to create Razorpay order', details: err });
+  }
+});
+
+app.post('/api/verify-payment', (req, res) => {
+  const { razorpay_order_id, razorpay_payment_id, razorpay_signature } = req.body;
+  
+  if (!razorpay_order_id || !razorpay_payment_id || !razorpay_signature) {
+    return res.status(400).json({ error: 'Missing payment details' });
+  }
+
+  const body = razorpay_order_id + "|" + razorpay_payment_id;
+  const secret = process.env.RAZORPAY_KEY_SECRET || 'rzp_test_placeholder_secret';
+  
+  const expectedSignature = crypto
+    .createHmac('sha256', secret)
+    .update(body.toString())
+    .digest('hex');
+    
+  const isAuthentic = expectedSignature === razorpay_signature;
+  
+  if (isAuthentic) {
+    res.json({ success: true, message: 'Payment verified successfully' });
+  } else {
+    res.status(400).json({ success: false, error: 'Invalid signature' });
+  }
 });
 
 // ── PRODUCTS API ─────────────────────────────────────────────────────────────
