@@ -110,6 +110,16 @@ export default function Navbar() {
               </button>
             </form>
 
+            {/* Account / Profile Dropdown Trigger (Desktop Only) */}
+            <Link
+              to="/account"
+              className="hidden md:flex items-center gap-2 px-3 py-2 border border-zinc-200 text-zinc-700 hover:text-black hover:border-black text-xs font-mono font-bold uppercase tracking-wider transition-all"
+              title="My Account"
+            >
+              <User className="w-4 h-4" />
+              <span>{user ? user.name?.split(' ')[0] : 'SIGN IN'}</span>
+            </Link>
+
             {/* Wishlist Button */}
             <Link
               to="/wishlist"
