@@ -2466,22 +2466,34 @@ export default function AdminDashboard() {
                   >
                     {(() => {
                       const optionMap = new Map();
-                      // 1. All dynamic categories created in Admin
+                      // 1. All dynamic categories created in Admin Categories tab
                       (categories || []).forEach(cat => {
                         const slug = cat.slug || cat.name?.toLowerCase().replace(/[^a-z0-9]+/g, '-');
                         if (slug) {
-                          optionMap.set(slug, { slug, name: cat.name || slug });
+                          optionMap.set(slug.toLowerCase(), { slug: slug.toLowerCase(), name: cat.name || slug });
                         }
                       });
-                      // 2. Fallback defaults if not present
+                      // 2. All unique categories assigned to any existing products
+                      (products || []).forEach(p => {
+                        if (p.category) {
+                          const slug = p.category.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+                          if (!optionMap.has(slug)) {
+                            optionMap.set(slug, { slug, name: p.category });
+                          }
+                        }
+                      });
+                      // 3. Fallback defaults if not present
                       ['t-shirts', 'hoodies', 'jackets', 'accessories'].forEach(slug => {
                         if (!optionMap.has(slug)) {
                           optionMap.set(slug, { slug, name: slug });
                         }
                       });
-                      // 3. Current product category if custom
-                      if (editingProduct?.category && !optionMap.has(editingProduct.category)) {
-                        optionMap.set(editingProduct.category, { slug: editingProduct.category, name: editingProduct.category });
+                      // 4. Current product category if custom
+                      if (editingProduct?.category) {
+                        const slug = editingProduct.category.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+                        if (!optionMap.has(slug)) {
+                          optionMap.set(slug, { slug, name: editingProduct.category });
+                        }
                       }
                       return [
                         ...Array.from(optionMap.values()).map(cat => (
