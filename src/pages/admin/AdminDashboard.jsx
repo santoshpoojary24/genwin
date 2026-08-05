@@ -11,6 +11,7 @@ import {
 } from 'lucide-react';
 import { FirebaseService } from '../../services/firebaseService';
 import { useSettings } from '../../context/SettingsContext';
+import { INITIAL_PRODUCTS, INITIAL_CATEGORIES } from '../../data/seedData';
 
 // ── File Upload Picker Component ──────────────────────────────────────────
 function FileUploadPicker({ value, onChange, label = "UPLOAD IMAGE / FILE (JPG, PNG, WEBP, PDF)" }) {
@@ -180,13 +181,33 @@ export default function AdminDashboard() {
 
   const [productViewMode, setProductViewMode] = useState('grid'); // 'grid' or 'table'
 
-  const [products, setProducts] = useState([]);
+  const [products, setProducts] = useState(() => {
+    try {
+      const s = localStorage.getItem('genwin_products_v8');
+      if (s) {
+        const parsed = JSON.parse(s);
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      }
+    } catch (_) {}
+    return INITIAL_PRODUCTS;
+  });
+
+  const [categories, setCategories] = useState(() => {
+    try {
+      const s = localStorage.getItem('genwin_categories');
+      if (s) {
+        const parsed = JSON.parse(s);
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      }
+    } catch (_) {}
+    return INITIAL_CATEGORIES;
+  });
+
   const [orders, setOrders] = useState([]);
-  const [categories, setCategories] = useState([]);
   const [coupons, setCoupons] = useState([]);
   const [ads, setAds] = useState([]);
   const [employees, setEmployees] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
 
   // Filters
   const [searchTerm, setSearchTerm] = useState('');
@@ -396,15 +417,23 @@ export default function AdminDashboard() {
     e.preventDefault();
     if (isCustomCategoryInput && customCategoryName.trim()) {
       const catSlug = customCategoryName.trim().toLowerCase().replace(/[^a-z0-9]+/g, '-');
-      await FirebaseService.saveCategory({
+      const savedCat = await FirebaseService.saveCategory({
         name: customCategoryName.trim(),
         slug: catSlug,
         description: 'Custom added category',
         isFeatured: true
       });
+      setCategories(prev => {
+        const exists = prev.some(c => c.id === savedCat.id || c.slug === savedCat.slug);
+        return exists ? prev.map(c => (c.id === savedCat.id || c.slug === savedCat.slug) ? savedCat : c) : [...prev, savedCat];
+      });
       editingProduct.category = catSlug;
     }
-    await FirebaseService.saveProduct(editingProduct);
+    const savedProd = await FirebaseService.saveProduct(editingProduct);
+    setProducts(prev => {
+      const exists = prev.some(p => p.id === savedProd.id);
+      return exists ? prev.map(p => p.id === savedProd.id ? savedProd : p) : [savedProd, ...prev];
+    });
     setEditingProduct(null);
     setIsCustomCategoryInput(false);
     setCustomCategoryName('');
@@ -414,6 +443,7 @@ export default function AdminDashboard() {
   const handleDeleteProduct = async (id) => {
     if (window.confirm('Are you sure you want to delete this product?')) {
       await FirebaseService.deleteProduct(id);
+      setProducts(prev => prev.filter(p => p.id !== id));
       refreshData();
     }
   };
