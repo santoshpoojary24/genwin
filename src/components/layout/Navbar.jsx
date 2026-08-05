@@ -81,9 +81,6 @@ export default function Navbar() {
               <span className="font-display font-black text-2xl sm:text-3xl tracking-tighter text-black">
                 {settings.storeName || 'जेनwin.'}
               </span>
-              <span className="hidden sm:inline-block px-2 py-0.5 text-[8px] font-mono font-bold tracking-widest uppercase bg-black text-white">
-                STUDIO
-              </span>
             </Link>
           </div>
 

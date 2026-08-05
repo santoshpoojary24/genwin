@@ -177,7 +177,7 @@ export default function AdminDashboard() {
 
   // Settings State
   const [settings, setSettings] = useState({
-    storeName: 'जेनwin. Studio',
+    storeName: 'जेनwin.',
     tagline: 'Oversized Streetwear & Custom DTG Prints',
     supportEmail: 'support@genwin.studio',
     supportPhone: '+91 98765 43210',

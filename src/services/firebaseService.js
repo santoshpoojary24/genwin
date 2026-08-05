@@ -55,7 +55,7 @@ const DEFAULT_EMPLOYEES = [
 ];
 
 const DEFAULT_SETTINGS = {
-  storeName: 'जेनwin. Studio',
+  storeName: 'जेनwin.',
   tagline: 'Oversized Streetwear & Custom DTG Prints',
   supportEmail: 'support@genwin.studio',
   supportPhone: '+91 98765 43210',

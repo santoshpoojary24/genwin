@@ -80,7 +80,7 @@ export default function Login() {
         </div>
 
         <div className="relative z-10 flex items-center justify-between text-[10px] text-zinc-700 uppercase tracking-widest border-t border-zinc-900 pt-4">
-          <span>© {new Date().getFullYear()} GENWIN STUDIO</span>
+          <span>© {new Date().getFullYear()} जेनwin.</span>
           <div className="flex gap-3 text-zinc-500">
             <button onClick={() => setPolicyTab('terms')} className="hover:text-white transition-colors">TERMS</button>
             <span>·</span>
@@ -113,7 +113,7 @@ export default function Login() {
               {isRegister ? 'CREATE ACCOUNT' : 'SIGN IN'}
             </h1>
             <p className="text-[10px] text-zinc-400 uppercase tracking-widest mt-1">
-              {isRegister ? 'Join for exclusive access & order tracking' : 'Welcome back to Genwin Studio'}
+              {isRegister ? 'Join for exclusive access & order tracking' : 'Welcome back to जेनwin.'}
             </p>
           </div>
 
@@ -239,7 +239,7 @@ export default function Login() {
 
         {/* Clean Footer */}
         <div className="text-center text-[10px] text-zinc-400 uppercase tracking-widest border-t border-zinc-100 pt-4 flex flex-col sm:flex-row items-center justify-between gap-2">
-          <span>© {new Date().getFullYear()} GENWIN STUDIO</span>
+          <span>© {new Date().getFullYear()} जेनwin.</span>
           <div className="flex gap-4">
             <button onClick={() => setPolicyTab('terms')} className="hover:text-black transition-colors font-bold">TERMS OF SERVICE</button>
             <button onClick={() => setPolicyTab('privacy')} className="hover:text-black transition-colors font-bold">PRIVACY POLICY</button>
@@ -333,7 +333,7 @@ export default function Login() {
               <div className="space-y-4 text-xs leading-relaxed text-zinc-700 animate-fade-in">
                 <h4 className="font-bold text-black text-sm uppercase">1. TERMS OF USE</h4>
                 <p>
-                  By accessing or purchasing from जेनwin. Studio, you agree to be bound by these Terms of Service. All designs, graphics, and apparel products are protected by Indian trademark and copyright laws.
+                  By accessing or purchasing from जेनwin., you agree to be bound by these Terms of Service. All designs, graphics, and apparel products are protected by Indian trademark and copyright laws.
                 </p>
 
                 <h4 className="font-bold text-black text-sm uppercase">2. DTG PRINT CUSTOMIZATION</h4>

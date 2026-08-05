@@ -34,7 +34,7 @@ export default function Footer() {
     },
     terms: {
       title: 'TERMS OF SERVICE',
-      body: `By placing an order on ${settings.storeName || 'GenWin Studio'}, you agree to our transparent store policies. Custom DTG print graphics are created according to your canvas input. Exchange is available within 7 days of delivery.`
+      body: `By placing an order on ${settings.storeName || 'जेनwin.'}, you agree to our transparent store policies. Custom DTG print graphics are created according to your canvas input. Exchange is available within 7 days of delivery.`
     },
     refund: {
       title: '7-DAY REPLACEMENT & REFUND POLICY',
@@ -179,7 +179,7 @@ export default function Footer() {
       {/* Bottom Bar */}
       <div className="border-t border-zinc-900">
         <div className="max-w-7xl mx-auto px-6 lg:px-12 py-5 flex flex-col sm:flex-row items-center justify-between gap-3 text-[11px] text-zinc-600 uppercase">
-          <p>© {new Date().getFullYear()} {settings.storeName || 'GENWIN STUDIO'}. ALL RIGHTS RESERVED.</p>
+          <p>© {new Date().getFullYear()} {settings.storeName || 'जेनwin.'}. ALL RIGHTS RESERVED.</p>
           <div className="flex items-center gap-5">
             <button onClick={() => handleOpenPolicy('privacy')} className="hover:text-zinc-400 transition-colors">PRIVACY POLICY</button>
             <button onClick={() => handleOpenPolicy('terms')} className="hover:text-zinc-400 transition-colors">TERMS OF SERVICE</button>
