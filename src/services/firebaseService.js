@@ -320,12 +320,12 @@ export const FirebaseService = {
         const remote = snap.docs.map(d => ({ id: d.id, ...d.data() }));
         const map = new Map();
         remote.forEach(c => {
-          const key = c.id || c.slug;
-          if (key) map.set(key, c);
+          const key = c.slug || c.id;
+          if (key) map.set(key.toLowerCase(), c);
         });
         local.forEach(c => {
-          const key = c.id || c.slug;
-          if (key && !map.has(key)) map.set(key, c);
+          const key = c.slug || c.id;
+          if (key) map.set(key.toLowerCase(), c);
         });
         const merged = Array.from(map.values()).map(c => ({
           ...c,

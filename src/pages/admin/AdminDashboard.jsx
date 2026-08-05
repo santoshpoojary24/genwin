@@ -2450,7 +2450,17 @@ export default function AdminDashboard() {
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
-                <label className="block text-[10px] text-zinc-400 uppercase mb-1">CATEGORY</label>
+                <div className="flex items-center justify-between mb-1">
+                  <label className="block text-[10px] text-zinc-400 uppercase font-bold">CATEGORY</label>
+                  <button
+                    type="button"
+                    onClick={() => setIsCustomCategoryInput(!isCustomCategoryInput)}
+                    className="text-[9px] text-amber-400 hover:underline uppercase font-bold flex items-center gap-1"
+                  >
+                    {isCustomCategoryInput ? "← SELECT FROM LIST" : "+ TYPE CUSTOM CATEGORY"}
+                  </button>
+                </div>
+
                 {!isCustomCategoryInput ? (
                   <select
                     value={editingProduct.category}
@@ -2462,18 +2472,36 @@ export default function AdminDashboard() {
                         setEditingProduct({ ...editingProduct, category: e.target.value });
                       }
                     }}
-                    className="w-full bg-zinc-950 border border-zinc-800 p-3 text-white text-xs font-mono uppercase cursor-pointer"
+                    className="w-full bg-zinc-950 border border-zinc-800 p-3 text-white text-xs font-mono uppercase cursor-pointer focus:border-white"
                   >
                     {(() => {
                       const optionMap = new Map();
-                      // 1. All dynamic categories created in Admin Categories tab
+
+                      // 1. Direct synchronous localStorage read (instant local categories)
+                      try {
+                        const raw = localStorage.getItem('genwin_categories');
+                        if (raw) {
+                          const parsed = JSON.parse(raw);
+                          if (Array.isArray(parsed)) {
+                            parsed.forEach(c => {
+                              const slug = c.slug || c.name?.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+                              if (slug) {
+                                optionMap.set(slug.toLowerCase(), { slug: slug.toLowerCase(), name: c.name || slug });
+                              }
+                            });
+                          }
+                        }
+                      } catch (_) {}
+
+                      // 2. React state categories
                       (categories || []).forEach(cat => {
                         const slug = cat.slug || cat.name?.toLowerCase().replace(/[^a-z0-9]+/g, '-');
                         if (slug) {
                           optionMap.set(slug.toLowerCase(), { slug: slug.toLowerCase(), name: cat.name || slug });
                         }
                       });
-                      // 2. All unique categories assigned to any existing products
+
+                      // 3. Products assigned categories
                       (products || []).forEach(p => {
                         if (p.category) {
                           const slug = p.category.toLowerCase().replace(/[^a-z0-9]+/g, '-');
@@ -2482,19 +2510,22 @@ export default function AdminDashboard() {
                           }
                         }
                       });
-                      // 3. Fallback defaults if not present
+
+                      // 4. Default categories
                       ['t-shirts', 'hoodies', 'jackets', 'accessories'].forEach(slug => {
                         if (!optionMap.has(slug)) {
                           optionMap.set(slug, { slug, name: slug });
                         }
                       });
-                      // 4. Current product category if custom
+
+                      // 5. Current product category if custom
                       if (editingProduct?.category) {
                         const slug = editingProduct.category.toLowerCase().replace(/[^a-z0-9]+/g, '-');
                         if (!optionMap.has(slug)) {
                           optionMap.set(slug, { slug, name: editingProduct.category });
                         }
                       }
+
                       return [
                         ...Array.from(optionMap.values()).map(cat => (
                           <option key={cat.slug} value={cat.slug}>
@@ -2502,7 +2533,7 @@ export default function AdminDashboard() {
                           </option>
                         )),
                         <option key="__ADD_NEW__" value="__ADD_NEW__">
-                          + ADD NEW CATEGORY...
+                          + TYPE NEW CUSTOM CATEGORY...
                         </option>
                       ];
                     })()}
@@ -2511,7 +2542,7 @@ export default function AdminDashboard() {
                   <div className="flex items-center gap-2">
                     <input
                       type="text"
-                      placeholder="ENTER NEW CATEGORY NAME..."
+                      placeholder="TYPE CATEGORY NAME (e.g. THRIFT)..."
                       value={customCategoryName}
                       onChange={e => {
                         const val = e.target.value;
@@ -2519,7 +2550,7 @@ export default function AdminDashboard() {
                         const slug = val.toLowerCase().replace(/[^a-z0-9]+/g, '-');
                         setEditingProduct({ ...editingProduct, category: slug });
                       }}
-                      className="w-full bg-zinc-950 border border-zinc-700 p-2.5 text-white text-xs font-mono uppercase focus:border-white"
+                      className="w-full bg-zinc-950 border border-amber-500 p-2.5 text-white text-xs font-mono uppercase focus:outline-none"
                       autoFocus
                     />
                     <button
