@@ -190,6 +190,7 @@ export default function AdminDashboard() {
 
   // Filters
   const [searchTerm, setSearchTerm] = useState('');
+  const [catalogCategoryFilter, setCatalogCategoryFilter] = useState('all');
   const [categorySearch, setCategorySearch] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('all');
   const [couponSearch, setCouponSearch] = useState('');
@@ -529,9 +530,17 @@ export default function AdminDashboard() {
     { id: 'settings',   label: 'SETTINGS',   icon: Settings,        count: null },
   ];
 
-  const filteredProducts = products.filter(
-    p => !searchTerm || p.name.toLowerCase().includes(searchTerm.toLowerCase()) || p.category.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const getCatLabel = (catSlug) => {
+    if (!catSlug) return 'UNASSIGNED';
+    const found = categories.find(c => c.slug === catSlug || c.id === catSlug || c.name?.toLowerCase() === catSlug?.toLowerCase());
+    return found ? found.name : catSlug;
+  };
+
+  const filteredProducts = products.filter(p => {
+    const matchesSearch = !searchTerm || p.name.toLowerCase().includes(searchTerm.toLowerCase()) || (p.category && p.category.toLowerCase().includes(searchTerm.toLowerCase()));
+    const matchesCat = catalogCategoryFilter === 'all' || p.category === catalogCategoryFilter || p.category?.toLowerCase() === catalogCategoryFilter?.toLowerCase();
+    return matchesSearch && matchesCat;
+  });
 
   return (
     <div className="min-h-screen bg-zinc-950 text-zinc-100 flex flex-col lg:flex-row font-mono">
@@ -851,6 +860,19 @@ export default function AdminDashboard() {
                     />
                   </div>
 
+                  <select
+                    value={catalogCategoryFilter}
+                    onChange={e => setCatalogCategoryFilter(e.target.value)}
+                    className="w-full sm:w-auto bg-zinc-900 border border-zinc-800 text-xs py-2 px-3 uppercase text-zinc-300 focus:outline-none focus:border-zinc-500 font-mono"
+                  >
+                    <option value="all">ALL CATEGORIES</option>
+                    {categories.map(c => (
+                      <option key={c.id || c.slug} value={c.slug}>
+                        {c.name.toUpperCase()}
+                      </option>
+                    ))}
+                  </select>
+
                   <button
                     onClick={() => setEditingProduct({ name: '', category: 't-shirts', basePrice: 999, discountPrice: 799, stockQty: 25, isCustomizable: true, images: ['https://images.unsplash.com/photo-1576566588028-4147f3842f27?w=600&q=80'], description: 'Heavyweight 240 GSM combed cotton tee.', sizes: ['S','M','L','XL','XXL'], colors: [{ name: 'Black', hex: '#000000' }] })}
                     className="w-full sm:w-auto px-4 py-2 bg-white text-black font-extrabold text-xs uppercase tracking-widest flex items-center justify-center gap-2 hover:bg-zinc-200 transition-colors"
@@ -894,7 +916,7 @@ export default function AdminDashboard() {
                       {/* Info & Details */}
                       <div className="p-3 space-y-2 flex-1 flex flex-col justify-between">
                         <div>
-                          <span className="text-[8px] sm:text-[9px] text-zinc-500 font-bold uppercase block">{p.category}</span>
+                          <span className="text-[8px] sm:text-[9px] text-zinc-500 font-bold uppercase block">{getCatLabel(p.category)}</span>
                           <strong className="text-xs sm:text-sm text-white uppercase font-black tracking-tight line-clamp-1 block mt-0.5">{p.name}</strong>
                         </div>
 
@@ -953,7 +975,7 @@ export default function AdminDashboard() {
                               </div>
                             </div>
                           </td>
-                          <td className="p-4 uppercase text-zinc-300">{p.category}</td>
+                          <td className="p-4 uppercase text-zinc-300">{getCatLabel(p.category)}</td>
                           <td className="p-4">
                             <span className="font-bold text-white">₹{p.discountPrice || p.basePrice}</span>
                             {p.discountPrice && <span className="text-[10px] text-zinc-500 line-through ml-1.5">₹{p.basePrice}</span>}
