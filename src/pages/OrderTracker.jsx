@@ -114,27 +114,7 @@ export default function OrderTracker() {
         <div className="absolute inset-0 opacity-[0.05] pointer-events-none"
           style={{ backgroundImage:'radial-gradient(circle,#fff 1px,transparent 1px)', backgroundSize:'24px 24px' }} />
 
-        {/* Live Satellite Ping Badge */}
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-zinc-800 pb-5 relative z-10">
-          <div className="flex items-center gap-3">
-            <span className="relative flex h-3 w-3">
-              <span className={`animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 ${isCancelled ? 'bg-red-400' : 'bg-emerald-400'}`} />
-              <span className={`relative inline-flex rounded-full h-3 w-3 ${isCancelled ? 'bg-red-500' : 'bg-emerald-500'}`} />
-            </span>
-            <span className={`text-[10px] font-bold uppercase tracking-widest flex items-center gap-1.5 ${isCancelled ? 'text-red-400' : 'text-emerald-400'}`}>
-              <Radio className="w-3.5 h-3.5" /> {isCancelled ? 'ORDER CANCELLED' : isReturnFlow ? 'RETURN / EXCHANGE IN PROGRESS' : 'LIVE SATELLITE RADAR CONNECTED'}
-            </span>
-          </div>
-
-          <div className="flex items-center gap-3">
-            <button
-              onClick={handlePrintInvoice}
-              className="flex items-center gap-1.5 px-3 py-1.5 bg-zinc-900 border border-zinc-800 hover:border-zinc-600 text-zinc-300 text-[10px] font-bold uppercase transition-colors"
-            >
-              <Printer className="w-3.5 h-3.5" /> PRINT INVOICE
-            </button>
-          </div>
-        </div>
+        {/* Live Satellite Ping Badge Removed */}
 
         {/* Main Order Metadata */}
         <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6 relative z-10">
