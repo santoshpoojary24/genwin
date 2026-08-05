@@ -46,9 +46,11 @@ html {
 
 html, body {
   min-height: 100%;
+  overscroll-behavior-y: none; /* Prevents rubber-banding exposing the wrong background */
 }
 body {
-  background: var(--white);
+  /* Set to black so if any bottom overscroll occurs, it matches the black footer instead of a white flash */
+  background: var(--black);
   color: var(--black);
   font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
   line-height: 1.6;

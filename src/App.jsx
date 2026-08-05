@@ -133,7 +133,7 @@ export default function App() {
               <Route
                 path="*"
                 element={
-                  <div className="min-h-[100dvh] w-full relative overflow-x-hidden flex flex-col bg-white text-zinc-900">
+                  <div className="min-h-screen min-h-[100dvh] w-full relative overflow-x-hidden flex flex-col bg-white text-zinc-900">
                     <Navbar />
                     <CartDrawer />
                     <main className="flex-1">
