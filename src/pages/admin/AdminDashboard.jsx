@@ -169,6 +169,8 @@ export default function AdminDashboard() {
 
   // Modals state
   const [editingProduct, setEditingProduct] = useState(null);
+  const [newColorName, setNewColorName] = useState('');
+  const [newColorHex, setNewColorHex] = useState('#000000');
   const [editingCategory, setEditingCategory] = useState(null);
   const [editingCoupon, setEditingCoupon] = useState(null);
   const [editingAd, setEditingAd] = useState(null);
@@ -2422,26 +2424,119 @@ export default function AdminDashboard() {
               </div>
             </div>
 
-            {/* File Upload Picker for Product Image */}
-            <FileUploadPicker
-              label="PRODUCT MAIN IMAGE / GRAPHIC FILE (JPG, PNG, WEBP, PDF)"
-              value={editingProduct.images?.[0] || ''}
-              onChange={val => setEditingProduct({ ...editingProduct, images: [val] })}
-            />
+            <div className="space-y-4 pt-4 border-t border-zinc-800">
+              <h4 className="font-bold text-[10px] text-zinc-500 uppercase tracking-widest">PRODUCT IMAGES (GALLERY)</h4>
+              
+              {/* Display existing images */}
+              <div className="flex flex-wrap gap-3">
+                {editingProduct.images?.map((img, idx) => (
+                  <div key={idx} className="relative group w-20 h-24 bg-zinc-900 border border-zinc-700 shrink-0">
+                    <img src={img} alt="" className="w-full h-full object-cover" />
+                    <button 
+                      type="button"
+                      onClick={() => {
+                        const newImages = [...editingProduct.images];
+                        newImages.splice(idx, 1);
+                        setEditingProduct({ ...editingProduct, images: newImages });
+                      }}
+                      className="absolute -top-2 -right-2 bg-red-500 text-white p-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity shadow-lg hover:bg-red-600"
+                    >
+                      <X className="w-3 h-3" />
+                    </button>
+                  </div>
+                ))}
+              </div>
 
-            <div className="flex items-center gap-2 pt-2">
+              {/* Append new image */}
+              <FileUploadPicker
+                label="UPLOAD NEW IMAGE TO GALLERY (JPG, PNG, WEBP)"
+                value=""
+                onChange={val => {
+                  if (val) {
+                    const newImages = [...(editingProduct.images || []), val];
+                    setEditingProduct({ ...editingProduct, images: newImages });
+                  }
+                }}
+              />
+            </div>
+
+            <div className="space-y-4 pt-4 border-t border-zinc-800">
+              <h4 className="font-bold text-[10px] text-zinc-500 uppercase tracking-widest">PRODUCT COLORS</h4>
+              
+              {/* Display existing colors */}
+              <div className="flex flex-wrap gap-3">
+                {editingProduct.colors?.map((c, idx) => (
+                  <div key={idx} className="flex items-center gap-2 bg-zinc-900 border border-zinc-700 px-3 py-1.5 pr-1 text-xs">
+                    <span className="w-4 h-4 rounded-full border border-zinc-500" style={{ backgroundColor: c.hex }} />
+                    <span className="text-white font-bold">{c.name}</span>
+                    <button 
+                      type="button"
+                      onClick={() => {
+                        const newColors = [...editingProduct.colors];
+                        newColors.splice(idx, 1);
+                        setEditingProduct({ ...editingProduct, colors: newColors });
+                      }}
+                      className="text-zinc-500 hover:text-red-400 p-1 transition-colors"
+                    >
+                      <X className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+
+              {/* Add new color inline form */}
+              <div className="flex items-end gap-3 bg-zinc-950 p-3 border border-zinc-800">
+                <div className="flex-1">
+                  <label className="block text-[9px] text-zinc-500 uppercase mb-1 font-bold">Color Name (e.g. Crimson)</label>
+                  <input
+                    type="text"
+                    value={newColorName}
+                    onChange={e => setNewColorName(e.target.value)}
+                    className="w-full bg-zinc-900 border border-zinc-700 p-2 text-white text-xs focus:border-zinc-500 focus:outline-none"
+                    placeholder="Red"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[9px] text-zinc-500 uppercase mb-1 font-bold">Hex</label>
+                  <div className="flex items-center gap-2 bg-zinc-900 border border-zinc-700 p-1 h-8">
+                    <input
+                      type="color"
+                      value={newColorHex}
+                      onChange={e => setNewColorHex(e.target.value)}
+                      className="w-6 h-6 border-0 bg-transparent cursor-pointer p-0"
+                    />
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (newColorName && newColorHex) {
+                      const newColors = [...(editingProduct.colors || []), { name: newColorName, hex: newColorHex }];
+                      setEditingProduct({ ...editingProduct, colors: newColors });
+                      setNewColorName('');
+                      setNewColorHex('#000000');
+                    }
+                  }}
+                  className="bg-white hover:bg-zinc-200 text-black px-4 h-8 text-[10px] font-extrabold uppercase transition-colors"
+                >
+                  ADD
+                </button>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2 pt-4 border-t border-zinc-800">
               <input
                 type="checkbox"
                 id="isCust"
                 checked={editingProduct.isCustomizable}
                 onChange={e => setEditingProduct({ ...editingProduct, isCustomizable: e.target.checked })}
-                className="accent-white w-4 h-4 shrink-0"
+                className="accent-white w-4 h-4 shrink-0 cursor-pointer"
               />
-              <label htmlFor="isCust" className="text-white uppercase font-bold text-xs">ALLOW GRAPHIC CUSTOMIZATION</label>
+              <label htmlFor="isCust" className="text-white uppercase font-bold text-xs cursor-pointer">ALLOW GRAPHIC CUSTOMIZATION IN DTG STUDIO</label>
             </div>
 
-            <button type="submit" className="w-full py-3 bg-white text-black font-extrabold text-xs uppercase tracking-widest hover:bg-zinc-200 mt-4">
-              SAVE PRODUCT
+            <button type="submit" className="w-full py-4 bg-emerald-500 text-white font-extrabold text-sm uppercase tracking-widest hover:bg-emerald-600 transition-colors mt-6 flex items-center justify-center gap-2 shadow-lg">
+              <Check className="w-4 h-4" /> SAVE PRODUCT
             </button>
           </form>
         </div>
