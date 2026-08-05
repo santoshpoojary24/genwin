@@ -78,16 +78,17 @@ export default function Account() {
 
   // Compute Customer Loyalty Stats (ONLY count delivered orders after 7-day refund window ends)
   const SEVEN_DAYS_MS = 7 * 24 * 60 * 60 * 1000;
+  const ONE_YEAR_MS = 365 * 24 * 60 * 60 * 1000;
   const eligibleDeliveredOrders = userOrders.filter(o => {
     if (o.status !== 'delivered') return false;
     const orderTime = new Date(o.createdAt || o.date || Date.now()).getTime();
-    return (Date.now() - orderTime) >= SEVEN_DAYS_MS;
+    return (Date.now() - orderTime) >= SEVEN_DAYS_MS && (Date.now() - orderTime) <= ONE_YEAR_MS;
   });
 
-  const totalLifetimeSpend = eligibleDeliveredOrders.reduce((sum, o) => sum + (o.total || 0), 0);
-  const vipTier = totalLifetimeSpend >= 4000 ? 'VIP MEMBER' : 'CLUB MEMBER';
+  const annualSpend = eligibleDeliveredOrders.reduce((sum, o) => sum + (o.total || 0), 0);
+  const vipTier = annualSpend >= 4000 ? 'VIP MEMBER' : 'CLUB MEMBER';
   const nextTierTarget = 4000;
-  const tierProgressPercent = Math.min(100, Math.round((totalLifetimeSpend / nextTierTarget) * 100));
+  const tierProgressPercent = Math.min(100, Math.round((annualSpend / nextTierTarget) * 100));
 
   // Find active in-transit order
   const activeShipment = userOrders.find(o => ['placed', 'confirmed', 'packed', 'shipped', 'out_for_delivery'].includes(o.status));
@@ -229,8 +230,8 @@ export default function Account() {
           <div className="space-y-4">
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs border-t border-zinc-900 pt-6">
               <div className="bg-zinc-950/80 border border-zinc-800 p-4 space-y-1">
-                <span className="text-[9px] text-zinc-500 font-bold uppercase tracking-widest">LIFETIME SPEND</span>
-                <p className="font-display font-black text-xl text-emerald-400">₹{totalLifetimeSpend.toLocaleString('en-IN')}</p>
+                <span className="text-[9px] text-zinc-500 font-bold uppercase tracking-widest">ANNUAL SPEND</span>
+                <p className="font-display font-black text-xl text-emerald-400">₹{annualSpend.toLocaleString('en-IN')}</p>
               </div>
               <div className="bg-zinc-950/80 border border-zinc-800 p-4 space-y-1">
                 <span className="text-[9px] text-zinc-500 font-bold uppercase tracking-widest">TOTAL ORDERS</span>
@@ -249,19 +250,19 @@ export default function Account() {
             {/* VIP Tier Progress Bar */}
             <div className="bg-zinc-950/90 border border-zinc-800 p-4 space-y-2">
               <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center text-[10px] font-bold uppercase gap-2">
-                <span className={`${totalLifetimeSpend >= nextTierTarget ? 'text-amber-400' : 'text-zinc-400'} flex items-center gap-1.5`}>
-                  <Crown className={`w-3.5 h-3.5 ${totalLifetimeSpend >= nextTierTarget ? 'text-amber-400' : 'text-zinc-500'}`} /> 
-                  {totalLifetimeSpend >= nextTierTarget ? 'VIP MEMBER UNLOCKED' : 'VIP MEMBER PROGRESS'} ({tierProgressPercent}%)
+                <span className={`${annualSpend >= nextTierTarget ? 'text-amber-400' : 'text-zinc-400'} flex items-center gap-1.5`}>
+                  <Crown className={`w-3.5 h-3.5 ${annualSpend >= nextTierTarget ? 'text-amber-400' : 'text-zinc-500'}`} /> 
+                  {annualSpend >= nextTierTarget ? 'VIP MEMBER UNLOCKED' : 'VIP MEMBER PROGRESS'} ({tierProgressPercent}%)
                 </span>
-                <span className={totalLifetimeSpend >= nextTierTarget ? 'text-amber-400' : 'text-emerald-400'}>
-                  {totalLifetimeSpend >= nextTierTarget 
-                    ? '★ LIFETIME VIP BENEFITS ACTIVE ★' 
-                    : `SPEND ₹${(nextTierTarget - totalLifetimeSpend).toLocaleString('en-IN')} MORE FOR VIP MEMBER STATUS`}
+                <span className={annualSpend >= nextTierTarget ? 'text-amber-400' : 'text-emerald-400'}>
+                  {annualSpend >= nextTierTarget 
+                    ? '★ 1-YEAR VIP BENEFITS ACTIVE ★' 
+                    : `SPEND ₹${(nextTierTarget - annualSpend).toLocaleString('en-IN')} MORE FOR VIP MEMBER STATUS`}
                 </span>
               </div>
               <div className="w-full bg-zinc-900 h-2 border border-zinc-800">
                 <div
-                  className="bg-gradient-to-r from-amber-500 via-emerald-400 to-white h-full transition-all duration-700"
+                  className={`h-full transition-all duration-1000 ${annualSpend >= nextTierTarget ? 'bg-amber-400 shadow-[0_0_10px_rgba(251,191,36,0.4)]' : 'bg-emerald-500'}`}
                   style={{ width: `${tierProgressPercent}%` }}
                 />
               </div>
