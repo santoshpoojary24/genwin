@@ -128,6 +128,11 @@ export default function App() {
                 }
               />
 
+              {/* Standalone DTG Print Studio Customizer */}
+              <Route path="/customize/:productId" element={<Customizer />} />
+              <Route path="/customize"           element={<Customizer />} />
+              <Route path="/customizer"          element={<Customizer />} />
+
               {/* Storefront routes (with storefront Navbar and Footer) */}
               <Route
                 path="*"
@@ -141,9 +146,6 @@ export default function App() {
                         <Route path="/shop"                    element={<Shop />} />
                         <Route path="/product/:slug"           element={<ProductDetail />} />
                         <Route path="/wishlist"                element={<Wishlist />} />
-                        <Route path="/customize/:productId"    element={<Customizer />} />
-                        <Route path="/customize"              element={<Customizer />} />
-                        <Route path="/customizer"              element={<Customizer />} />
                         <Route path="/checkout"                element={<Checkout />} />
                         <Route path="/order-success/:orderId"  element={<OrderTracker />} />
                         <Route
