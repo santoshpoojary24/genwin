@@ -274,7 +274,12 @@ export default function ProductDetail() {
                     return (
                       <button
                         key={i}
-                        onClick={() => setSelectedColor(c)}
+                        onClick={() => {
+                          setSelectedColor(c);
+                          if (product.images && product.images[i]) {
+                            setSelectedImage(product.images[i]);
+                          }
+                        }}
                         className={`px-3 py-2 text-xs font-bold uppercase border transition-all flex items-center gap-2 ${
                           (selectedColor?.name === name || selectedColor === name) ? 'bg-black text-white border-black' : 'bg-white text-black border-zinc-200 hover:border-black'
                         }`}
