@@ -94,9 +94,9 @@ function syncCloudDatabases(collectionName, itemId, data, isDelete = false) {
   try {
     // 1. Firestore Cloud DB
     if (isDelete) {
-      deleteDoc(doc(db, collectionName, itemId)).catch(() => {});
+      deleteDoc(doc(db, collectionName, itemId)).catch((err) => console.error(`Firebase deleteDoc error on ${collectionName}:`, err));
     } else {
-      setDoc(doc(db, collectionName, itemId), data, { merge: true }).catch(() => {});
+      setDoc(doc(db, collectionName, itemId), data, { merge: true }).catch((err) => console.error(`Firebase setDoc error on ${collectionName}:`, err));
     }
 
     // 2. Realtime Database (rtdb)
@@ -131,7 +131,9 @@ export const FirebaseService = {
         ls.set(KEYS.products, remote);
         return remote;
       }
-    } catch (_) {}
+    } catch (err) {
+      console.error("Firebase getProducts error:", err);
+    }
 
     return ls.get(KEYS.products, INITIAL_PRODUCTS);
   },
@@ -193,7 +195,9 @@ export const FirebaseService = {
         ls.set(KEYS.orders, remote);
         return remote;
       }
-    } catch (_) {}
+    } catch (err) {
+      console.error("Firebase getAllOrders error:", err);
+    }
 
     return ls.get(KEYS.orders, []);
   },
