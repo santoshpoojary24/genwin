@@ -23,7 +23,7 @@ export default function ProductCard({ product, onQuickView }) {
     ? Math.round(((product.basePrice - product.discountPrice) / product.basePrice) * 100)
     : 0;
 
-  const mainImg  = thumbUrl(product.images[0]);
+  const mainImg  = thumbUrl(product.images?.[0] || product.image || 'https://images.unsplash.com/photo-1576566588028-4147f3842f27?w=400&q=80');
   const displayImg = mainImg;
 
   const handleQuickAdd = (e) => {

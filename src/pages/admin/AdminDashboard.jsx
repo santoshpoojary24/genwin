@@ -17,9 +17,43 @@ function FileUploadPicker({ value, onChange, label = "UPLOAD IMAGE / FILE (JPG, 
   const handleFileChange = (e) => {
     const file = e.target.files[0];
     if (!file) return;
+
+    if (file.type === 'application/pdf') {
+      const reader = new FileReader();
+      reader.onload = (event) => onChange(event.target.result);
+      reader.readAsDataURL(file);
+      return;
+    }
+
     const reader = new FileReader();
     reader.onload = (event) => {
-      onChange(event.target.result);
+      const img = new window.Image();
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        const MAX_WIDTH = 800;
+        const MAX_HEIGHT = 800;
+        let width = img.width;
+        let height = img.height;
+        
+        if (width > height) {
+          if (width > MAX_WIDTH) {
+            height *= MAX_WIDTH / width;
+            width = MAX_WIDTH;
+          }
+        } else {
+          if (height > MAX_HEIGHT) {
+            width *= MAX_HEIGHT / height;
+            height = MAX_HEIGHT;
+          }
+        }
+        
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, width, height);
+        onChange(canvas.toDataURL('image/jpeg', 0.7));
+      };
+      img.src = event.target.result;
     };
     reader.readAsDataURL(file);
   };
@@ -1862,7 +1896,7 @@ export default function AdminDashboard() {
                             <td className="p-3 font-bold text-zinc-500">#0{i+1}</td>
                             <td className="p-3">
                               <div className="flex items-center gap-3">
-                                <img src={p.image} alt="" className="w-8 h-10 object-cover border border-zinc-700 bg-zinc-800 shrink-0" />
+                                <img src={p.images?.[0] || p.image || 'https://images.unsplash.com/photo-1576566588028-4147f3842f27?w=400&q=80'} alt="" className="w-8 h-10 object-cover border border-zinc-700 bg-zinc-800 shrink-0" />
                                 <div>
                                   <strong className="text-white block uppercase">{p.name}</strong>
                                   <span className="text-[9px] text-zinc-500 uppercase">SKU: {p.id}</span>

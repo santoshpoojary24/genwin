@@ -276,8 +276,10 @@ export default function ProductDetail() {
                         key={i}
                         onClick={() => {
                           setSelectedColor(c);
-                          if (product.images && product.images[i]) {
-                            setSelectedImage(product.images[i]);
+                          if (product.images?.length > 0) {
+                            setSelectedImage(product.images[i] || product.images[0]);
+                          } else if (product.image) {
+                            setSelectedImage(product.image);
                           }
                         }}
                         className={`px-3 py-2 text-xs font-bold uppercase border transition-all flex items-center gap-2 ${
