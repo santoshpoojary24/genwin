@@ -105,7 +105,7 @@ export default function Login() {
 
           {/* Logo (mobile only) */}
           <div className="lg:hidden">
-            <p className="font-display font-black text-black text-2xl uppercase tracking-tighter">जेनwin.</p>
+            <p className="font-display font-black text-black text-2xl tracking-tighter">जेनwin.</p>
           </div>
 
           <div>

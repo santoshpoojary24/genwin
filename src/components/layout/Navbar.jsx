@@ -195,7 +195,7 @@ export default function Navbar() {
         {/* Drawer Header */}
         <div className="flex items-center justify-between px-5 py-5 bg-black text-white border-b border-zinc-800">
           <div className="flex items-center gap-2">
-            <span className="font-display font-black text-2xl tracking-tighter uppercase">
+            <span className="font-display font-black text-2xl tracking-tighter">
               {settings.storeName || 'जेनwin.'}
             </span>
           </div>
