@@ -35,7 +35,6 @@ export const AuthProvider = ({ children }) => {
       if (!email || !password) throw new Error('EMAIL AND PASSWORD ARE REQUIRED.');
       if (password.length < 4)  throw new Error('PASSWORD TOO SHORT.');
 
-      try {
         const userCredential = await signInWithEmailAndPassword(auth, email, password);
         const firebaseUser = userCredential.user;
         const loggedUser = {
@@ -48,19 +47,6 @@ export const AuthProvider = ({ children }) => {
         };
         setUser(loggedUser);
         return { success: true, user: loggedUser };
-      } catch (fbErr) {
-        // Fallback to seamless session creation
-        const mockUser = {
-          uid: 'usr_' + Math.random().toString(36).substr(2, 9),
-          name: email.split('@')[0].replace(/[^a-zA-Z]/g, ' ').toUpperCase().trim() || 'USER',
-          email,
-          phone: '+91 9876543210',
-          role: 'customer',
-          addresses: [],
-        };
-        setUser(mockUser);
-        return { success: true, user: mockUser };
-      }
     } catch (err) {
       return { success: false, error: err.message };
     } finally {
@@ -86,16 +72,8 @@ export const AuthProvider = ({ children }) => {
       setUser(googleUser);
       return { success: true, user: googleUser };
     } catch (err) {
-      // If popup fails or is blocked, fallback to seamless Google login
-      const fallbackGoogleUser = {
-        uid: 'usr_google_' + Date.now(),
-        name: 'GOOGLE USER',
-        email: 'user.google@genwin.studio',
-        role: 'customer',
-        addresses: [],
-      };
-      setUser(fallbackGoogleUser);
-      return { success: true, user: fallbackGoogleUser };
+      console.error('Google sign-in error:', err);
+      return { success: false, error: 'GOOGLE LOGIN FAILED: ' + err.message };
     } finally {
       setLoading(false);
     }
@@ -108,7 +86,6 @@ export const AuthProvider = ({ children }) => {
       if (!email || !password || !name) throw new Error('NAME, EMAIL & PASSWORD ARE REQUIRED.');
       if (password.length < 6) throw new Error('PASSWORD MUST BE AT LEAST 6 CHARACTERS.');
 
-      try {
         const userCredential = await createUserWithEmailAndPassword(auth, email, password);
         const fbUser = userCredential.user;
         const newUser = {
@@ -121,18 +98,6 @@ export const AuthProvider = ({ children }) => {
         };
         setUser(newUser);
         return { success: true, user: newUser };
-      } catch (fbErr) {
-        const newUser = {
-          uid: 'usr_' + Math.random().toString(36).substr(2, 9),
-          name: name.trim().toUpperCase(),
-          email,
-          phone: phone || '',
-          role: 'customer',
-          addresses: [],
-        };
-        setUser(newUser);
-        return { success: true, user: newUser };
-      }
     } catch (err) {
       return { success: false, error: err.message };
     } finally {
