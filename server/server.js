@@ -386,7 +386,7 @@ if (!process.env.VERCEL) {
   app.listen(PORT, () => {
     console.log(`
 ┌─────────────────────────────────────────────────────────────┐
-│  जेनwin. STUDIO EXPRESS BACKEND & FIREBASE SERVER RUNNING    │
+│  जेनwin. EXPRESS BACKEND & FIREBASE SERVER RUNNING    │
 │  ➜ FIREBASE PROJECT: genwin-store-app                       │
 │  ➜ PORT: http://localhost:${PORT}                           │
 │  ➜ HEALTH: http://localhost:${PORT}/api/health               │

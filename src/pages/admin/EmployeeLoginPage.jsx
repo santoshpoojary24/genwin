@@ -215,7 +215,7 @@ export default function EmployeeLoginPage() {
 
       {/* Footer */}
       <footer className="p-4 text-center text-[10px] text-zinc-600 border-t border-zinc-800/80">
-        © 2026 जेनwin. STUDIO · ALL RIGHTS RESERVED
+        © 2026 जेनwin. · ALL RIGHTS RESERVED
       </footer>
 
     </div>

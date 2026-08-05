@@ -201,7 +201,7 @@ export default function AdminLoginPage() {
 
       {/* Footer */}
       <footer className="p-4 text-center text-[10px] text-zinc-600 border-t border-zinc-800/80">
-        © {new Date().getFullYear()} जेनwin. STUDIO · ALL RIGHTS RESERVED
+        © {new Date().getFullYear()} जेनwin. · ALL RIGHTS RESERVED
       </footer>
 
     </div>
