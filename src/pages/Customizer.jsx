@@ -20,7 +20,14 @@ export default function Customizer() {
   useEffect(() => {
     async function loadProduct() {
       setLoading(true);
-      const prod = await FirebaseService.getProductBySlug(productId);
+      const allProds = await FirebaseService.getProducts();
+      let prod = null;
+      if (productId) {
+        prod = allProds.find(p => p.slug === productId || p.id === productId);
+      }
+      if (!prod) {
+        prod = allProds.find(p => p.isCustomizable) || allProds[0];
+      }
       setProduct(prod);
       if (prod) {
         setSelectedSize(prod.sizes?.[0] || 'M');

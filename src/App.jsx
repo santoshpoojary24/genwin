@@ -143,7 +143,8 @@ export default function App() {
                         <Route path="/product/:slug"           element={<ProductDetail />} />
                         <Route path="/wishlist"                element={<Wishlist />} />
                         <Route path="/customize/:productId"    element={<Customizer />} />
-                        <Route path="/customizer"              element={<Navigate to="/customize/heavyweight-canvas-tee" replace />} />
+                        <Route path="/customize"              element={<Customizer />} />
+                        <Route path="/customizer"              element={<Customizer />} />
                         <Route path="/checkout"                element={<Checkout />} />
                         <Route path="/order-success/:orderId"  element={<OrderTracker />} />
                         <Route
