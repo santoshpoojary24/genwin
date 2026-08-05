@@ -198,9 +198,6 @@ export default function Navbar() {
             <span className="font-display font-black text-2xl tracking-tighter uppercase">
               {settings.storeName || 'जेनwin.'}
             </span>
-            <span className="text-[8px] font-mono font-bold tracking-widest uppercase bg-zinc-800 text-zinc-300 px-1.5 py-0.5">
-              STUDIO
-            </span>
           </div>
           <button
             onClick={() => setMobileMenuOpen(false)}
