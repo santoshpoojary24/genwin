@@ -204,6 +204,8 @@ export default function AdminDashboard() {
 
   // Modals state
   const [editingProduct, setEditingProduct] = useState(null);
+  const [isCustomCategoryInput, setIsCustomCategoryInput] = useState(false);
+  const [customCategoryName, setCustomCategoryName] = useState('');
   const [newColorName, setNewColorName] = useState('');
   const [newColorHex, setNewColorHex] = useState('#000000');
   const [editingCategory, setEditingCategory] = useState(null);
@@ -392,8 +394,20 @@ export default function AdminDashboard() {
   // Product Handlers
   const handleSaveProduct = async (e) => {
     e.preventDefault();
+    if (isCustomCategoryInput && customCategoryName.trim()) {
+      const catSlug = customCategoryName.trim().toLowerCase().replace(/[^a-z0-9]+/g, '-');
+      await FirebaseService.saveCategory({
+        name: customCategoryName.trim(),
+        slug: catSlug,
+        description: 'Custom added category',
+        isFeatured: true
+      });
+      editingProduct.category = catSlug;
+    }
     await FirebaseService.saveProduct(editingProduct);
     setEditingProduct(null);
+    setIsCustomCategoryInput(false);
+    setCustomCategoryName('');
     refreshData();
   };
 
@@ -407,7 +421,11 @@ export default function AdminDashboard() {
   // Category Handlers
   const handleSaveCategory = async (e) => {
     e.preventDefault();
-    await FirebaseService.saveCategory(editingCategory);
+    const saved = await FirebaseService.saveCategory(editingCategory);
+    setCategories(prev => {
+      const exists = prev.some(c => c.id === saved.id || c.slug === saved.slug);
+      return exists ? prev.map(c => (c.id === saved.id || c.slug === saved.slug) ? saved : c) : [...prev, saved];
+    });
     setEditingCategory(null);
     refreshData();
   };
@@ -2433,32 +2451,69 @@ export default function AdminDashboard() {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
                 <label className="block text-[10px] text-zinc-400 uppercase mb-1">CATEGORY</label>
-                <select
-                  value={editingProduct.category}
-                  onChange={e => setEditingProduct({ ...editingProduct, category: e.target.value })}
-                  className="w-full bg-zinc-950 border border-zinc-800 p-3 text-white text-xs font-mono uppercase"
-                >
-                  {(() => {
-                    const optionMap = new Map();
-                    ['t-shirts', 'hoodies', 'jackets', 'accessories'].forEach(slug => {
-                      optionMap.set(slug, { slug, name: slug });
-                    });
-                    (categories || []).forEach(cat => {
-                      const slug = cat.slug || cat.name?.toLowerCase().replace(/[^a-z0-9]+/g, '-');
-                      if (slug) {
-                        optionMap.set(slug, { slug, name: cat.name || slug });
+                {!isCustomCategoryInput ? (
+                  <select
+                    value={editingProduct.category}
+                    onChange={e => {
+                      if (e.target.value === '__ADD_NEW__') {
+                        setIsCustomCategoryInput(true);
+                        setCustomCategoryName('');
+                      } else {
+                        setEditingProduct({ ...editingProduct, category: e.target.value });
                       }
-                    });
-                    if (editingProduct?.category && !optionMap.has(editingProduct.category)) {
-                      optionMap.set(editingProduct.category, { slug: editingProduct.category, name: editingProduct.category });
-                    }
-                    return Array.from(optionMap.values()).map(cat => (
-                      <option key={cat.slug} value={cat.slug}>
-                        {cat.name.toUpperCase()} ({cat.slug})
-                      </option>
-                    ));
-                  })()}
-                </select>
+                    }}
+                    className="w-full bg-zinc-950 border border-zinc-800 p-3 text-white text-xs font-mono uppercase"
+                  >
+                    {(() => {
+                      const optionMap = new Map();
+                      ['t-shirts', 'hoodies', 'jackets', 'accessories'].forEach(slug => {
+                        optionMap.set(slug, { slug, name: slug });
+                      });
+                      (categories || []).forEach(cat => {
+                        const slug = cat.slug || cat.name?.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+                        if (slug) {
+                          optionMap.set(slug, { slug, name: cat.name || slug });
+                        }
+                      });
+                      if (editingProduct?.category && !optionMap.has(editingProduct.category)) {
+                        optionMap.set(editingProduct.category, { slug: editingProduct.category, name: editingProduct.category });
+                      }
+                      return [
+                        ...Array.from(optionMap.values()).map(cat => (
+                          <option key={cat.slug} value={cat.slug}>
+                            {cat.name.toUpperCase()} ({cat.slug})
+                          </option>
+                        )),
+                        <option key="__ADD_NEW__" value="__ADD_NEW__">
+                          + ADD NEW CATEGORY...
+                        </option>
+                      ];
+                    })()}
+                  </select>
+                ) : (
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="text"
+                      placeholder="ENTER NEW CATEGORY NAME..."
+                      value={customCategoryName}
+                      onChange={e => {
+                        const val = e.target.value;
+                        setCustomCategoryName(val);
+                        const slug = val.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+                        setEditingProduct({ ...editingProduct, category: slug });
+                      }}
+                      className="w-full bg-zinc-950 border border-zinc-700 p-2.5 text-white text-xs font-mono uppercase focus:border-white"
+                      autoFocus
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setIsCustomCategoryInput(false)}
+                      className="px-2.5 py-2.5 bg-zinc-800 text-zinc-300 hover:text-white text-xs font-bold uppercase shrink-0"
+                    >
+                      CANCEL
+                    </button>
+                  </div>
+                )}
               </div>
 
               <div>
