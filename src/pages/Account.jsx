@@ -23,13 +23,13 @@ const STATUS_STYLE = {
 };
 
 export default function Account() {
-  const { user, logout, wishlist, addAddress, updateAddress, deleteAddress, setDefaultAddress } = useAuth();
+  const { user, logout, addAddress, updateAddress, deleteAddress, setDefaultAddress } = useAuth();
   const { addToCart, setIsCartOpen } = useCart();
   const [searchParams] = useSearchParams();
   const [activeTab, setActiveTab] = useState(searchParams.get('tab') || 'orders');
   const [orderFilter, setOrderFilter] = useState('ALL');
   const [userOrders, setUserOrders] = useState([]);
-  const [wishlistProducts, setWishlistProducts] = useState([]);
+
   const [allProducts, setAllProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [reorderedId, setReorderedId] = useState(null);
@@ -49,9 +49,8 @@ export default function Account() {
     ]).then(([orders, prods]) => {
       setUserOrders(orders);
       setAllProducts(prods);
-      setWishlistProducts(prods.filter(p => wishlist.includes(p.id)));
     }).finally(() => setLoading(false));
-  }, [user, wishlist]);
+  }, [user]);
 
   if (!user) return (
     <div className="min-h-[80vh] flex items-center justify-center px-6 page-enter font-mono">
@@ -62,7 +61,7 @@ export default function Account() {
         <div>
           <h2 className="font-display font-black text-3xl uppercase tracking-tighter">SIGN IN TO STUDIO</h2>
           <p className="text-[11px] text-zinc-400 uppercase mt-2 tracking-widest leading-relaxed">
-            Access orders, wishlist &amp; saved addresses.
+            Access orders &amp; saved addresses.
           </p>
         </div>
         <Link to="/login"
@@ -240,10 +239,7 @@ export default function Account() {
                 <span className="text-[9px] text-zinc-500 font-bold uppercase tracking-widest">SAVED ADDRESSES</span>
                 <p className="font-display font-black text-xl text-white">{user?.addresses?.length || 0} SAVED</p>
               </div>
-              <div className="bg-zinc-950/80 border border-zinc-800 p-4 space-y-1">
-                <span className="text-[9px] text-zinc-500 font-bold uppercase tracking-widest">WISHLIST ITEMS</span>
-                <p className="font-display font-black text-xl text-white">{wishlistProducts.length} ITEMS</p>
-              </div>
+
             </div>
 
             {/* VIP Tier Progress Bar */}
