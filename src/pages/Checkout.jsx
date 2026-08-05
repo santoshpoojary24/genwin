@@ -163,7 +163,7 @@ export default function Checkout() {
       
       const orderData = await createOrderRes.json();
       if (!orderData.id) {
-         alert('Server error. Could not create payment session.');
+         alert('Payment Session Error: ' + (orderData.error || 'Unknown') + ' | Details: ' + JSON.stringify(orderData.details || ''));
          setSubmitting(false);
          return;
       }
