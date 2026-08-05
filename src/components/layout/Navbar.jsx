@@ -113,24 +113,25 @@ export default function Navbar() {
             {/* Wishlist Button */}
             <Link
               to="/account?tab=wishlist"
-              className="p-2 border border-transparent hover:border-zinc-200 text-zinc-700 hover:text-black relative transition-all"
+              className="flex items-center gap-2 p-2 sm:px-3 sm:py-2 border border-zinc-200 text-zinc-700 hover:text-black hover:bg-zinc-50 hover:border-black transition-all duration-300 font-mono font-bold uppercase text-[11px] sm:text-xs press shadow-sm hover:shadow-md"
               title="Wishlist"
             >
-              <Heart className="w-4 h-4 sm:w-4.5 sm:h-4.5" />
+              <Heart className={`w-4 h-4 sm:w-4.5 sm:h-4.5 ${wishlist.length > 0 ? 'fill-red-500 text-red-500' : ''}`} />
+              <span className="hidden sm:inline">LIKES</span>
               {wishlist.length > 0 && (
-                <span className="absolute -top-1 -right-1 bg-black text-white text-[8px] font-mono font-bold w-4 h-4 rounded-full flex items-center justify-center anim-pop-in">
+                <span className="bg-red-500 text-white font-extrabold text-[10px] px-1.5 py-0.5 min-w-[18px] text-center anim-pop-in shadow-[0_0_10px_rgba(239,68,68,0.5)]">
                   {wishlist.length}
                 </span>
               )}
             </Link>
 
-            {/* Account / User Button — Sleek Pill Button displaying Gmail Avatar */}
+            {/* Account / User Button */}
             <Link
               to={user ? '/account' : '/login'}
-              className={`flex items-center gap-2 px-2.5 sm:px-3 py-1.5 border text-xs font-mono font-bold uppercase tracking-wider transition-all press ${
+              className={`flex items-center gap-2 p-2 sm:px-3 sm:py-2 border font-mono font-bold uppercase text-[11px] sm:text-xs tracking-wider transition-all duration-300 press shadow-sm hover:shadow-md ${
                 user
-                  ? 'border-zinc-900 bg-black text-white hover:bg-zinc-800'
-                  : 'border-zinc-200 text-zinc-800 hover:border-black hover:bg-zinc-50'
+                  ? 'border-black bg-black text-white hover:bg-zinc-800 hover:border-zinc-800'
+                  : 'border-zinc-200 text-zinc-800 hover:text-white hover:bg-black hover:border-black'
               }`}
               title={user ? user.name : 'Sign In'}
             >
@@ -140,32 +141,32 @@ export default function Navbar() {
                     <img
                       src={user.photoURL}
                       alt={user.name}
-                      className="w-5 h-5 rounded-full object-cover border border-white shrink-0"
+                      className="w-4 h-4 sm:w-5 sm:h-5 rounded-full object-cover border border-zinc-700 shrink-0"
                     />
                   ) : (
-                    <span className="w-5 h-5 bg-white text-black font-extrabold text-[10px] flex items-center justify-center uppercase rounded-none shrink-0">
+                    <span className="w-4 h-4 sm:w-5 sm:h-5 bg-white text-black font-extrabold text-[10px] flex items-center justify-center uppercase shrink-0">
                       {user.name.charAt(0)}
                     </span>
                   )}
-                  <span className="hidden xl:inline text-[11px] max-w-[80px] truncate">{user.name.split(' ')[0]}</span>
+                  <span className="hidden xl:inline max-w-[80px] truncate">{user.name.split(' ')[0]}</span>
                 </>
               ) : (
                 <>
-                  <User className="w-3.5 h-3.5" />
-                  <span className="hidden sm:inline text-[11px]">ACCOUNT</span>
+                  <User className="w-4 h-4 sm:w-4.5 sm:h-4.5" />
+                  <span className="hidden sm:inline">ACCOUNT</span>
                 </>
               )}
             </Link>
 
-            {/* Cart / Bag Button — Bold & Interactive */}
+            {/* Cart / Bag Button */}
             <button
               onClick={() => setIsCartOpen(true)}
-              className="btn-magnetic press flex items-center gap-2 bg-black hover:bg-zinc-800 text-white px-3.5 py-2 text-xs font-mono font-bold uppercase tracking-wider transition-all shadow-sm"
+              className="btn-magnetic press flex items-center gap-2 p-2 sm:px-4 sm:py-2 bg-emerald-500 hover:bg-emerald-400 border border-emerald-500 text-black font-mono font-black uppercase text-[11px] sm:text-xs tracking-wider transition-all duration-300 shadow-[0_0_15px_rgba(16,185,129,0.3)] hover:shadow-[0_0_20px_rgba(16,185,129,0.5)]"
               title="Cart / Shopping Bag"
             >
-              <ShoppingBag className="w-4 h-4" />
+              <ShoppingBag className="w-4 h-4 sm:w-4.5 sm:h-4.5" />
               <span className="hidden sm:inline">BAG</span>
-              <span className="bg-white text-black font-extrabold text-[10px] px-1.5 py-0.5 min-w-[18px] text-center">
+              <span className="bg-black text-emerald-400 font-extrabold text-[10px] px-1.5 py-0.5 min-w-[20px] text-center">
                 {totalCount}
               </span>
             </button>
