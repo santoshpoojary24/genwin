@@ -110,29 +110,25 @@ export default function Navbar() {
               </button>
             </form>
 
-            {/* Wishlist Button */}
+            {/* Wishlist Button - Brutalist */}
             <Link
               to="/account?tab=wishlist"
-              className="flex items-center gap-2 p-2 sm:px-3 sm:py-2 border border-zinc-200 text-zinc-700 hover:text-black hover:bg-zinc-50 hover:border-black transition-all duration-300 font-mono font-bold uppercase text-[11px] sm:text-xs press shadow-sm hover:shadow-md"
+              className="flex items-center gap-2 p-2 sm:px-3 sm:py-2 bg-white border-2 border-black text-black font-mono font-black uppercase text-[11px] sm:text-xs transition-all duration-200 shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] hover:shadow-[0px_0px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[3px] hover:translate-y-[3px]"
               title="Wishlist"
             >
-              <Heart className={`w-4 h-4 sm:w-4.5 sm:h-4.5 ${wishlist.length > 0 ? 'fill-red-500 text-red-500' : ''}`} />
+              <Heart className={`w-4 h-4 sm:w-4.5 sm:h-4.5 ${wishlist.length > 0 ? 'fill-red-500 text-red-500' : ''} transition-transform hover:scale-110`} />
               <span className="hidden sm:inline">LIKES</span>
               {wishlist.length > 0 && (
-                <span className="bg-red-500 text-white font-extrabold text-[10px] px-1.5 py-0.5 min-w-[18px] text-center anim-pop-in shadow-[0_0_10px_rgba(239,68,68,0.5)]">
+                <span className="bg-red-500 text-white font-extrabold text-[10px] px-1.5 py-0.5 min-w-[20px] text-center border-l-2 border-black -my-2 -mr-3 sm:-mr-3 h-full flex items-center justify-center">
                   {wishlist.length}
                 </span>
               )}
             </Link>
 
-            {/* Account / User Button */}
+            {/* Account / User Button - Brutalist */}
             <Link
               to={user ? '/account' : '/login'}
-              className={`flex items-center gap-2 p-2 sm:px-3 sm:py-2 border font-mono font-bold uppercase text-[11px] sm:text-xs tracking-wider transition-all duration-300 press shadow-sm hover:shadow-md ${
-                user
-                  ? 'border-black bg-black text-white hover:bg-zinc-800 hover:border-zinc-800'
-                  : 'border-zinc-200 text-zinc-800 hover:text-white hover:bg-black hover:border-black'
-              }`}
+              className="group flex items-center gap-2 p-2 sm:px-3 sm:py-2 bg-white border-2 border-black text-black font-mono font-black uppercase text-[11px] sm:text-xs tracking-wider transition-all duration-200 shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] hover:shadow-[0px_0px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[3px] hover:translate-y-[3px]"
               title={user ? user.name : 'Sign In'}
             >
               {user ? (
@@ -141,10 +137,10 @@ export default function Navbar() {
                     <img
                       src={user.photoURL}
                       alt={user.name}
-                      className="w-4 h-4 sm:w-5 sm:h-5 rounded-full object-cover border border-zinc-700 shrink-0"
+                      className="w-4 h-4 sm:w-5 sm:h-5 object-cover border border-black shrink-0"
                     />
                   ) : (
-                    <span className="w-4 h-4 sm:w-5 sm:h-5 bg-white text-black font-extrabold text-[10px] flex items-center justify-center uppercase shrink-0">
+                    <span className="w-4 h-4 sm:w-5 sm:h-5 bg-black text-white font-extrabold text-[10px] flex items-center justify-center uppercase shrink-0">
                       {user.name.charAt(0)}
                     </span>
                   )}
@@ -152,21 +148,21 @@ export default function Navbar() {
                 </>
               ) : (
                 <>
-                  <User className="w-4 h-4 sm:w-4.5 sm:h-4.5" />
+                  <User className="w-4 h-4 sm:w-4.5 sm:h-4.5 group-hover:rotate-12 transition-transform" />
                   <span className="hidden sm:inline">ACCOUNT</span>
                 </>
               )}
             </Link>
 
-            {/* Cart / Bag Button */}
+            {/* Cart / Bag Button - Brutalist (Neon Yellow) */}
             <button
               onClick={() => setIsCartOpen(true)}
-              className="btn-magnetic press flex items-center gap-2 p-2 sm:px-4 sm:py-2 bg-emerald-500 hover:bg-emerald-400 border border-emerald-500 text-black font-mono font-black uppercase text-[11px] sm:text-xs tracking-wider transition-all duration-300 shadow-[0_0_15px_rgba(16,185,129,0.3)] hover:shadow-[0_0_20px_rgba(16,185,129,0.5)]"
+              className="group flex items-center gap-2 p-2 sm:px-4 sm:py-2 bg-[#E8FF00] border-2 border-black text-black font-mono font-black uppercase text-[11px] sm:text-xs tracking-wider transition-all duration-200 shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] hover:shadow-[0px_0px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[3px] hover:translate-y-[3px]"
               title="Cart / Shopping Bag"
             >
-              <ShoppingBag className="w-4 h-4 sm:w-4.5 sm:h-4.5" />
+              <ShoppingBag className="w-4 h-4 sm:w-4.5 sm:h-4.5 group-hover:-rotate-12 transition-transform" />
               <span className="hidden sm:inline">BAG</span>
-              <span className="bg-black text-emerald-400 font-extrabold text-[10px] px-1.5 py-0.5 min-w-[20px] text-center">
+              <span className="bg-black text-[#E8FF00] font-extrabold text-[10px] px-2 py-0.5 min-w-[22px] text-center border-l-2 border-black -my-2 -mr-4 sm:-mr-4 h-full flex items-center justify-center">
                 {totalCount}
               </span>
             </button>
