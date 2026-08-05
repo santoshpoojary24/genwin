@@ -4,6 +4,7 @@ import { CreditCard, MapPin, ArrowRight, Lock, ChevronRight } from 'lucide-react
 import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
 import { FirebaseService } from '../services/firebaseService';
+import { useSettings } from '../context/SettingsContext';
 
 const loadRazorpayScript = () => {
   return new Promise((resolve) => {
@@ -49,7 +50,23 @@ export default function Checkout() {
     state: user?.addresses?.[0]?.state || 'Maharashtra',
     pincode: user?.addresses?.[0]?.pincode || '400013'
   });
-  const [paymentMethod, setPaymentMethod] = useState('upi');
+
+  const { settings } = useSettings();
+  const availableMethods = [
+    ...(settings?.upiEnabled !== false ? [{ value: 'upi', label: 'UPI (GPay / PhonePe / Paytm)', sub: 'Fastest — scan or enter VPA', badge: 'RECOMMENDED' }] : []),
+    ...(settings?.codEnabled !== false ? [{ value: 'cod', label: 'Cash on Delivery', sub: 'Pay cash or UPI at doorstep', badge: null }] : []),
+    ...(settings?.cardEnabled !== false ? [{ value: 'card', label: 'Credit / Debit Card', sub: 'Visa, MasterCard, RuPay', badge: null }] : []),
+  ];
+
+  const [paymentMethod, setPaymentMethod] = useState(availableMethods.length > 0 ? availableMethods[0].value : 'cod');
+  
+  // Ensure selected method is always valid
+  React.useEffect(() => {
+    if (availableMethods.length > 0 && !availableMethods.find(m => m.value === paymentMethod)) {
+      setPaymentMethod(availableMethods[0].value);
+    }
+  }, [settings]);
+
   const [submitting, setSubmitting] = useState(false);
 
   const subtotal = getSubtotal();
@@ -338,11 +355,7 @@ export default function Checkout() {
               <CreditCard className="w-4 h-4" /> 2. PAYMENT METHOD
             </h3>
 
-            {[
-              { value: 'upi', label: 'UPI (GPay / PhonePe / Paytm)', sub: 'Fastest — scan or enter VPA', badge: 'RECOMMENDED' },
-              { value: 'cod', label: 'Cash on Delivery', sub: 'Pay cash or UPI at doorstep', badge: null },
-              { value: 'card', label: 'Credit / Debit Card', sub: 'Visa, MasterCard, RuPay', badge: null },
-            ].map(method => (
+            {availableMethods.map(method => (
               <label key={method.value} className={`flex items-center justify-between p-4 border-2 cursor-pointer transition-all ${
                 paymentMethod === method.value ? 'border-black bg-zinc-50' : 'border-zinc-200 hover:border-zinc-400'
               }`}>
