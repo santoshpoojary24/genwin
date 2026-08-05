@@ -127,8 +127,8 @@ app.get('/api/health', (req, res) => {
 
 // ── RAZORPAY API ─────────────────────────────────────────────────────────────
 const razorpayInstance = new Razorpay({
-  key_id: process.env.RAZORPAY_KEY_ID || 'rzp_test_TM0e930fFxpDsE',
-  key_secret: process.env.RAZORPAY_KEY_SECRET || 'PBtHsNjpKgOZD3nS98Gl7j1U'
+  key_id: 'rzp_test_TM0e930fFxpDsE',
+  key_secret: 'PBtHsNjpKgOZD3nS98Gl7j1U'
 });
 
 app.post('/api/create-razorpay-order', async (req, res) => {
@@ -160,7 +160,7 @@ app.post('/api/verify-payment', (req, res) => {
   }
 
   const body = razorpay_order_id + "|" + razorpay_payment_id;
-  const secret = process.env.RAZORPAY_KEY_SECRET || 'PBtHsNjpKgOZD3nS98Gl7j1U';
+  const secret = 'PBtHsNjpKgOZD3nS98Gl7j1U';
   
   const expectedSignature = crypto
     .createHmac('sha256', secret)
