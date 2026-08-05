@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { BrowserRouter as Router, Routes, Route, Link, useLocation } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Link, useLocation, Navigate } from 'react-router-dom';
 
 function ScrollToTop() {
   const { pathname, search } = useLocation();
@@ -143,6 +143,7 @@ export default function App() {
                         <Route path="/product/:slug"           element={<ProductDetail />} />
                         <Route path="/wishlist"                element={<Wishlist />} />
                         <Route path="/customize/:productId"    element={<Customizer />} />
+                        <Route path="/customizer"              element={<Navigate to="/customize/heavyweight-canvas-tee" replace />} />
                         <Route path="/checkout"                element={<Checkout />} />
                         <Route path="/order-success/:orderId"  element={<OrderTracker />} />
                         <Route
