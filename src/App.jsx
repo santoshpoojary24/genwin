@@ -21,7 +21,6 @@ import CartDrawer  from './components/cart/CartDrawer';
 import Home              from './pages/Home';
 import Shop              from './pages/Shop';
 import ProductDetail      from './pages/ProductDetail';
-import StoreLocator from './pages/StoreLocator';
 import Wishlist from './pages/Wishlist';
 import Customizer        from './pages/Customizer';
 import Checkout          from './pages/Checkout';
