@@ -104,7 +104,6 @@ export default function Account() {
 
   const tabs = [
     { id: 'orders',    label: `MY ORDERS`,    count: userOrders.length,       icon: Package },
-    { id: 'wishlist',  label: `WISHLIST`,   count: wishlistProducts.length, icon: Heart   },
     { id: 'addresses', label: `ADDRESSES`,  count: user?.addresses?.length || 0, icon: MapPin },
   ];
 
@@ -432,26 +431,6 @@ export default function Account() {
           </div>
         )}
 
-        {/* ── Wishlist Tab ────────────────────────────────────────────────── */}
-        {activeTab === 'wishlist' && (
-          wishlistProducts.length === 0 ? (
-            <div className="border border-zinc-200 bg-zinc-50 p-16 text-center space-y-4">
-              <Heart className="w-12 h-12 text-zinc-300 mx-auto" />
-              <h3 className="font-black text-sm uppercase text-black">WISHLIST IS EMPTY</h3>
-              <p className="text-[10px] text-zinc-400 uppercase">TAP ♡ ON ANY GARMENT TO SAVE IT TO YOUR PERSONAL WISHLIST.</p>
-              <Link
-                to="/shop"
-                className="btn-magnetic press inline-block px-8 py-3.5 bg-black text-white font-bold text-xs uppercase tracking-widest"
-              >
-                BROWSE SHOP
-              </Link>
-            </div>
-          ) : (
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
-              {wishlistProducts.map(p => <ProductCard key={p.id} product={p} onQuickView={() => {}} />)}
-            </div>
-          )
-        )}
 
         {/* ── Addresses Tab ───────────────────────────────────────────────── */}
         {activeTab === 'addresses' && (

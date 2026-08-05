@@ -21,6 +21,8 @@ import CartDrawer  from './components/cart/CartDrawer';
 import Home              from './pages/Home';
 import Shop              from './pages/Shop';
 import ProductDetail      from './pages/ProductDetail';
+import StoreLocator from './pages/StoreLocator';
+import Wishlist from './pages/Wishlist';
 import Customizer        from './pages/Customizer';
 import Checkout          from './pages/Checkout';
 import OrderTracker      from './pages/OrderTracker';
@@ -139,6 +141,7 @@ export default function App() {
                         <Route path="/"                        element={<Home />} />
                         <Route path="/shop"                    element={<Shop />} />
                         <Route path="/product/:slug"           element={<ProductDetail />} />
+                        <Route path="/wishlist"                element={<Wishlist />} />
                         <Route path="/customize/:productId"    element={<Customizer />} />
                         <Route path="/checkout"                element={<Checkout />} />
                         <Route path="/order-success/:orderId"  element={<OrderTracker />} />

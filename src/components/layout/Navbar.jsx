@@ -112,7 +112,7 @@ export default function Navbar() {
 
             {/* Wishlist Button */}
             <Link
-              to="/account?tab=wishlist"
+              to="/wishlist"
               className="p-2 border border-transparent hover:border-zinc-200 text-zinc-700 hover:text-black relative transition-all"
               title="Wishlist"
             >
