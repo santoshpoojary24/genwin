@@ -163,7 +163,7 @@ export default function EmployeeDashboard() {
           <div className="p-5 border-b border-zinc-800 flex items-center justify-between">
             <div>
               <span className="font-display font-black text-2xl tracking-tighter text-white">
-                {settings.storeName || 'जेनwin.'}
+                जेनwin.
               </span>
               <span className="block text-[9px] font-bold tracking-widest text-blue-400 uppercase mt-0.5">
                 STAFF WORKSPACE CONSOLE
