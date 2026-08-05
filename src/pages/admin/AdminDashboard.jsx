@@ -2462,26 +2462,31 @@ export default function AdminDashboard() {
                         setEditingProduct({ ...editingProduct, category: e.target.value });
                       }
                     }}
-                    className="w-full bg-zinc-950 border border-zinc-800 p-3 text-white text-xs font-mono uppercase"
+                    className="w-full bg-zinc-950 border border-zinc-800 p-3 text-white text-xs font-mono uppercase cursor-pointer"
                   >
                     {(() => {
                       const optionMap = new Map();
-                      ['t-shirts', 'hoodies', 'jackets', 'accessories'].forEach(slug => {
-                        optionMap.set(slug, { slug, name: slug });
-                      });
+                      // 1. All dynamic categories created in Admin
                       (categories || []).forEach(cat => {
                         const slug = cat.slug || cat.name?.toLowerCase().replace(/[^a-z0-9]+/g, '-');
                         if (slug) {
                           optionMap.set(slug, { slug, name: cat.name || slug });
                         }
                       });
+                      // 2. Fallback defaults if not present
+                      ['t-shirts', 'hoodies', 'jackets', 'accessories'].forEach(slug => {
+                        if (!optionMap.has(slug)) {
+                          optionMap.set(slug, { slug, name: slug });
+                        }
+                      });
+                      // 3. Current product category if custom
                       if (editingProduct?.category && !optionMap.has(editingProduct.category)) {
                         optionMap.set(editingProduct.category, { slug: editingProduct.category, name: editingProduct.category });
                       }
                       return [
                         ...Array.from(optionMap.values()).map(cat => (
                           <option key={cat.slug} value={cat.slug}>
-                            {cat.name.toUpperCase()} ({cat.slug})
+                            {cat.name.toUpperCase()}
                           </option>
                         )),
                         <option key="__ADD_NEW__" value="__ADD_NEW__">
