@@ -169,7 +169,7 @@ export default function Checkout() {
       }
 
       const options = {
-        key: import.meta.env.VITE_RAZORPAY_KEY_ID || 'rzp_test_placeholder_key',
+        key: import.meta.env.VITE_RAZORPAY_KEY_ID || 'rzp_test_TM0e930fFxpDsE',
         amount: orderData.amount,
         currency: orderData.currency,
         name: 'GenWin Studio',
