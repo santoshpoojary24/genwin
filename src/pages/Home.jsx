@@ -606,7 +606,7 @@ export default function Home() {
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between border-b border-zinc-900 pb-4 gap-2">
             <div>
               <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest block">NEED HELP OR HAVE QUESTIONS?</span>
-              <h3 className="font-display font-black text-white text-xl tracking-tight">GET IN TOUCH WITH {settings.storeName || 'जेनwin.clothing'}</h3>
+              <h3 className="font-display font-black text-white text-xl tracking-tight">GET IN TOUCH WITH {settings.storeName || 'जेनwin.'}</h3>
             </div>
             <span className="text-[9px] font-bold bg-zinc-900 border border-zinc-800 text-emerald-400 px-3 py-1 uppercase">24/7 CUSTOMER HELPLINE</span>
           </div>
@@ -663,7 +663,7 @@ export default function Home() {
           <div className="pointer-events-none absolute inset-0 opacity-[0.05]"
             style={{ backgroundImage: 'radial-gradient(circle,#fff 1px,transparent 1px)', backgroundSize: '28px 28px' }} />
           <div className="relative z-10 space-y-2">
-            <p className="section-num text-zinc-500 font-bold">जेनwin.clothing</p>
+            <p className="section-num text-zinc-500 font-bold">जेनwin.</p>
             <h2 className="font-display font-black text-white uppercase text-3xl sm:text-5xl tracking-tight leading-none">
               PREMIUM APPAREL.<br /><span className="text-zinc-600">DELIVERED FAST.</span>
             </h2>

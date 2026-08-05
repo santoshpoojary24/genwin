@@ -177,7 +177,7 @@ export default function AdminDashboard() {
 
   // Settings State
   const [settings, setSettings] = useState({
-    storeName: 'जेनwin.clothing',
+    storeName: 'जेनwin.',
     tagline: 'Oversized Streetwear & Custom DTG Prints',
     supportEmail: 'support@genwin.studio',
     supportPhone: '+91 98765 43210',
@@ -518,7 +518,7 @@ export default function AdminDashboard() {
           <div className="p-5 lg:p-6 border-b border-zinc-800 flex items-center justify-between">
             <div>
               <span className="font-display font-black text-2xl tracking-tighter text-white">
-                {settings.storeName || 'जेनwin.clothing'}
+                {settings.storeName || 'जेनwin.'}
               </span>
               <span className="block text-[9px] font-bold tracking-widest text-zinc-500 uppercase mt-0.5">
                 ADMIN CONSOLE
@@ -1940,17 +1940,7 @@ export default function AdminDashboard() {
                     </h3>
                     
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                      <div>
-                        <label className="block text-[10px] sm:text-xs text-zinc-400 uppercase mb-1.5 font-bold">STORE NAME</label>
-                        <input
-                          type="text"
-                          required
-                          value={settings.storeName}
-                          onChange={e => setSettings({ ...settings, storeName: e.target.value })}
-                          className="w-full bg-zinc-950 border border-zinc-800 p-3 text-white text-xs sm:text-sm font-mono focus:outline-none focus:border-zinc-500 font-bold"
-                        />
-                      </div>
-                      <div>
+                      <div className="col-span-1 sm:col-span-2">
                         <label className="block text-[10px] sm:text-xs text-zinc-400 uppercase mb-1.5 font-bold">TAGLINE</label>
                         <input
                           type="text"

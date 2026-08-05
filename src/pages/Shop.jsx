@@ -107,7 +107,7 @@ export default function Shop() {
             style={{ backgroundImage:'radial-gradient(circle,#fff 1px,transparent 1px)', backgroundSize:'24px 24px' }} />
           <div className="relative z-10">
             <div className="flex items-center gap-3 mb-3">
-              <span className="section-num text-zinc-700">जेनwin.clothing</span>
+              <span className="section-num text-zinc-700">जेनwin.</span>
               <span className="block h-px w-6 bg-zinc-800" />
               <span className="section-num text-zinc-700">CATALOG</span>
             </div>

@@ -65,7 +65,7 @@ export default function AdminLoginPage() {
       <header className="p-6 border-b border-zinc-800/80 flex items-center justify-between relative z-10">
         <div>
           <span className="font-display font-black text-2xl tracking-tighter text-white">
-            जेनwin.clothing
+            जेनwin.
           </span>
           <span className="block text-[9px] font-bold tracking-widest text-zinc-500 uppercase mt-0.5">
             SUPERADMIN SECURITY PORTAL
@@ -201,7 +201,7 @@ export default function AdminLoginPage() {
 
       {/* Footer */}
       <footer className="p-4 text-center text-[10px] text-zinc-600 border-t border-zinc-800/80">
-        © {new Date().getFullYear()} जेनwin.clothing · ALL RIGHTS RESERVED
+        © {new Date().getFullYear()} जेनwin. · ALL RIGHTS RESERVED
       </footer>
 
     </div>

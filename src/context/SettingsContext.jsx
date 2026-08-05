@@ -5,7 +5,7 @@ const SettingsContext = createContext();
 const LOCAL_SETTINGS_KEY = 'genwin_settings';
 
 const DEFAULT_SETTINGS = {
-  storeName: 'जेनwin.clothing',
+  storeName: 'जेनwin.',
   tagline: 'Oversized Streetwear & Custom DTG Prints',
   supportEmail: 'support@genwin.studio',
   supportPhone: '+91 98765 43210',

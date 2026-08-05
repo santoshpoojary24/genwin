@@ -79,7 +79,7 @@ export default function Navbar() {
 
             <Link to="/" className="flex items-center gap-2 shrink-0">
               <span className="font-display font-black text-2xl sm:text-3xl tracking-tighter text-black">
-                {settings.storeName || 'जेनwin.clothing'}
+                {settings.storeName || 'जेनwin.'}
               </span>
             </Link>
           </div>
@@ -196,7 +196,7 @@ export default function Navbar() {
         <div className="flex items-center justify-between px-5 py-5 bg-black text-white border-b border-zinc-800">
           <div className="flex items-center gap-2">
             <span className="font-display font-black text-2xl tracking-tighter">
-              {settings.storeName || 'जेनwin.clothing'}
+              {settings.storeName || 'जेनwin.'}
             </span>
           </div>
           <button
