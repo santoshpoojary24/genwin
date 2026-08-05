@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useSearchParams, Link, useNavigate } from 'react-router-dom';
 import {
   Package, MapPin, LogOut, ArrowRight, ShoppingBag, User, Plus, Edit2, Trash2,
-  Home, Briefcase, X, Crown, Sparkles, Navigation, RotateCcw
+  Home, Briefcase, X, Crown, Sparkles, Navigation, RotateCcw, ChevronDown, ChevronUp
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
@@ -26,6 +26,7 @@ export default function Account() {
   const [searchParams] = useSearchParams();
   const [activeTab, setActiveTab] = useState(searchParams.get('tab') || 'orders');
   const [orderFilter, setOrderFilter] = useState('ALL');
+  const [expandedOrderId, setExpandedOrderId] = useState(null);
   const [userOrders, setUserOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [reorderedId, setReorderedId] = useState(null);
@@ -235,51 +236,65 @@ export default function Account() {
               </div>
             ) : (
               <div className="space-y-4">
-                {filteredUserOrders.map(order => (
-                  <div key={order.id} className="bg-white rounded-xl border border-zinc-200 p-5 sm:p-6 shadow-sm">
-                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4">
-                      <div>
-                        <div className="flex items-center gap-3 mb-1">
-                          <h4 className="font-semibold text-base">Order #{order.orderNumber}</h4>
-                          <span className={`px-2.5 py-0.5 rounded-full text-xs font-medium ${STATUS_STYLE[order.status] || 'bg-zinc-100 text-zinc-600'}`}>
-                            {STATUS[order.status] || order.status}
-                          </span>
+                {filteredUserOrders.map(order => {
+                  const isExpanded = expandedOrderId === order.id;
+                  
+                  return (
+                    <div key={order.id} className="bg-white rounded-xl border border-zinc-200 shadow-sm overflow-hidden transition-all">
+                      {/* Clickable Header */}
+                      <button 
+                        onClick={() => setExpandedOrderId(isExpanded ? null : order.id)}
+                        className="w-full text-left p-5 sm:p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4 hover:bg-zinc-50 transition-colors"
+                      >
+                        <div>
+                          <div className="flex items-center gap-3 mb-1">
+                            <h4 className="font-semibold text-base text-black">Order #{order.orderNumber}</h4>
+                            <span className={`px-2.5 py-0.5 rounded-full text-xs font-medium ${STATUS_STYLE[order.status] || 'bg-zinc-100 text-zinc-600'}`}>
+                              {STATUS[order.status] || order.status}
+                            </span>
+                          </div>
+                          <p className="text-sm text-zinc-500">
+                            Placed on {new Date(order.createdAt).toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' })}
+                            {' • '}₹{order.total}
+                          </p>
                         </div>
-                        <p className="text-sm text-zinc-500">
-                          Placed on {new Date(order.createdAt).toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' })}
-                        </p>
-                      </div>
-                      
-                      <div className="flex items-center gap-2 w-full sm:w-auto">
-                        <button onClick={() => handleReorder(order)} className="flex-1 sm:flex-none flex justify-center items-center gap-1.5 px-4 py-2 bg-zinc-100 hover:bg-zinc-200 text-black text-sm font-medium rounded-lg transition-colors">
-                          <RotateCcw className="w-4 h-4" /> {reorderedId === order.id ? 'Added!' : 'Buy Again'}
-                        </button>
-                        <Link to={`/order-success/${order.id}`} className="flex-1 sm:flex-none flex justify-center items-center gap-1.5 px-4 py-2 bg-black hover:bg-zinc-800 text-white text-sm font-medium rounded-lg transition-colors">
-                          Track Order <ArrowRight className="w-4 h-4" />
-                        </Link>
-                      </div>
-                    </div>
+                        
+                        <div className="text-zinc-400">
+                          {isExpanded ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
+                        </div>
+                      </button>
 
-                    <div className="flex justify-between items-end border-t border-zinc-100 pt-4">
-                      <div className="flex gap-3 overflow-x-auto pb-1">
-                        {order.items?.map((item, i) => (
-                          <div key={i} className="flex gap-3 min-w-[200px]">
-                            <img src={item.image} alt={item.name} className="w-16 h-20 object-cover rounded-md bg-zinc-100" />
-                            <div className="py-1">
-                              <p className="font-medium text-sm text-black line-clamp-1">{item.name}</p>
-                              <p className="text-xs text-zinc-500 mt-1">Size: {item.size} | Qty: {item.quantity}</p>
-                              <p className="text-xs text-zinc-500 mt-0.5">₹{item.unitPrice || item.price}</p>
+                      {/* Expandable Details Area */}
+                      {isExpanded && (
+                        <div className="p-5 sm:p-6 pt-0 border-t border-zinc-100 bg-white">
+                          <div className="flex flex-col sm:flex-row items-center justify-end gap-2 w-full pt-4 mb-4 border-b border-zinc-100 pb-4">
+                            <button onClick={() => handleReorder(order)} className="w-full sm:w-auto flex justify-center items-center gap-1.5 px-4 py-2 bg-zinc-100 hover:bg-zinc-200 text-black text-sm font-medium rounded-lg transition-colors">
+                              <RotateCcw className="w-4 h-4" /> {reorderedId === order.id ? 'Added!' : 'Buy Again'}
+                            </button>
+                            <Link to={`/order-success/${order.id}`} className="w-full sm:w-auto flex justify-center items-center gap-1.5 px-4 py-2 bg-black hover:bg-zinc-800 text-white text-sm font-medium rounded-lg transition-colors">
+                              Track Order <ArrowRight className="w-4 h-4" />
+                            </Link>
+                          </div>
+
+                          <div className="flex justify-between items-end">
+                            <div className="flex gap-3 overflow-x-auto pb-1 w-full">
+                              {order.items?.map((item, i) => (
+                                <div key={i} className="flex gap-3 min-w-[200px]">
+                                  <img src={item.image} alt={item.name} className="w-16 h-20 object-cover rounded-md bg-zinc-100" />
+                                  <div className="py-1">
+                                    <p className="font-medium text-sm text-black line-clamp-1">{item.name}</p>
+                                    <p className="text-xs text-zinc-500 mt-1">Size: {item.size} | Qty: {item.quantity}</p>
+                                    <p className="text-xs text-zinc-500 mt-0.5">₹{item.unitPrice || item.price}</p>
+                                  </div>
+                                </div>
+                              ))}
                             </div>
                           </div>
-                        ))}
-                      </div>
-                      <div className="text-right pl-4">
-                        <p className="text-xs text-zinc-500 mb-0.5">Total</p>
-                        <p className="text-lg font-bold">₹{order.total}</p>
-                      </div>
+                        </div>
+                      )}
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             )}
           </div>
