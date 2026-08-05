@@ -85,8 +85,8 @@ export default function Account() {
   });
 
   const totalLifetimeSpend = eligibleDeliveredOrders.reduce((sum, o) => sum + (o.total || 0), 0);
-  const vipTier = totalLifetimeSpend >= 5000 ? 'VIP PLATINUM CLUB' : totalLifetimeSpend >= 2000 ? 'GOLD STREETWEAR MEMBER' : 'CLUB MEMBER';
-  const nextTierTarget = 5000;
+  const vipTier = totalLifetimeSpend >= 4000 ? 'VIP MEMBER' : 'CLUB MEMBER';
+  const nextTierTarget = 4000;
   const tierProgressPercent = Math.min(100, Math.round((totalLifetimeSpend / nextTierTarget) * 100));
 
   // Find active in-transit order
@@ -248,12 +248,15 @@ export default function Account() {
 
             {/* VIP Tier Progress Bar */}
             <div className="bg-zinc-950/90 border border-zinc-800 p-4 space-y-2">
-              <div className="flex justify-between items-center text-[10px] font-bold uppercase">
-                <span className="text-zinc-400 flex items-center gap-1.5">
-                  <Crown className="w-3.5 h-3.5 text-amber-400" /> VIP PLATINUM CLUB PROGRESS ({tierProgressPercent}%)
+              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center text-[10px] font-bold uppercase gap-2">
+                <span className={`${totalLifetimeSpend >= nextTierTarget ? 'text-amber-400' : 'text-zinc-400'} flex items-center gap-1.5`}>
+                  <Crown className={`w-3.5 h-3.5 ${totalLifetimeSpend >= nextTierTarget ? 'text-amber-400' : 'text-zinc-500'}`} /> 
+                  {totalLifetimeSpend >= nextTierTarget ? 'VIP MEMBER UNLOCKED' : 'VIP MEMBER PROGRESS'} ({tierProgressPercent}%)
                 </span>
-                <span className="text-emerald-400">
-                  {totalLifetimeSpend >= nextTierTarget ? 'MAX PLATINUM UNLOCKED' : `SPEND ₹${(nextTierTarget - totalLifetimeSpend).toLocaleString('en-IN')} MORE FOR 15% VIP PASS`}
+                <span className={totalLifetimeSpend >= nextTierTarget ? 'text-amber-400' : 'text-emerald-400'}>
+                  {totalLifetimeSpend >= nextTierTarget 
+                    ? '★ LIFETIME VIP BENEFITS ACTIVE ★' 
+                    : `SPEND ₹${(nextTierTarget - totalLifetimeSpend).toLocaleString('en-IN')} MORE FOR VIP MEMBER STATUS`}
                 </span>
               </div>
               <div className="w-full bg-zinc-900 h-2 border border-zinc-800">
