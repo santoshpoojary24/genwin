@@ -976,7 +976,7 @@ export default function AdminDashboard() {
                 {/* Status Filter Tabs (Mobile Horizontal Touch Scroll) */}
                 <div className="overflow-x-auto pb-1 sm:pb-0 w-full sm:w-auto">
                   <div className="flex gap-1 bg-zinc-900 p-1 border border-zinc-800 text-[10px] w-max">
-                    {['all', 'placed', 'confirmed', 'packed', 'shipped', 'delivered', 'cancelled'].map(st => (
+                    {['all', 'placed', 'confirmed', 'packed', 'shipped', 'delivered', 'return_requested', 'return_picked', 'refund_processed', 'cancelled'].map(st => (
                       <button
                         key={st}
                         onClick={() => setStatusFilter(st)}
@@ -984,7 +984,7 @@ export default function AdminDashboard() {
                           statusFilter === st ? 'bg-white text-black' : 'text-zinc-400 hover:text-white'
                         }`}
                       >
-                        {st}
+                        {st.replace('_', ' ')}
                       </button>
                     ))}
                   </div>
@@ -1020,7 +1020,7 @@ export default function AdminDashboard() {
                           <td className="p-4 font-bold text-white">₹{o.total}</td>
                           <td className="p-4">
                             <span className="px-2 py-0.5 text-[9px] font-bold bg-zinc-800 text-zinc-200 border border-zinc-700 uppercase">
-                              {o.status}
+                              {o.status.replace('_', ' ')}
                             </span>
                           </td>
                           <td className="p-4 text-right flex items-center justify-end gap-2">
@@ -1036,8 +1036,8 @@ export default function AdminDashboard() {
                               onChange={e => handleUpdateOrderStatus(o.id, e.target.value)}
                               className="bg-zinc-950 border border-zinc-700 text-xs px-2 py-1 text-white font-mono uppercase focus:outline-none"
                             >
-                              {['placed', 'confirmed', 'packed', 'shipped', 'out_for_delivery', 'delivered', 'cancelled'].map(s => (
-                                <option key={s} value={s}>{s.toUpperCase()}</option>
+                              {['placed', 'confirmed', 'packed', 'shipped', 'out_for_delivery', 'delivered', 'return_requested', 'return_picked', 'refund_processed', 'cancelled'].map(s => (
+                                <option key={s} value={s}>{s.replace('_', ' ').toUpperCase()}</option>
                               ))}
                             </select>
                           </td>

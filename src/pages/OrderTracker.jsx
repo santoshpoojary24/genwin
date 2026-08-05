@@ -17,6 +17,12 @@ const STATUS_STEPS = [
   { id: 'delivered',        label: 'DELIVERED',           desc: 'Package handed to recipient',      icon: Home },
 ];
 
+const RETURN_STEPS = [
+  { id: 'return_requested', label: 'RETURN REQUESTED', desc: 'Request under review by logistics', icon: RotateCcw },
+  { id: 'return_picked',    label: 'RETURN PICKED UP', desc: 'Item collected by courier agent',   icon: Truck },
+  { id: 'refund_processed', label: 'REFUND PROCESSED', desc: 'Refund credited to bank account',   icon: CheckCircle2 },
+];
+
 export default function OrderTracker() {
   const { orderId } = useParams();
   const [order, setOrder] = useState(null);
@@ -55,11 +61,12 @@ export default function OrderTracker() {
   );
 
   const isCancelled = order.status === 'cancelled';
-  const isReturnRequested = order.status === 'return_requested';
+  const isReturnFlow = ['return_requested', 'return_picked', 'refund_processed'].includes(order.status);
   const canCancel = ['placed', 'confirmed', 'packed'].includes(order.status);
   const canReturn = ['shipped', 'out_for_delivery', 'delivered'].includes(order.status);
 
-  const currentIdx = STATUS_STEPS.findIndex(s => s.id === order.status);
+  const currentSteps = isReturnFlow ? RETURN_STEPS : STATUS_STEPS;
+  const currentIdx = currentSteps.findIndex(s => s.id === order.status);
   const activeIdx = currentIdx >= 0 ? currentIdx : 0;
   const awbNumber = order.awb || `BD-${(order.orderNumber || 849201) * 31}-IN`;
 
@@ -95,7 +102,7 @@ export default function OrderTracker() {
   const formattedTime = orderDate.toLocaleTimeString('en-IN', { hour:'2-digit', minute:'2-digit' });
 
   // Progress percentage for progress bar & radar marker
-  const progressPercent = isCancelled ? 0 : Math.min(100, Math.round(((activeIdx + 1) / STATUS_STEPS.length) * 100));
+  const progressPercent = isCancelled ? 0 : Math.min(100, Math.round(((activeIdx + 1) / currentSteps.length) * 100));
 
   return (
     <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8 font-mono page-enter">
@@ -115,7 +122,7 @@ export default function OrderTracker() {
               <span className={`relative inline-flex rounded-full h-3 w-3 ${isCancelled ? 'bg-red-500' : 'bg-emerald-500'}`} />
             </span>
             <span className={`text-[10px] font-bold uppercase tracking-widest flex items-center gap-1.5 ${isCancelled ? 'text-red-400' : 'text-emerald-400'}`}>
-              <Radio className="w-3.5 h-3.5" /> {isCancelled ? 'ORDER CANCELLED' : isReturnRequested ? 'RETURN / EXCHANGE IN PROGRESS' : 'LIVE SATELLITE RADAR CONNECTED'}
+              <Radio className="w-3.5 h-3.5" /> {isCancelled ? 'ORDER CANCELLED' : isReturnFlow ? 'RETURN / EXCHANGE IN PROGRESS' : 'LIVE SATELLITE RADAR CONNECTED'}
             </span>
           </div>
 
@@ -137,7 +144,7 @@ export default function OrderTracker() {
               <strong className="text-emerald-400 font-bold text-xs uppercase">#{order.orderNumber}</strong>
             </div>
             <h1 className="font-display font-black text-white text-3xl sm:text-4xl uppercase tracking-tighter">
-              {isCancelled ? 'CANCELLED' : isReturnRequested ? 'RETURN REQUESTED' : (STATUS_STEPS[activeIdx]?.label || order.status?.toUpperCase())}
+              {isCancelled ? 'CANCELLED' : (currentSteps[activeIdx]?.label || order.status?.toUpperCase())}
             </h1>
             <p className="text-[11px] text-zinc-400 uppercase pt-0.5">
               PLACED ON {formattedDate} AT {formattedTime}
@@ -173,12 +180,12 @@ export default function OrderTracker() {
       )}
 
       {/* Return Requested Banner */}
-      {isReturnRequested && (
+      {isReturnFlow && (
         <div className="bg-amber-950 border border-amber-800 p-5 text-amber-200 text-xs uppercase flex items-center gap-3">
           <RotateCcw className="w-6 h-6 shrink-0 text-amber-400 animate-spin" />
           <div>
-            <strong className="block text-white font-bold">RETURN &amp; EXCHANGE REQUEST IN PROCESS</strong>
-            <p className="text-[10px] text-amber-300">Our dispatch logistics team will contact you within 24 hours to schedule reverse pickup from your doorstep.</p>
+            <strong className="block text-white font-bold">RETURN &amp; EXCHANGE LOGISTICS</strong>
+            <p className="text-[10px] text-amber-300">Your return request is currently being processed by our logistics team. Please pack the item securely.</p>
           </div>
         </div>
       )}
@@ -249,11 +256,11 @@ export default function OrderTracker() {
         <div className="bg-white border border-zinc-200 p-6 sm:p-8 space-y-6">
           <h3 className="font-bold text-xs uppercase tracking-widest text-black border-b border-zinc-100 pb-3 flex items-center justify-between">
             <span>TRACKING MILESTONES</span>
-            <span className="text-[10px] text-zinc-400">STATUS: {STATUS_STEPS[activeIdx]?.label}</span>
+            <span className="text-[10px] text-zinc-400">STATUS: {currentSteps[activeIdx]?.label}</span>
           </h3>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {STATUS_STEPS.map((step, idx) => {
+            {currentSteps.map((step, idx) => {
               const isPast = idx < activeIdx;
               const isCurrent = idx === activeIdx;
               const Icon = step.icon;
@@ -375,7 +382,7 @@ export default function OrderTracker() {
               </button>
             )}
 
-            {canReturn && !isReturnRequested && !isCancelled && (
+            {canReturn && !isReturnFlow && !isCancelled && (
               <button
                 onClick={() => setShowReturnModal(true)}
                 className="w-full py-3.5 bg-zinc-900 hover:bg-black text-white font-bold text-xs uppercase tracking-wider flex items-center justify-center gap-2 transition-colors press"

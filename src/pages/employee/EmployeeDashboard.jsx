@@ -360,7 +360,7 @@ export default function EmployeeDashboard() {
                 {/* Status Filter Scroll Pill Bar */}
                 <div className="overflow-x-auto pb-1 sm:pb-0">
                   <div className="flex gap-1 bg-zinc-900 p-1 border border-zinc-800 text-[10px] w-max">
-                    {['all', 'placed', 'confirmed', 'packed', 'shipped', 'delivered'].map(st => (
+                    {['all', 'placed', 'confirmed', 'packed', 'shipped', 'delivered', 'return_requested', 'return_picked', 'refund_processed', 'cancelled'].map(st => (
                       <button
                         key={st}
                         onClick={() => setStatusFilter(st)}
@@ -398,9 +398,17 @@ export default function EmployeeDashboard() {
                               ? 'bg-emerald-950 text-emerald-300 border-emerald-800'
                               : o.status === 'packed'
                               ? 'bg-blue-950 text-blue-300 border-blue-800'
+                              : o.status === 'cancelled'
+                              ? 'bg-red-950 text-red-300 border-red-800'
+                              : o.status === 'return_requested'
+                              ? 'bg-amber-950 text-amber-300 border-amber-800'
+                              : o.status === 'return_picked'
+                              ? 'bg-orange-950 text-orange-300 border-orange-800'
+                              : o.status === 'refund_processed'
+                              ? 'bg-purple-950 text-purple-300 border-purple-800'
                               : 'bg-zinc-800 text-zinc-300 border-zinc-700'
                           }`}>
-                            {o.status}
+                            {o.status.replace('_', ' ')}
                           </span>
                         </div>
 
@@ -457,6 +465,22 @@ export default function EmployeeDashboard() {
                               className="w-full py-2 bg-emerald-700 hover:bg-emerald-600 text-white uppercase col-span-2 flex items-center justify-center gap-1"
                             >
                               <CheckCircle className="w-3.5 h-3.5" /> MARK DELIVERED
+                            </button>
+                          )}
+                          {o.status === 'return_requested' && (
+                            <button
+                              onClick={() => handleUpdateStatus(o.id, 'return_picked')}
+                              className="w-full py-2 bg-amber-900 hover:bg-amber-800 text-white uppercase col-span-2 flex items-center justify-center gap-1"
+                            >
+                              <Truck className="w-3.5 h-3.5" /> MARK RETURN PICKED
+                            </button>
+                          )}
+                          {o.status === 'return_picked' && (
+                            <button
+                              onClick={() => handleUpdateStatus(o.id, 'refund_processed')}
+                              className="w-full py-2 bg-purple-900 hover:bg-purple-800 text-white uppercase col-span-2 flex items-center justify-center gap-1"
+                            >
+                              <CheckCircle className="w-3.5 h-3.5" /> PROCESS REFUND
                             </button>
                           )}
                         </div>
