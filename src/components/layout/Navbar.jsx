@@ -110,59 +110,30 @@ export default function Navbar() {
               </button>
             </form>
 
-            {/* Wishlist Button - Brutalist */}
+            {/* Wishlist Button */}
             <Link
               to="/account?tab=wishlist"
-              className="flex items-center gap-2 p-2 sm:px-3 sm:py-2 bg-white border-2 border-black text-black font-mono font-black uppercase text-[11px] sm:text-xs transition-all duration-200 shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] hover:shadow-[0px_0px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[3px] hover:translate-y-[3px]"
+              className="p-2 border border-transparent hover:border-zinc-200 text-zinc-700 hover:text-black relative transition-all"
               title="Wishlist"
             >
-              <Heart className={`w-4 h-4 sm:w-4.5 sm:h-4.5 ${wishlist.length > 0 ? 'fill-red-500 text-red-500' : ''} transition-transform hover:scale-110`} />
-              <span className="hidden sm:inline">LIKES</span>
+              <Heart className="w-4 h-4 sm:w-4.5 sm:h-4.5" />
               {wishlist.length > 0 && (
-                <span className="bg-red-500 text-white font-extrabold text-[10px] px-1.5 py-0.5 min-w-[20px] text-center border-l-2 border-black -my-2 -mr-3 sm:-mr-3 h-full flex items-center justify-center">
+                <span className="absolute -top-1 -right-1 bg-black text-white text-[8px] font-mono font-bold w-4 h-4 rounded-full flex items-center justify-center anim-pop-in">
                   {wishlist.length}
                 </span>
               )}
             </Link>
 
-            {/* Account / User Button - Brutalist */}
-            <Link
-              to={user ? '/account' : '/login'}
-              className="group flex items-center gap-2 p-2 sm:px-3 sm:py-2 bg-white border-2 border-black text-black font-mono font-black uppercase text-[11px] sm:text-xs tracking-wider transition-all duration-200 shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] hover:shadow-[0px_0px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[3px] hover:translate-y-[3px]"
-              title={user ? user.name : 'Sign In'}
-            >
-              {user ? (
-                <>
-                  {user.photoURL ? (
-                    <img
-                      src={user.photoURL}
-                      alt={user.name}
-                      className="w-4 h-4 sm:w-5 sm:h-5 object-cover border border-black shrink-0"
-                    />
-                  ) : (
-                    <span className="w-4 h-4 sm:w-5 sm:h-5 bg-black text-white font-extrabold text-[10px] flex items-center justify-center uppercase shrink-0">
-                      {user.name.charAt(0)}
-                    </span>
-                  )}
-                  <span className="hidden xl:inline max-w-[80px] truncate">{user.name.split(' ')[0]}</span>
-                </>
-              ) : (
-                <>
-                  <User className="w-4 h-4 sm:w-4.5 sm:h-4.5 group-hover:rotate-12 transition-transform" />
-                  <span className="hidden sm:inline">ACCOUNT</span>
-                </>
-              )}
-            </Link>
 
-            {/* Cart / Bag Button - Brutalist (Neon Yellow) */}
+            {/* Cart / Bag Button — Bold & Interactive */}
             <button
               onClick={() => setIsCartOpen(true)}
-              className="group flex items-center gap-2 p-2 sm:px-4 sm:py-2 bg-[#E8FF00] border-2 border-black text-black font-mono font-black uppercase text-[11px] sm:text-xs tracking-wider transition-all duration-200 shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] hover:shadow-[0px_0px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[3px] hover:translate-y-[3px]"
+              className="btn-magnetic press flex items-center gap-2 bg-black hover:bg-zinc-800 text-white px-3.5 py-2 text-xs font-mono font-bold uppercase tracking-wider transition-all shadow-sm"
               title="Cart / Shopping Bag"
             >
-              <ShoppingBag className="w-4 h-4 sm:w-4.5 sm:h-4.5 group-hover:-rotate-12 transition-transform" />
+              <ShoppingBag className="w-4 h-4" />
               <span className="hidden sm:inline">BAG</span>
-              <span className="bg-black text-[#E8FF00] font-extrabold text-[10px] px-2 py-0.5 min-w-[22px] text-center border-l-2 border-black -my-2 -mr-4 sm:-mr-4 h-full flex items-center justify-center">
+              <span className="bg-white text-black font-extrabold text-[10px] px-1.5 py-0.5 min-w-[18px] text-center">
                 {totalCount}
               </span>
             </button>
