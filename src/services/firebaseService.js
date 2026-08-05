@@ -124,18 +124,25 @@ export const FirebaseService = {
 
   /** 1. Products (Firebase Cloud Firestore & Realtime DB) */
   async getProducts() {
+    const local = ls.get(KEYS.products, INITIAL_PRODUCTS);
     try {
       const snap = await withTimeout(getDocs(collection(db, 'products')));
       if (!snap.empty) {
         const remote = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-        ls.set(KEYS.products, remote);
-        return remote;
+        const map = new Map();
+        remote.forEach(p => map.set(p.id, p));
+        local.forEach(p => {
+          if (p.id && !map.has(p.id)) map.set(p.id, p);
+        });
+        const merged = Array.from(map.values());
+        ls.set(KEYS.products, merged);
+        return merged;
       }
     } catch (err) {
       console.error("Firebase getProducts error:", err);
     }
 
-    return ls.get(KEYS.products, INITIAL_PRODUCTS);
+    return local;
   },
 
   async getProductBySlug(slug) {
@@ -306,17 +313,31 @@ export const FirebaseService = {
 
   /** 4. Categories Collection */
   async getCategories() {
+    const local = ls.get(KEYS.categories, INITIAL_CATEGORIES);
     try {
       const snap = await withTimeout(getDocs(collection(db, 'categories')));
       if (!snap.empty) {
         const remote = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-        ls.set(KEYS.categories, remote);
-        return remote;
+        const map = new Map();
+        remote.forEach(c => {
+          const key = c.id || c.slug;
+          if (key) map.set(key, c);
+        });
+        local.forEach(c => {
+          const key = c.id || c.slug;
+          if (key && !map.has(key)) map.set(key, c);
+        });
+        const merged = Array.from(map.values()).map(c => ({
+          ...c,
+          isFeatured: c.isFeatured ?? true,
+          description: c.description || 'Premium heavyweight streetwear collection.',
+        }));
+        ls.set(KEYS.categories, merged);
+        return merged;
       }
     } catch (_) {}
 
-    const current = ls.get(KEYS.categories, INITIAL_CATEGORIES);
-    return current.map(c => ({
+    return local.map(c => ({
       ...c,
       isFeatured: c.isFeatured ?? true,
       description: c.description || 'Premium heavyweight streetwear collection.',
@@ -335,7 +356,7 @@ export const FirebaseService = {
 
     syncCloudDatabases('categories', id, payload);
 
-    const current = await this.getCategories();
+    const current = ls.get(KEYS.categories, INITIAL_CATEGORIES);
     const exists = current.some(c => c.id === id || c.slug === payload.slug);
     const updated = exists
       ? current.map(c => (c.id === id || c.slug === payload.slug) ? payload : c)
@@ -347,7 +368,7 @@ export const FirebaseService = {
   async deleteCategory(id) {
     syncCloudDatabases('categories', id, null, true);
 
-    const current = await this.getCategories();
+    const current = ls.get(KEYS.categories, INITIAL_CATEGORIES);
     const updated = current.filter(c => c.id !== id && c.slug !== id);
     ls.set(KEYS.categories, updated);
   },

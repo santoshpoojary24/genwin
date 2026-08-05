@@ -737,7 +737,7 @@ export default function AdminDashboard() {
                 <h3 className="font-display font-black text-white text-base uppercase">QUICK ACTIONS</h3>
                 <div className="flex flex-col sm:flex-row flex-wrap gap-2.5 sm:gap-3">
                   <button
-                    onClick={() => { setActiveTab('products'); setEditingProduct({ name: '', category: 't-shirts', basePrice: 999, discountPrice: 799, stockQty: 25, isCustomizable: true, images: ['https://images.unsplash.com/photo-1576566588028-4147f3842f27?w=600&q=80'], description: 'Heavyweight 240 GSM combed cotton tee.', sizes: ['S','M','L','XL','XXL'], colors: [{ name: 'Black', hex: '#000000' }] }); }}
+                    onClick={() => { setActiveTab('products'); setEditingProduct({ name: '', category: categories[0]?.slug || 't-shirts', basePrice: 999, discountPrice: 799, stockQty: 25, isCustomizable: true, images: ['https://images.unsplash.com/photo-1576566588028-4147f3842f27?w=600&q=80'], description: 'Heavyweight 240 GSM combed cotton tee.', sizes: ['S','M','L','XL','XXL'], colors: [{ name: 'Black', hex: '#000000' }] }); }}
                     className="w-full sm:w-auto px-4 py-2.5 bg-white text-black font-bold text-xs uppercase flex items-center justify-center gap-2 hover:bg-zinc-200"
                   >
                     <Plus className="w-3.5 h-3.5" /> ADD NEW PRODUCT
@@ -874,7 +874,7 @@ export default function AdminDashboard() {
                   </select>
 
                   <button
-                    onClick={() => setEditingProduct({ name: '', category: 't-shirts', basePrice: 999, discountPrice: 799, stockQty: 25, isCustomizable: true, images: ['https://images.unsplash.com/photo-1576566588028-4147f3842f27?w=600&q=80'], description: 'Heavyweight 240 GSM combed cotton tee.', sizes: ['S','M','L','XL','XXL'], colors: [{ name: 'Black', hex: '#000000' }] })}
+                    onClick={() => setEditingProduct({ name: '', category: categories[0]?.slug || 't-shirts', basePrice: 999, discountPrice: 799, stockQty: 25, isCustomizable: true, images: ['https://images.unsplash.com/photo-1576566588028-4147f3842f27?w=600&q=80'], description: 'Heavyweight 240 GSM combed cotton tee.', sizes: ['S','M','L','XL','XXL'], colors: [{ name: 'Black', hex: '#000000' }] })}
                     className="w-full sm:w-auto px-4 py-2 bg-white text-black font-extrabold text-xs uppercase tracking-widest flex items-center justify-center gap-2 hover:bg-zinc-200 transition-colors"
                   >
                     <Plus className="w-4 h-4" /> ADD PRODUCT
