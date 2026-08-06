@@ -6,6 +6,7 @@ import { useAuth } from '../context/AuthContext';
 export default function Login() {
   const { loginWithGoogle, loginWithPhone, loading } = useAuth();
   const navigate = useNavigate();
+  const [error,        setError]        = useState('');
   const [phone,        setPhone]        = useState('');
   const [showOtp,      setShowOtp]      = useState(false);
   const [otpCode,      setOtpCode]      = useState('');
