@@ -627,24 +627,6 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ══ 2. USP STRIP ═════════════════════════════════════════════════ */}
-      <SR className="max-w-7xl mx-auto px-6 lg:px-12 py-16">
-        <div className="grid grid-cols-2 lg:grid-cols-4 border border-zinc-200 divide-x divide-zinc-200 stagger bg-white">
-          {[
-            { n: '01', label: 'FREE SHIPPING', sub: 'Orders above ₹999' },
-            { n: '02', label: 'SAME DAY DISPATCH', sub: 'Order before 2 PM' },
-            { n: '03', label: '7-DAY RETURNS', sub: 'Hassle-free doorstep exchange' },
-            { n: '04', label: 'SECURE PAYMENTS', sub: 'UPI · Card · COD' },
-          ].map((u, i) => (
-            <div key={i} className="sr group px-6 py-8 hover:bg-zinc-50 transition-colors duration-200 cursor-default space-y-1">
-              <span className="section-num text-zinc-400 font-bold">{u.n}</span>
-              <p className="font-mono font-black text-black text-xs uppercase tracking-widest mt-2">{u.label}</p>
-              <p className="font-mono text-[10px] text-zinc-500 uppercase">{u.sub}</p>
-            </div>
-          ))}
-        </div>
-      </SR>
-
       {/* ══ 3. PROMO CAROUSEL ════════════════════════════════════════════ */}
       <SR className="max-w-7xl mx-auto px-6 lg:px-12 space-y-5">
         <div className="flex items-center justify-between">
@@ -655,19 +637,6 @@ export default function Home() {
         </div>
         <PromoSlider customAds={ads.filter(a => a.active !== false && a.placement === 'homepage_hero')} />
       </SR>
-
-      {/* ══ 4. LOOKBOOK STRIP (GPU LOW-END FRIENDLY) ═════════════════════ */}
-      <div className="mt-20">
-        <SR className="max-w-7xl mx-auto px-6 lg:px-12 mb-5">
-          <div className="flex items-center justify-between">
-            <EyeBrow n="03" label="SS 2026 APPAREL LOOKBOOK (TAP PRODUCT TO VIEW)" />
-            <Link to="/shop" className="underline-wipe font-mono text-[10px] uppercase tracking-widest text-zinc-500 hover:text-black flex items-center gap-1 transition-colors">
-              Shop All <ArrowUpRight className="w-3 h-3" />
-            </Link>
-          </div>
-        </SR>
-        <ModelStrip products={products} />
-      </div>
 
       {/* ══ 5. CATEGORIES ════════════════════════════════════════════════ */}
       <SR className="max-w-7xl mx-auto px-6 lg:px-12 mt-20 space-y-6">
@@ -788,63 +757,6 @@ export default function Home() {
                 SHOP HOODIES <ArrowRight className="w-3.5 h-3.5" />
               </Link>
             </div>
-          </div>
-        </div>
-      </SR>
-
-      {/* ══ 9.5 CUSTOMER SUPPORT & DIRECT CONNECT STRIP ═════════════════ */}
-      <SR className="max-w-7xl mx-auto px-6 lg:px-12 mt-16">
-        <div className="bg-zinc-950 border border-zinc-800 p-8 font-mono space-y-6">
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between border-b border-zinc-900 pb-4 gap-2">
-            <div>
-              <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest block">NEED HELP OR HAVE QUESTIONS?</span>
-              <h3 className="font-display font-black text-white text-xl tracking-tight">GET IN TOUCH WITH {settings.storeName || 'जेनwin.'}</h3>
-            </div>
-            <span className="text-[9px] font-bold bg-zinc-900 border border-zinc-800 text-emerald-400 px-3 py-1 uppercase">24/7 CUSTOMER HELPLINE</span>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 pt-2">
-            {/* Gmail / Support Email */}
-            {settings?.supportEmail && (
-              <div className="bg-zinc-900/60 border border-zinc-800/80 p-4 space-y-2 group hover:border-zinc-600 transition-all">
-                <div className="flex items-center gap-2 text-white">
-                  <Mail className="w-4 h-4 text-emerald-400" />
-                  <span className="text-xs font-bold uppercase">GMAIL / SUPPORT EMAIL</span>
-                </div>
-                <p className="text-xs text-zinc-300 font-mono select-all truncate">{settings.supportEmail}</p>
-                <a href={`mailto:${settings.supportEmail}`} className="inline-flex items-center gap-1 text-[10px] font-bold text-zinc-400 hover:text-white uppercase pt-1">
-                  SEND EMAIL →
-                </a>
-              </div>
-            )}
-
-            {/* Support Phone / Call / WhatsApp */}
-            {settings?.supportPhone && (
-              <div className="bg-zinc-900/60 border border-zinc-800/80 p-4 space-y-2 group hover:border-zinc-600 transition-all">
-                <div className="flex items-center gap-2 text-white">
-                  <Phone className="w-4 h-4 text-blue-400" />
-                  <span className="text-xs font-bold uppercase">PHONE / HELPLINE</span>
-                </div>
-                <p className="text-xs text-zinc-300 font-mono select-all">{settings.supportPhone}</p>
-                <a href={`tel:${String(settings.supportPhone).replace(/[^0-9+]/g, '')}`} className="inline-flex items-center gap-1 text-[10px] font-bold text-zinc-400 hover:text-white uppercase pt-1">
-                  CALL NOW →
-                </a>
-              </div>
-            )}
-
-            {/* Instagram Handle */}
-            {settings?.instagram && (
-              <div className="bg-zinc-900/60 border border-zinc-800/80 p-4 space-y-2 group hover:border-zinc-600 transition-all">
-                <div className="flex items-center gap-2 text-white">
-                  <Instagram className="w-4 h-4 text-pink-400" />
-                  <span className="text-xs font-bold uppercase">INSTAGRAM OFFICIAL</span>
-                </div>
-                <p className="text-xs text-zinc-300 font-mono select-all truncate">{settings.instagram}</p>
-                <a href={`https://instagram.com/${String(settings.instagram).replace('@', '')}`} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 text-[10px] font-bold text-zinc-400 hover:text-white uppercase pt-1">
-                  OPEN INSTAGRAM →
-                </a>
-              </div>
-            )}
           </div>
         </div>
       </SR>
