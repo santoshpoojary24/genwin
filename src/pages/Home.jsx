@@ -342,44 +342,38 @@ function PromoSlider({ customAds = [] }) {
 /* ── Front & Center Scroll-Triggered Promo Modal (One-Time Display) ───────── */
 function PopupPromoModal({ ads = [] }) {
   const [isOpen, setIsOpen] = useState(false);
+  const [dismissed, setDismissed] = useState(() => {
+    try {
+      return sessionStorage.getItem('genwin_popup_dismissed') === 'true';
+    } catch (_) {
+      return false;
+    }
+  });
 
-  const customPopupAd = ads.find(a => a.active !== false && (a.placement === 'popup' || a.placement === 'modal'))
-                     || ads.find(a => a.active !== false && a.placement === 'homepage_hero');
-
-  const popupAd = customPopupAd || {
-    badge: 'EXCLUSIVE STORE DROP',
-    headline: 'GET 20% OFF SITE-WIDE',
-    sub: 'Use promo code GENWIN20 on your order. Free express All-India delivery on orders over ₹999.',
-    cta: 'CLAIM 20% OFF NOW',
-    link: '/shop',
-    image: 'https://images.unsplash.com/photo-1503342217505-b0a15ec3261c?w=800&q=80'
-  };
+  const customPopupAd = ads.find(a => a.active !== false && (a.placement === 'popup' || a.placement === 'modal'));
 
   useEffect(() => {
+    if (dismissed || !customPopupAd) return;
+
     const timer = setTimeout(() => {
       setIsOpen(true);
-    }, 1500);
+    }, 2500);
 
-    const handleScroll = () => {
-      if (window.scrollY > 200) {
-        setIsOpen(true);
-      }
-    };
+    return () => clearTimeout(timer);
+  }, [dismissed, customPopupAd]);
 
-    window.addEventListener('scroll', handleScroll, { passive: true });
-    return () => {
-      clearTimeout(timer);
-      window.removeEventListener('scroll', handleScroll);
-    };
-  }, []);
-
-  if (!isOpen) return null;
+  if (!isOpen || dismissed || !customPopupAd) return null;
 
   const handleClose = () => {
     setIsOpen(false);
+    setDismissed(true);
+    try {
+      sessionStorage.setItem('genwin_popup_dismissed', 'true');
+    } catch (_) {}
   };
 
-  const rawHeadline = popupAd.headline || popupAd.title || 'SPECIAL STORE DISCOUNT';
+  const popupAd = customPopupAd;
+  const rawHeadline = popupAd?.headline || popupAd?.title || 'SPECIAL STORE DISCOUNT';
   const subtext = popupAd.sub || popupAd.subtitle || '240 GSM organic cotton streetwear drop. Limited availability.';
   const badge = popupAd.badge || 'PROMO DROP';
   const cta = popupAd.cta || popupAd.linkText || 'CLAIM OFFER NOW';
