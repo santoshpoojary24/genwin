@@ -54,7 +54,29 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  // ── Firebase Google Sign-In Provider ─────────────────────────────────────
+  // ── Phone Number Sign-In Provider ─────────────────────────────────────
+  const loginWithPhone = async (phone, name = '') => {
+    setLoading(true);
+    try {
+      const cleanDigits = (phone || '').replace(/\D/g, '');
+      if (cleanDigits.length < 10) throw new Error('PLEASE ENTER A VALID 10-DIGIT MOBILE NUMBER.');
+      const formattedPhone = `+91 ${cleanDigits.slice(-10)}`;
+      const phoneUser = {
+        uid: 'phone_' + cleanDigits.slice(-10),
+        name: (name || `CUSTOMER (${cleanDigits.slice(-4)})`).trim().toUpperCase(),
+        email: `${cleanDigits.slice(-10)}@genwin-customer.com`,
+        phone: formattedPhone,
+        role: 'customer',
+        addresses: [],
+      };
+      setUser(phoneUser);
+      return { success: true, user: phoneUser };
+    } catch (err) {
+      return { success: false, error: err.message };
+    } finally {
+      setLoading(false);
+    }
+  };
   const loginWithGoogle = async () => {
     setLoading(true);
     try {
@@ -158,7 +180,7 @@ export const AuthProvider = ({ children }) => {
 
   return (
     <AuthContext.Provider value={{
-      user, login, logout, register, loginWithGoogle, loading, wishlist, toggleWishlist,
+      user, login, logout, register, loginWithGoogle, loginWithPhone, loading, wishlist, toggleWishlist,
       addAddress, updateAddress, deleteAddress, setDefaultAddress
     }}>
       {children}

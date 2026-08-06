@@ -4,32 +4,16 @@ import { LogIn, UserPlus, Eye, EyeOff, Lock, Mail, User, ArrowLeft, CheckCircle2
 import { useAuth } from '../context/AuthContext';
 
 export default function Login() {
-  const { login, register, loginWithGoogle, loading } = useAuth();
+  const { loginWithGoogle, loginWithPhone, loading } = useAuth();
   const navigate = useNavigate();
-  const [isRegister, setIsRegister] = useState(false);
-  const [showPass,   setShowPass]   = useState(false);
   const [error,      setError]      = useState('');
-  const [form,       setForm]       = useState({ name:'', email:'', phone:'', password:'' });
-
-  // Forgot Password modal state
-  const [showForgot, setShowForgot] = useState(false);
-  const [resetEmail, setResetEmail] = useState('');
-  const [resetSent,  setResetSent]  = useState(false);
+  const [phone,      setPhone]      = useState('');
+  const [showOtp,    setShowOtp]    = useState(false);
+  const [otpCode,    setOtpCode]    = useState('');
+  const [otpSending, setOtpSending] = useState(false);
 
   // Policy Modal state
   const [policyTab, setPolicyTab]   = useState(null); // 'terms' | 'privacy' | 'refund'
-
-  const set = key => e => setForm(f => ({ ...f, [key]: e.target.value }));
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setError('');
-    const res = isRegister
-      ? await register(form.email, form.password, form.name, form.phone)
-      : await login(form.email, form.password);
-    if (res?.success) navigate('/account');
-    else setError(res?.error || 'AUTHENTICATION FAILED — PLEASE TRY AGAIN.');
-  };
 
   const handleGoogleSignIn = async () => {
     setError('');
@@ -38,19 +22,33 @@ export default function Login() {
     else setError(res?.error || 'GOOGLE AUTHENTICATION FAILED. PLEASE TRY AGAIN.');
   };
 
-  const handleResetPassword = (e) => {
+  const handleSendOtp = async (e) => {
     e.preventDefault();
-    if (resetEmail.trim()) {
-      setResetSent(true);
-      setTimeout(() => {
-        setResetSent(false);
-        setShowForgot(false);
-        setResetEmail('');
-      }, 2500);
+    setError('');
+    const cleanDigits = phone.replace(/\D/g, '');
+    if (cleanDigits.length < 10) {
+      setError('PLEASE ENTER A VALID 10-DIGIT MOBILE NUMBER.');
+      return;
     }
+    setOtpSending(true);
+    // Simulate SMS OTP dispatch
+    setTimeout(() => {
+      setOtpSending(false);
+      setShowOtp(true);
+    }, 800);
   };
 
-  const field = 'w-full bg-white border border-zinc-200 text-sm px-4 py-3.5 pl-11 focus:outline-none focus:border-black transition-colors font-sans text-zinc-900 placeholder:text-zinc-400';
+  const handleVerifyOtp = async (e) => {
+    e.preventDefault();
+    setError('');
+    if (otpCode.length < 4) {
+      setError('PLEASE ENTER THE VERIFICATION OTP.');
+      return;
+    }
+    const res = await loginWithPhone(phone);
+    if (res?.success) navigate('/account');
+    else setError(res?.error || 'PHONE AUTHENTICATION FAILED.');
+  };
 
   return (
     <div className="min-h-screen bg-white flex page-enter font-mono selection:bg-black selection:text-white">
@@ -101,7 +99,7 @@ export default function Login() {
         </div>
 
         {/* Form Container */}
-        <div className="w-full max-w-sm mx-auto space-y-8 my-auto py-12">
+        <div className="w-full max-w-sm mx-auto space-y-6 my-auto py-8">
 
           {/* Logo (mobile only) */}
           <div className="lg:hidden">
@@ -113,7 +111,7 @@ export default function Login() {
               SIGN IN
             </h1>
             <p className="text-xs text-zinc-500 uppercase tracking-widest leading-relaxed">
-              Sign in with your Google account for 1-tap checkout, order tracking &amp; exclusive drops.
+              Sign in using Mobile OTP or Google 1-Tap Auth.
             </p>
           </div>
 
@@ -125,31 +123,97 @@ export default function Login() {
           )}
 
           {/* Google One-Tap Primary Action Button */}
-          <div className="space-y-4 pt-2">
-            <button
-              type="button"
-              onClick={handleGoogleSignIn}
-              disabled={loading}
-              className="w-full py-4 bg-black text-white hover:bg-zinc-800 font-extrabold text-xs uppercase tracking-widest flex items-center justify-center gap-3 transition-all rounded-xl shadow-xl press disabled:opacity-50 disabled:cursor-not-allowed border border-black"
-            >
-              {loading ? (
-                <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-              ) : (
-                <svg className="w-5 h-5 shrink-0" viewBox="0 0 24 24">
-                  <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
-                  <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
-                  <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z" />
-                  <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z" />
-                </svg>
-              )}
-              <span>{loading ? 'CONNECTING TO GOOGLE...' : 'CONTINUE WITH GOOGLE'}</span>
-            </button>
+          <button
+            type="button"
+            onClick={handleGoogleSignIn}
+            disabled={loading || otpSending}
+            className="w-full py-3.5 bg-black text-white hover:bg-zinc-800 font-extrabold text-xs uppercase tracking-widest flex items-center justify-center gap-3 transition-all rounded-xl shadow-lg press disabled:opacity-50 disabled:cursor-not-allowed border border-black"
+          >
+            {loading ? (
+              <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+            ) : (
+              <svg className="w-5 h-5 shrink-0" viewBox="0 0 24 24">
+                <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
+                <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
+                <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z" />
+                <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z" />
+              </svg>
+            )}
+            <span>CONTINUE WITH GOOGLE</span>
+          </button>
 
-            <div className="flex items-center gap-2 justify-center text-[10px] text-zinc-400 font-bold uppercase tracking-wider pt-2">
-              <Shield className="w-3.5 h-3.5 text-zinc-500" />
-              <span>100% SECURE &amp; ENCRYPTED GOOGLE AUTH</span>
-            </div>
+          {/* Divider */}
+          <div className="relative flex items-center justify-center py-2">
+            <div className="border-t border-zinc-200 w-full" />
+            <span className="bg-white px-3 text-[10px] text-zinc-400 font-bold uppercase tracking-widest shrink-0 absolute">
+              OR PHONE NUMBER
+            </span>
           </div>
+
+          {/* Mobile Phone Number Auth Form */}
+          {!showOtp ? (
+            <form onSubmit={handleSendOtp} className="space-y-4">
+              <div className="relative">
+                <span className="text-xs font-bold text-black absolute left-3.5 top-1/2 -translate-y-1/2 flex items-center gap-1">
+                  🇮🇳 +91
+                </span>
+                <input
+                  type="tel"
+                  maxLength={10}
+                  required
+                  placeholder="Enter Mobile Number"
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value.replace(/\D/g, ''))}
+                  className="w-full bg-zinc-50 border border-zinc-200 text-sm py-3.5 pl-20 pr-4 focus:outline-none focus:border-black transition-colors font-mono rounded-xl font-bold placeholder:font-normal placeholder:text-zinc-400"
+                />
+              </div>
+
+              <button
+                type="submit"
+                disabled={otpSending || phone.length < 10}
+                className="w-full py-3.5 bg-black hover:bg-zinc-800 text-white font-extrabold text-xs uppercase tracking-widest transition-all rounded-xl press disabled:opacity-40 disabled:cursor-not-allowed shadow-md"
+              >
+                {otpSending ? 'SENDING OTP...' : 'GET OTP / SIGN IN'}
+              </button>
+            </form>
+          ) : (
+            <form onSubmit={handleVerifyOtp} className="space-y-4 animate-fade-in">
+              <div className="bg-zinc-50 border border-zinc-200 p-3 rounded-xl flex items-center justify-between text-xs font-mono">
+                <span>📱 +91 {phone}</span>
+                <button
+                  type="button"
+                  onClick={() => setShowOtp(false)}
+                  className="text-[10px] font-bold text-black uppercase underline"
+                >
+                  CHANGE
+                </button>
+              </div>
+
+              <div className="space-y-1">
+                <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">
+                  ENTER 4-DIGIT VERIFICATION CODE
+                </label>
+                <input
+                  type="text"
+                  maxLength={6}
+                  autoFocus
+                  required
+                  placeholder="• • • •"
+                  value={otpCode}
+                  onChange={(e) => setOtpCode(e.target.value)}
+                  className="w-full bg-white border border-zinc-300 text-center text-lg tracking-[0.4em] py-3 focus:outline-none focus:border-black font-mono font-bold rounded-xl"
+                />
+              </div>
+
+              <button
+                type="submit"
+                disabled={loading}
+                className="w-full py-3.5 bg-black hover:bg-zinc-800 text-white font-extrabold text-xs uppercase tracking-widest transition-all rounded-xl press disabled:opacity-40 shadow-md"
+              >
+                {loading ? 'VERIFYING...' : 'VERIFY &amp; SIGN IN'}
+              </button>
+            </form>
+          )}
 
           {/* Footer Terms & Policy Links */}
           <div className="text-center pt-4 text-[10px] text-zinc-400 uppercase leading-relaxed font-mono border-t border-zinc-100">
