@@ -487,7 +487,7 @@ export default function Home() {
 
   const filteredBestsellers = products.filter(p => p.isBestseller || p.rating >= 4.5);
   const bestsellers = (filteredBestsellers.length > 0 ? filteredBestsellers : products).slice(0, 4);
-  const featuredDress = products[0] || INITIAL_PRODUCTS[0];
+  const featuredDress = products[0] || null;
 
   const handleSelectModelGarment = (m) => {
     const keywords = m.label.toUpperCase().split(' ');
@@ -565,46 +565,48 @@ export default function Home() {
           </div>
 
           {/* ── Right: Floating Animated Dress Showcase Card ── */}
-          <div className="lg:col-span-5 anim-fade-right d-200 flex justify-center">
-            <div
-              onClick={() => navigate(`/product/${featuredDress.slug || featuredDress.id}`)}
-              className="garment-card-gpu anim-garment-float relative w-full max-w-sm bg-zinc-950 border border-zinc-800 hover:border-white p-4 space-y-3 cursor-pointer group shadow-2xl transition-all"
-            >
-              <div className="relative overflow-hidden aspect-[3/4] bg-zinc-900">
-                <img
-                  src={featuredDress.images?.[0] || 'https://images.unsplash.com/photo-1576566588028-4147f3842f27?w=900&q=85'}
-                  alt={featuredDress.name}
-                  className="garment-img-zoom w-full h-full object-cover object-top opacity-90"
-                />
-                
-                {/* Floating stock pill */}
-                <div className="absolute top-3 left-3 bg-black/80 backdrop-blur-md border border-zinc-700 px-2.5 py-1 text-[9px] font-bold text-emerald-400 uppercase tracking-widest flex items-center gap-1.5">
-                  <span className="w-2 h-2 rounded-full bg-emerald-500 animate-ping" />
-                  <span>9 IN STOCK</span>
+          {featuredDress && (
+            <div className="lg:col-span-5 anim-fade-right d-200 flex justify-center">
+              <div
+                onClick={() => navigate(`/product/${featuredDress.slug || featuredDress.id}`)}
+                className="garment-card-gpu anim-garment-float relative w-full max-w-sm bg-zinc-950 border border-zinc-800 hover:border-white p-4 space-y-3 cursor-pointer group shadow-2xl transition-all"
+              >
+                <div className="relative overflow-hidden aspect-[3/4] bg-zinc-900">
+                  <img
+                    src={featuredDress.images?.[0] || featuredDress.image || 'https://images.unsplash.com/photo-1576566588028-4147f3842f27?w=900&q=85'}
+                    alt={featuredDress.name || 'Featured Dress'}
+                    className="garment-img-zoom w-full h-full object-cover object-top opacity-90"
+                  />
+                  
+                  {/* Floating stock pill */}
+                  <div className="absolute top-3 left-3 bg-black/80 backdrop-blur-md border border-zinc-700 px-2.5 py-1 text-[9px] font-bold text-emerald-400 uppercase tracking-widest flex items-center gap-1.5">
+                    <span className="w-2 h-2 rounded-full bg-emerald-500 animate-ping" />
+                    <span>9 IN STOCK</span>
+                  </div>
+
+                  {/* Price Tag Badge */}
+                  <div className="absolute top-3 right-3 bg-white text-black px-2.5 py-1 font-black text-xs uppercase shadow-md">
+                    ₹{featuredDress.discountPrice || featuredDress.price || featuredDress.basePrice}
+                  </div>
+
+                  {/* Hover overlay button */}
+                  <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center p-4">
+                    <span className="bg-white text-black text-xs font-black px-5 py-3 uppercase tracking-widest flex items-center gap-2 shadow-2xl">
+                      VIEW DRESS DETAILS <Eye className="w-4 h-4" />
+                    </span>
+                  </div>
                 </div>
 
-                {/* Price Tag Badge */}
-                <div className="absolute top-3 right-3 bg-white text-black px-2.5 py-1 font-black text-xs uppercase shadow-md">
-                  ₹{featuredDress.discountPrice || featuredDress.basePrice}
+                <div className="flex items-center justify-between pt-1">
+                  <div>
+                    <span className="text-[9px] font-bold text-zinc-500 uppercase tracking-widest block">{featuredDress.category || 'FEATURED DRESS'}</span>
+                    <h4 className="font-bold text-xs text-white uppercase truncate max-w-[200px]">{featuredDress.name}</h4>
+                  </div>
+                  <span className="text-[10px] font-bold text-zinc-400 uppercase group-hover:text-white transition-colors">TAP TO VIEW →</span>
                 </div>
-
-                {/* Hover overlay button */}
-                <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center p-4">
-                  <span className="bg-white text-black text-xs font-black px-5 py-3 uppercase tracking-widest flex items-center gap-2 shadow-2xl">
-                    VIEW DRESS DETAILS <Eye className="w-4 h-4" />
-                  </span>
-                </div>
-              </div>
-
-              <div className="flex items-center justify-between pt-1">
-                <div>
-                  <span className="text-[9px] font-bold text-zinc-500 uppercase tracking-widest block">{featuredDress.category || 'FEATURED DRESS'}</span>
-                  <h4 className="font-bold text-xs text-white uppercase truncate max-w-[200px]">{featuredDress.name}</h4>
-                </div>
-                <span className="text-[10px] font-bold text-zinc-400 uppercase group-hover:text-white transition-colors">TAP TO VIEW →</span>
               </div>
             </div>
-          </div>
+          )}
 
         </div>
 
