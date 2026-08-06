@@ -237,61 +237,71 @@ export default function Account() {
             ) : (
               <div className="space-y-4">
                 {filteredUserOrders.map(order => {
-                  const isExpanded = expandedOrderId === order.id;
-                  
                   return (
-                    <div key={order.id} className="bg-white rounded-xl border border-zinc-200 shadow-sm overflow-hidden transition-all">
-                      {/* Clickable Header */}
-                      <button 
-                        onClick={() => setExpandedOrderId(isExpanded ? null : order.id)}
-                        className="w-full text-left p-5 sm:p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4 hover:bg-zinc-50 transition-colors"
-                      >
+                    <div key={order.id} className="bg-white rounded-xl border border-zinc-200 shadow-sm overflow-hidden p-5 sm:p-6 space-y-5">
+                      
+                      {/* Order Header: Number, Date, Status, Total */}
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-zinc-100 pb-4">
                         <div>
-                          <div className="flex items-center gap-3 mb-1">
-                            <h4 className="font-semibold text-base text-black">Order #{order.orderNumber}</h4>
-                            <span className={`px-2.5 py-0.5 rounded-full text-xs font-medium ${STATUS_STYLE[order.status] || 'bg-zinc-100 text-zinc-600'}`}>
+                          <div className="flex items-center gap-3">
+                            <h4 className="font-bold text-base text-black">Order #{order.orderNumber}</h4>
+                            <span className={`px-2.5 py-0.5 rounded-full text-xs font-semibold ${STATUS_STYLE[order.status] || 'bg-zinc-100 text-zinc-600'}`}>
                               {STATUS[order.status] || order.status}
                             </span>
                           </div>
-                          <p className="text-sm text-zinc-500">
-                            Placed on {new Date(order.createdAt).toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' })}
-                            {' • '}₹{order.total}
+                          <p className="text-xs text-zinc-500 mt-1">
+                            Placed on {new Date(order.createdAt || order.date || Date.now()).toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' })}
                           </p>
                         </div>
-                        
-                        <div className="text-zinc-400">
-                          {isExpanded ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
-                        </div>
-                      </button>
 
-                      {/* Expandable Details Area */}
-                      {isExpanded && (
-                        <div className="p-5 sm:p-6 pt-0 border-t border-zinc-100 bg-white">
-                          <div className="flex flex-col sm:flex-row items-center justify-end gap-2 w-full pt-4 mb-4 border-b border-zinc-100 pb-4">
-                            <button onClick={() => handleReorder(order)} className="w-full sm:w-auto flex justify-center items-center gap-1.5 px-4 py-2 bg-zinc-100 hover:bg-zinc-200 text-black text-sm font-medium rounded-lg transition-colors">
-                              <RotateCcw className="w-4 h-4" /> {reorderedId === order.id ? 'Added!' : 'Buy Again'}
-                            </button>
-                            <Link to={`/order-success/${order.id}`} className="w-full sm:w-auto flex justify-center items-center gap-1.5 px-4 py-2 bg-black hover:bg-zinc-800 text-white text-sm font-medium rounded-lg transition-colors">
-                              Track Order <ArrowRight className="w-4 h-4" />
-                            </Link>
+                        <div className="flex items-center gap-3">
+                          <div className="text-left sm:text-right">
+                            <span className="text-[10px] text-zinc-400 block uppercase font-mono tracking-wider">Total Amount</span>
+                            <span className="font-bold text-base text-black">₹{order.total}</span>
                           </div>
+                        </div>
+                      </div>
 
-                          <div className="flex justify-between items-end">
-                            <div className="flex gap-3 overflow-x-auto pb-1 w-full">
-                              {order.items?.map((item, i) => (
-                                <div key={i} className="flex gap-3 min-w-[200px]">
-                                  <img src={item.image} alt={item.name} className="w-16 h-20 object-cover rounded-md bg-zinc-100" />
-                                  <div className="py-1">
-                                    <p className="font-medium text-sm text-black line-clamp-1">{item.name}</p>
-                                    <p className="text-xs text-zinc-500 mt-1">Size: {item.size} | Qty: {item.quantity}</p>
-                                    <p className="text-xs text-zinc-500 mt-0.5">₹{item.unitPrice || item.price}</p>
-                                  </div>
+                      {/* Order Items - Picture in Vertical List Form */}
+                      <div className="space-y-3 divide-y divide-zinc-100">
+                        {order.items?.map((item, i) => (
+                          <div key={i} className={`flex items-center justify-between gap-4 ${i > 0 ? 'pt-3' : ''}`}>
+                            <div className="flex items-center gap-4">
+                              <img 
+                                src={item.image || 'https://images.unsplash.com/photo-1521572267360-ee0c2909d518?w=800&q=80'} 
+                                alt={item.name} 
+                                className="w-16 h-20 object-cover rounded-lg bg-zinc-100 border border-zinc-200 shrink-0" 
+                              />
+                              <div className="space-y-0.5">
+                                <h5 className="font-bold text-sm text-black">{item.name}</h5>
+                                <div className="flex flex-wrap items-center gap-2 text-xs text-zinc-500">
+                                  {item.size && <span>Size: <strong className="text-zinc-700">{item.size}</strong></span>}
+                                  {item.color && <span>• Color: <strong className="text-zinc-700">{item.color}</strong></span>}
+                                  <span>• Qty: <strong className="text-zinc-700">{item.quantity}</strong></span>
                                 </div>
-                              ))}
+                                <p className="text-xs font-semibold text-zinc-900 pt-1">₹{item.unitPrice || item.price || item.basePrice}</p>
+                              </div>
                             </div>
                           </div>
-                        </div>
-                      )}
+                        ))}
+                      </div>
+
+                      {/* Order Card Action Footer */}
+                      <div className="flex flex-col sm:flex-row items-center justify-end gap-2 pt-4 border-t border-zinc-100">
+                        <button 
+                          onClick={() => handleReorder(order)} 
+                          className="w-full sm:w-auto flex justify-center items-center gap-1.5 px-4 py-2 bg-zinc-100 hover:bg-zinc-200 text-black text-xs font-bold rounded-lg transition-colors uppercase tracking-wider"
+                        >
+                          <RotateCcw className="w-3.5 h-3.5" /> {reorderedId === order.id ? 'Added!' : 'Buy Again'}
+                        </button>
+                        <Link 
+                          to={`/order-success/${order.id}`} 
+                          className="w-full sm:w-auto flex justify-center items-center gap-1.5 px-5 py-2 bg-black hover:bg-zinc-800 text-white text-xs font-bold rounded-lg transition-colors uppercase tracking-wider"
+                        >
+                          Track Order <ArrowRight className="w-3.5 h-3.5" />
+                        </Link>
+                      </div>
+
                     </div>
                   );
                 })}
