@@ -40,7 +40,7 @@ export default function Navbar() {
 
   const navLinkClass = ({ isActive }) =>
     `text-xs font-black uppercase tracking-wider transition-colors font-mono ${
-      isActive ? 'text-black underline underline-offset-4' : 'text-black/70 hover:text-black'
+      isActive ? 'text-black underline underline-offset-4' : 'text-zinc-500 hover:text-black'
     }`;
 
   const NAV_LINKS = [
@@ -56,25 +56,25 @@ export default function Navbar() {
 
   return (
     <>
-      <header className={`sticky top-0 z-40 bg-[#FFC700] text-black transition-shadow ${scrolled ? 'shadow-md border-b border-black/20' : 'border-b border-black/10'}`}>
+      <header className={`sticky top-0 z-40 bg-white text-black transition-shadow ${scrolled ? 'shadow-md border-b border-zinc-200' : 'border-b border-zinc-200/80'}`}>
 
         {/* Top Black Announcement Bar */}
         {settings.announcementEnabled !== false && (
           <div className="bg-black text-white text-[10px] sm:text-[11px] py-1.5 px-4 text-center font-mono tracking-wider uppercase flex items-center justify-center gap-2">
-            <span>⚡ EMI available 💡</span>
-            <span className="text-zinc-500">•</span>
-            <span>{settings.announcementText || `Free Home Delivery for Paid Orders`}</span>
+            <span>⚡ EMI AVAILABLE 💡</span>
+            <span className="text-zinc-600">•</span>
+            <span>{settings.announcementText || `FREE HOME DELIVERY FOR PAID ORDERS`}</span>
           </div>
         )}
 
-        {/* Main Yellow Navigation Bar (Matching Reference Image) */}
+        {/* Main Monochrome Navigation Bar */}
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-4 select-none">
 
           {/* Left Action Icons: Menu + Search */}
           <div className="flex items-center gap-4 sm:gap-5">
             <button
               onClick={() => setMobileMenuOpen(true)}
-              className="p-1 text-black hover:scale-105 transition-transform"
+              className="p-1 text-black hover:text-zinc-600 transition-colors"
               aria-label="Open Menu"
             >
               <Menu className="w-6 h-6 stroke-[2.2]" />
@@ -82,7 +82,7 @@ export default function Navbar() {
 
             <button
               onClick={() => setSearchOpen(!searchOpen)}
-              className="p-1 text-black hover:scale-105 transition-transform"
+              className="p-1 text-black hover:text-zinc-600 transition-colors"
               aria-label="Search"
             >
               <Search className="w-6 h-6 stroke-[2.2]" />
@@ -99,7 +99,7 @@ export default function Navbar() {
           {/* Right Action Icons: Wishlist + Shopping Cart */}
           <div className="flex items-center gap-4 sm:gap-5">
             {/* Desktop Quick Nav Links */}
-            <nav className="hidden lg:flex items-center gap-5 mr-2">
+            <nav className="hidden lg:flex items-center gap-6 mr-2">
               <NavLink to="/shop" className={navLinkClass}>SHOP</NavLink>
               <NavLink to="/shop?category=t-shirts" className={navLinkClass}>TEES</NavLink>
               <NavLink to="/shop?category=hoodies" className={navLinkClass}>HOODIES</NavLink>
@@ -108,7 +108,7 @@ export default function Navbar() {
             {/* Wishlist / Heart Icon */}
             <Link
               to="/wishlist"
-              className="p-1 text-black relative hover:scale-105 transition-transform"
+              className="p-1 text-black relative hover:text-zinc-600 transition-colors"
               title="Wishlist"
             >
               <Heart className="w-6 h-6 stroke-[2.2]" />
@@ -122,12 +122,12 @@ export default function Navbar() {
             {/* Shopping Cart Icon */}
             <button
               onClick={() => setIsCartOpen(true)}
-              className="p-1 text-black relative hover:scale-105 transition-transform"
+              className="p-1 text-black relative hover:text-zinc-600 transition-colors"
               title="Cart / Shopping Bag"
             >
               <ShoppingCart className="w-6 h-6 stroke-[2.2]" />
               {totalCount > 0 && (
-                <span className="absolute -top-1 -right-1 bg-black text-[#FFC700] font-extrabold text-[9px] w-4 h-4 rounded-full flex items-center justify-center border border-black">
+                <span className="absolute -top-1 -right-1 bg-black text-white font-extrabold text-[9px] w-4 h-4 rounded-full flex items-center justify-center">
                   {totalCount}
                 </span>
               )}
@@ -146,9 +146,9 @@ export default function Navbar() {
                 placeholder="SEARCH FOR SHIRTS, HOODIES, PANTS..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full bg-zinc-900 border border-zinc-700 text-white text-xs py-2.5 pl-4 pr-10 focus:outline-none focus:border-[#FFC700] uppercase font-mono tracking-wider"
+                className="w-full bg-zinc-900 border border-zinc-700 text-white text-xs py-2.5 pl-4 pr-10 focus:outline-none focus:border-white uppercase font-mono tracking-wider"
               />
-              <button type="submit" className="absolute right-3 text-[#FFC700]">
+              <button type="submit" className="absolute right-3 text-white">
                 <Search className="w-4 h-4" />
               </button>
             </form>
@@ -175,13 +175,13 @@ export default function Navbar() {
         }}
       >
         {/* Drawer Header */}
-        <div className="flex items-center justify-between px-5 py-5 bg-[#FFC700] text-black border-b border-black/20">
+        <div className="flex items-center justify-between px-5 py-5 bg-black text-white border-b border-zinc-800">
           <span className="font-display font-black text-2xl tracking-tighter uppercase">
             {settings.storeName || 'जेनwin.'}
           </span>
           <button
             onClick={() => setMobileMenuOpen(false)}
-            className="p-1.5 text-black hover:scale-110 transition-transform"
+            className="p-1.5 text-zinc-400 hover:text-white transition-colors"
             aria-label="Close menu"
           >
             <X className="w-6 h-6 stroke-[2.2]" />
