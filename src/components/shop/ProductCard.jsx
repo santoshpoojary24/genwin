@@ -91,16 +91,16 @@ export default function ProductCard({ product, onQuickView }) {
 
       {/* Image */}
       <Link to={`/product/${product.slug || product.id}`} className="block relative overflow-hidden bg-zinc-100" style={{ aspectRatio: '4/5' }}>
-        {/* Placeholder blur while loading */}
-        {!imgLoaded && (
-          <div className="absolute inset-0 skeleton" />
-        )}
         <img
           src={displayImg}
           alt={product.name}
           loading="lazy"
           onLoad={() => setImgLoaded(true)}
-          className={`w-full h-full object-cover object-top transition-transform duration-500 group-hover:scale-105 ${imgLoaded ? 'opacity-100' : 'opacity-0'}`}
+          onError={(e) => {
+            e.target.src = 'https://images.unsplash.com/photo-1576566588028-4147f3842f27?w=400&q=80';
+            setImgLoaded(true);
+          }}
+          className="w-full h-full object-cover object-top transition-transform duration-500 group-hover:scale-105 opacity-100"
         />
 
         {/* Quick View overlay */}

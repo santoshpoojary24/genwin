@@ -184,10 +184,10 @@ function ModelStrip({ onSelectGarment }) {
 
 /* ── Promo carousel ────────────────────────────────────────────────────── */
 const DEFAULT_ADS = [
-  { id: 1, eyebrow: 'LIMITED TIME', h1: '20% OFF', h2: 'SITE-WIDE.', body: 'Code GENWIN20 at checkout. Orders above ₹999.', cta: 'CLAIM OFFER', to: '/shop', image: 'https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=1600&q=80' },
-  { id: 2, eyebrow: 'NEW ARRIVAL', h1: 'HEAVYWEIGHT', h2: 'CANVAS TEE.', body: '240 GSM premium combed cotton. 12 washed colourways.', cta: 'SHOP NOW', to: '/shop?category=t-shirts', image: 'https://images.unsplash.com/photo-1503342217505-b0a15ec3261c?w=1600&q=80' },
-  { id: 3, eyebrow: 'FREE SHIPPING', h1: 'ORDERS', h2: 'ABOVE ₹999.', body: 'All-India express delivery. Same-day dispatch before 2 PM.', cta: 'START SHOPPING', to: '/shop', image: 'https://images.unsplash.com/photo-1489987707025-afc232f7ea0f?w=1600&q=80' },
-  { id: 4, eyebrow: 'COLLEGE DROPS', h1: 'BULK', h2: 'PRICING.', body: '10+ pieces for clubs, teams, and events. Special rates apply.', cta: 'GET QUOTE', to: '/customizer', image: 'https://images.unsplash.com/photo-1551028719-00167b16eac5?w=1600&q=80' },
+  { id: 1, eyebrow: 'LIMITED TIME', h1: '20% OFF', h2: 'SITE-WIDE.', body: 'Code GENWIN20 at checkout. Orders above ₹999.', cta: 'CLAIM OFFER', to: '/shop' },
+  { id: 2, eyebrow: 'NEW ARRIVAL', h1: 'HEAVYWEIGHT', h2: 'CANVAS TEE.', body: '240 GSM premium combed cotton. 12 washed colourways.', cta: 'SHOP NOW', to: '/shop?category=t-shirts' },
+  { id: 3, eyebrow: 'FREE SHIPPING', h1: 'ORDERS', h2: 'ABOVE ₹999.', body: 'All-India express delivery. Same-day dispatch before 2 PM.', cta: 'START SHOPPING', to: '/shop' },
+  { id: 4, eyebrow: 'COLLEGE DROPS', h1: 'BULK', h2: 'PRICING.', body: '10+ pieces for clubs, teams, and events. Special rates apply.', cta: 'GET QUOTE', to: '/customizer' },
 ];
 
 function PromoSlider({ customAds = [] }) {
@@ -286,44 +286,93 @@ function PromoSlider({ customAds = [] }) {
   );
 }
 
-/* ── Popup Promo ───────────────────────────────────────────────────────── */
-function PopupPromo({ ad }) {
-  const [open, setOpen] = useState(false);
+/* ── Popup Promo Modal ─────────────────────────────────────────────────── */
+function PopupPromoModal({ ads = [] }) {
+  const [isOpen, setIsOpen] = useState(false);
+  const [dismissed, setDismissed] = useState(false);
+
+  const popupAd = ads.find(a => a.active !== false && a.placement === 'popup') 
+               || ads.find(a => a.active !== false && (a.badge || a.headline));
+
   useEffect(() => {
-    // Only show popup once per session
-    const shown = sessionStorage.getItem('promo_popup_shown');
-    if (!shown && ad) {
-      const t = setTimeout(() => setOpen(true), 1500); // delay 1.5s
-      return () => clearTimeout(t);
-    }
-  }, [ad]);
+    if (!popupAd || dismissed) return;
 
-  if (!open || !ad) return null;
+    const handleScroll = () => {
+      if (window.scrollY > 250 && !dismissed) {
+        setIsOpen(true);
+      }
+    };
 
-  const close = () => {
-    setOpen(false);
-    sessionStorage.setItem('promo_popup_shown', 'true');
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    const timer = setTimeout(() => {
+      if (!dismissed) setIsOpen(true);
+    }, 3000);
+
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+      clearTimeout(timer);
+    };
+  }, [popupAd, dismissed]);
+
+  if (!isOpen || !popupAd || dismissed) return null;
+
+  const handleClose = () => {
+    setIsOpen(false);
+    setDismissed(true);
   };
 
+  const rawHeadline = popupAd.headline || popupAd.title || 'SPECIAL STORE DISCOUNT';
+  const subtext = popupAd.sub || popupAd.subtitle || '240 GSM organic cotton drop. Limited availability.';
+  const badge = popupAd.badge || 'FLASH PROMO';
+  const cta = popupAd.cta || popupAd.linkText || 'EXPLORE COLLECTION';
+  const link = popupAd.link || popupAd.linkUrl || '/shop';
+  const image = popupAd.image || 'https://images.unsplash.com/photo-1503342217505-b0a15ec3261c?w=800&q=80';
+
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
-      <div className="absolute inset-0 bg-black/80 backdrop-blur-sm" onClick={close} />
-      <div className="relative w-full max-w-lg bg-zinc-950 border border-zinc-800 shadow-2xl overflow-hidden flex flex-col sm:flex-row animate-fade-up">
-        <button onClick={close} className="absolute top-3 right-3 z-20 w-8 h-8 flex items-center justify-center bg-black/50 text-white hover:bg-black transition-colors">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-xs animate-fade-in" onClick={handleClose}>
+      <div 
+        className="relative bg-zinc-950 border border-zinc-800 text-white max-w-sm sm:max-w-md w-full overflow-hidden shadow-2xl space-y-0"
+        onClick={e => e.stopPropagation()}
+      >
+        <button 
+          onClick={handleClose} 
+          className="absolute top-3 right-3 z-20 w-8 h-8 rounded-full bg-black/80 text-zinc-400 hover:text-white border border-zinc-700 flex items-center justify-center transition-colors"
+          aria-label="Close Promo"
+        >
           <X className="w-4 h-4" />
         </button>
-        {ad.image && (
-          <div className="w-full sm:w-2/5 h-48 sm:h-auto relative shrink-0">
-            <img src={ad.image} alt="" className="w-full h-full object-cover" />
-            <div className="absolute inset-0 bg-gradient-to-t from-zinc-950 via-transparent to-transparent sm:bg-gradient-to-r" />
+
+        {image && (
+          <div className="h-44 w-full relative overflow-hidden bg-zinc-900 border-b border-zinc-800">
+            <img src={image} alt={rawHeadline} className="w-full h-full object-cover opacity-80" />
+            <div className="absolute inset-0 bg-gradient-to-t from-zinc-950 via-zinc-950/40 to-transparent" />
+            <div className="absolute bottom-3 left-4">
+              <span className="px-2.5 py-1 text-[9px] font-mono font-bold bg-white text-black uppercase tracking-widest shadow-md">
+                {badge}
+              </span>
+            </div>
           </div>
         )}
-        <div className="p-8 sm:p-10 flex-1 flex flex-col justify-center text-white relative z-10">
-          <span className="text-[10px] font-bold text-emerald-400 uppercase tracking-widest mb-2">{ad.badge || 'SPECIAL OFFER'}</span>
-          <h3 className="font-display font-black text-2xl uppercase leading-none mb-3">{ad.headline || ad.title}</h3>
-          <p className="text-zinc-400 text-xs leading-relaxed mb-6">{ad.sub || ad.subtitle}</p>
-          <Link to={ad.link || ad.linkUrl || '/shop'} onClick={close} className="btn-magnetic px-6 py-3 bg-white text-black font-black text-xs uppercase tracking-widest text-center hover:bg-zinc-200 transition-colors">
-            {ad.cta || ad.linkText || 'EXPLORE NOW'}
+
+        <div className="p-6 space-y-4 font-mono">
+          {!image && (
+            <span className="px-2.5 py-1 text-[9px] font-mono font-bold bg-white text-black uppercase tracking-widest inline-block">
+              {badge}
+            </span>
+          )}
+          <h3 className="font-display font-black text-xl sm:text-2xl uppercase tracking-tight text-white leading-tight">
+            {rawHeadline}
+          </h3>
+          <p className="text-xs text-zinc-400 uppercase leading-relaxed">
+            {subtext}
+          </p>
+
+          <Link
+            to={link}
+            onClick={handleClose}
+            className="btn-magnetic press w-full py-3.5 bg-white text-black font-mono font-black text-xs uppercase tracking-widest flex items-center justify-center gap-2 shadow-lg hover:bg-zinc-200 transition-colors"
+          >
+            {cta} <ArrowRight className="w-4 h-4" />
           </Link>
         </div>
       </div>
@@ -372,11 +421,8 @@ export default function Home() {
     }
   };
 
-  const popupAd = ads.find(a => a.active !== false && a.placement === 'popup');
-
   return (
     <div className="page-enter font-mono">
-      <PopupPromo ad={popupAd} />
 
       {/* ══ 1. HERO SECTION WITH ANIMATED DRESS SHOWCASE ══════════════════ */}
       <section className="relative bg-black min-h-[92vh] flex flex-col justify-between overflow-hidden">
@@ -758,6 +804,7 @@ export default function Home() {
       </SR>
 
       {qv && <QuickViewModal product={qv} onClose={() => setQv(null)} />}
+      <PopupPromoModal ads={ads} />
     </div>
   );
 }
