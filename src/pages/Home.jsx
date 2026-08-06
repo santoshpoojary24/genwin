@@ -301,7 +301,7 @@ function HeroBannerCarousel({ customAds = [] }) {
 
   useEffect(() => {
     if (paused) return;
-    const timer = setInterval(next, 5000);
+    const timer = setInterval(next, 2000);
     return () => clearInterval(timer);
   }, [paused, next]);
 
@@ -336,7 +336,7 @@ function HeroBannerCarousel({ customAds = [] }) {
       onTouchMove={handleTouchMove}
       onTouchEnd={handleTouchEnd}
     >
-      {/* Background Banner Image */}
+      {/* Background Banner Image - Tap anywhere to open category */}
       <div 
         key={slide.id}
         onClick={handleSlideClick}
@@ -347,13 +347,13 @@ function HeroBannerCarousel({ customAds = [] }) {
           alt={slide.headline} 
           className="w-full h-full object-cover object-top opacity-85 group-hover:scale-105 transition-transform duration-700 ease-out" 
         />
-        <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-black/20" />
+        <div className="absolute inset-0 bg-gradient-to-t from-black via-black/30 to-transparent" />
       </div>
 
-      {/* Content Overlay */}
-      <div className="relative z-10 max-w-7xl mx-auto w-full px-6 lg:px-12 pb-16 sm:pb-20 pt-20 text-white font-mono space-y-4 pointer-events-none">
+      {/* Content Overlay - Pure Info, No Buttons */}
+      <div className="relative z-10 max-w-7xl mx-auto w-full px-6 lg:px-12 pb-12 pt-20 text-white font-mono space-y-3 pointer-events-none">
         {slide.badge && (
-          <span className="inline-block px-3 py-1 bg-white text-black font-extrabold text-[10px] uppercase tracking-widest shadow-lg pointer-events-auto">
+          <span className="inline-block px-3 py-1 bg-white text-black font-extrabold text-[10px] uppercase tracking-widest shadow-lg">
             {slide.badge}
           </span>
         )}
@@ -368,45 +368,7 @@ function HeroBannerCarousel({ customAds = [] }) {
             </p>
           )}
         </div>
-
-        <div className="pt-2 pointer-events-auto">
-          {(() => {
-            const lp = getAdLinkProps(slide.link);
-            return lp.isExternal ? (
-              <a
-                href={lp.url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 px-8 py-4 bg-white text-black font-black text-xs uppercase tracking-widest hover:bg-zinc-200 transition-colors shadow-2xl rounded-xs"
-              >
-                {slide.cta} →
-              </a>
-            ) : (
-              <Link
-                to={lp.url}
-                className="inline-flex items-center gap-2 px-8 py-4 bg-white text-black font-black text-xs uppercase tracking-widest hover:bg-zinc-200 transition-colors shadow-2xl rounded-xs"
-              >
-                {slide.cta} →
-              </Link>
-            );
-          })()}
-        </div>
       </div>
-
-      {/* Slide Navigation Arrows */}
-      <button 
-        onClick={(e) => { e.stopPropagation(); prev(); }} 
-        className="absolute left-4 top-1/2 -translate-y-1/2 z-20 w-10 h-10 border border-white/20 text-white bg-black/60 backdrop-blur-md flex items-center justify-center hover:bg-white hover:text-black transition-all press"
-      >
-        <ChevronLeft className="w-5 h-5" />
-      </button>
-
-      <button 
-        onClick={(e) => { e.stopPropagation(); next(); }} 
-        className="absolute right-4 top-1/2 -translate-y-1/2 z-20 w-10 h-10 border border-white/20 text-white bg-black/60 backdrop-blur-md flex items-center justify-center hover:bg-white hover:text-black transition-all press"
-      >
-        <ChevronRight className="w-5 h-5" />
-      </button>
 
       {/* Progress Bar & Pagination Dots */}
       <div className="absolute bottom-4 left-6 sm:left-12 flex items-center gap-2 z-20">
