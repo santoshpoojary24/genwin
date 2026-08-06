@@ -92,28 +92,35 @@ function SR({ children, className = '', tag = 'div', delay = 0, type = 'sr' }) {
   );
 }
 
-/* ── Live Ticking Flash Drop Countdown Timer ────────────────────────────── */
+/* ── Genuine Real-Time Flash Drop Countdown Timer ───────────────────────── */
 function FlashCountdown() {
-  const [time, setTime] = useState({ hours: 4, minutes: 28, seconds: 15 });
+  const getTimeRemaining = useCallback(() => {
+    const now = new Date();
+    const target = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999);
+    const diff = target.getTime() - now.getTime();
+    if (diff <= 0) return { hours: 0, minutes: 0, seconds: 0 };
+    return {
+      hours: Math.floor(diff / (1000 * 60 * 60)),
+      minutes: Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60)),
+      seconds: Math.floor((diff % (1000 * 60)) / 1000)
+    };
+  }, []);
+
+  const [time, setTime] = useState(getTimeRemaining);
 
   useEffect(() => {
     const timer = setInterval(() => {
-      setTime(prev => {
-        if (prev.seconds > 0) return { ...prev, seconds: prev.seconds - 1 };
-        if (prev.minutes > 0) return { ...prev, minutes: 59, seconds: 59 };
-        if (prev.hours > 0) return { hours: prev.hours - 1, minutes: 59, seconds: 59 };
-        return { hours: 4, minutes: 28, seconds: 15 };
-      });
+      setTime(getTimeRemaining());
     }, 1000);
     return () => clearInterval(timer);
-  }, []);
+  }, [getTimeRemaining]);
 
   const fmt = n => n.toString().padStart(2, '0');
 
   return (
     <div className="inline-flex items-center gap-2 px-3.5 py-1.5 bg-red-950/80 border border-red-800/80 text-red-400 font-mono text-[10px] font-bold uppercase tracking-wider">
       <Flame className="w-3.5 h-3.5 text-red-400 animate-pulse" />
-      <span>FLASH DROP ENDS IN:</span>
+      <span>TODAY'S DROP ENDS IN:</span>
       <strong className="text-white font-mono font-black">{fmt(time.hours)}H {fmt(time.minutes)}M {fmt(time.seconds)}S</strong>
     </div>
   );
