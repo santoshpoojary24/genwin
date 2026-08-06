@@ -125,19 +125,8 @@ function FlashCountdown() {
   );
 }
 
-/* ── Scrolling model strip ─────────────────────────────────────────────── */
-const MODELS = [
-  { src: 'https://images.unsplash.com/photo-1576566588028-4147f3842f27?w=500&q=80', label: 'HEAVYWEIGHT TEE', price: '₹999' },
-  { src: 'https://images.unsplash.com/photo-1620799140408-edc6dcb6d633?w=500&q=80', label: 'FLEECE HOODIE', price: '₹1,899' },
-  { src: 'https://images.unsplash.com/photo-1503342217505-b0a15ec3261c?w=500&q=80', label: 'OVERSIZED TEE', price: '₹899' },
-  { src: 'https://images.unsplash.com/photo-1583743814966-8936f5b7be1a?w=500&q=80', label: 'CLASSIC FIT', price: '₹799' },
-  { src: 'https://images.unsplash.com/photo-1552902865-b72c031ac5ea?w=500&q=80', label: 'ACID WASH TEE', price: '₹1,099' },
-  { src: 'https://images.unsplash.com/photo-1551028719-00167b16eac5?w=500&q=80', label: 'DENIM JACKET', price: '₹2,499' },
-  { src: 'https://images.unsplash.com/photo-1578768079052-aa76e52ff62e?w=500&q=80', label: 'ZIP HOODIE', price: '₹1,999' },
-  { src: 'https://images.unsplash.com/photo-1544441893-675973e31985?w=500&q=80', label: 'VARSITY BOMBER', price: '₹2,999' },
-];
-
-function ModelStrip({ onSelectGarment }) {
+/* ── Real Products Scrolling Model Lookbook Strip ─────────────────────────────── */
+function ModelStrip({ products = [] }) {
   const trackRef = useRef(null);
   const pos = useRef(0);
   const raf = useRef(null);
@@ -158,31 +147,41 @@ function ModelStrip({ onSelectGarment }) {
     p?.addEventListener('mouseenter', pause);
     p?.addEventListener('mouseleave', resume);
     return () => { cancelAnimationFrame(raf.current); p?.removeEventListener('mouseenter', pause); p?.removeEventListener('mouseleave', resume); };
-  }, []);
+  }, [products]);
 
-  const all = [...MODELS, ...MODELS];
+  if (!products || products.length === 0) return null;
+
+  // Duplicate items array so continuous marquee scrolling is seamless
+  const displayItems = products.length < 4 ? [...products, ...products, ...products, ...products] : [...products, ...products];
+
   return (
     <div className="overflow-hidden select-none">
       <div ref={trackRef} className="flex gap-3 will-change-transform" style={{ width: 'max-content' }}>
-        {all.map((m, i) => (
-          <div
+        {displayItems.map((p, i) => (
+          <Link
             key={i}
-            onClick={() => onSelectGarment(m)}
-            className="garment-card-gpu relative shrink-0 w-44 sm:w-52 border border-zinc-200 hover:border-black cursor-pointer group bg-white p-2 space-y-2 shadow-sm"
+            to={`/product/${p.slug || p.id}`}
+            className="garment-card-gpu relative shrink-0 w-44 sm:w-52 border border-zinc-200 hover:border-black cursor-pointer group bg-white p-2 space-y-2 shadow-sm block"
           >
             <div className="relative overflow-hidden aspect-[3/4] bg-zinc-100">
-              <img src={m.src} alt={m.label} loading="lazy" draggable={false} className="garment-img-zoom w-full h-full object-cover object-top" />
+              <img 
+                src={p.images?.[0] || p.image || 'https://images.unsplash.com/photo-1521572267360-ee0c2909d518?w=800&q=80'} 
+                alt={p.name} 
+                loading="lazy" 
+                draggable={false} 
+                className="garment-img-zoom w-full h-full object-cover object-top" 
+              />
               <div className="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center p-2">
                 <span className="bg-black text-white text-[9px] font-mono font-bold px-2.5 py-1 uppercase tracking-widest flex items-center gap-1 shadow-md">
-                  QUICK VIEW <Eye className="w-3 h-3" />
+                  VIEW DRESS <Eye className="w-3 h-3" />
                 </span>
               </div>
             </div>
-            <div className="flex items-center justify-between font-mono text-[10px] uppercase font-bold">
-              <span className="text-black truncate">{m.label}</span>
-              <span className="text-emerald-600 font-extrabold">{m.price}</span>
+            <div className="flex items-center justify-between font-mono text-[10px] uppercase font-bold gap-2">
+              <span className="text-black truncate flex-1">{p.name}</span>
+              <span className="text-emerald-600 font-extrabold shrink-0">₹{p.price || p.basePrice || p.discountPrice}</span>
             </div>
-          </div>
+          </Link>
         ))}
       </div>
     </div>
@@ -654,13 +653,13 @@ export default function Home() {
       <div className="mt-20">
         <SR className="max-w-7xl mx-auto px-6 lg:px-12 mb-5">
           <div className="flex items-center justify-between">
-            <EyeBrow n="03" label="SS 2026 APPAREL LOOKBOOK (TAP FOR QUICK VIEW)" />
+            <EyeBrow n="03" label="SS 2026 APPAREL LOOKBOOK (TAP PRODUCT TO VIEW)" />
             <Link to="/shop" className="underline-wipe font-mono text-[10px] uppercase tracking-widest text-zinc-500 hover:text-black flex items-center gap-1 transition-colors">
               Shop All <ArrowUpRight className="w-3 h-3" />
             </Link>
           </div>
         </SR>
-        <ModelStrip onSelectGarment={handleSelectModelGarment} />
+        <ModelStrip products={products} />
       </div>
 
       {/* ══ 5. CATEGORIES ════════════════════════════════════════════════ */}
