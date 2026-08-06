@@ -237,70 +237,84 @@ export default function Account() {
             ) : (
               <div className="space-y-4">
                 {filteredUserOrders.map(order => {
+                  const isExpanded = expandedOrderId === order.id;
+
                   return (
-                    <div key={order.id} className="bg-white rounded-xl border border-zinc-200 shadow-sm overflow-hidden p-5 sm:p-6 space-y-5">
+                    <div key={order.id} className="bg-white rounded-xl border border-zinc-200 shadow-sm overflow-hidden transition-all">
                       
-                      {/* Order Header: Number, Date, Status, Total */}
-                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-zinc-100 pb-4">
-                        <div>
-                          <div className="flex items-center gap-3">
-                            <h4 className="font-bold text-base text-black">Order #{order.orderNumber}</h4>
-                            <span className={`px-2.5 py-0.5 rounded-full text-xs font-semibold ${STATUS_STYLE[order.status] || 'bg-zinc-100 text-zinc-600'}`}>
-                              {STATUS[order.status] || order.status}
-                            </span>
+                      {/* ── Main Collapsed Bar: Order No, Status, Buy Again & Track Order ── */}
+                      <div className="p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white">
+                        
+                        {/* Clickable Order Info to toggle Accordion Dropdown */}
+                        <div 
+                          onClick={() => setExpandedOrderId(isExpanded ? null : order.id)}
+                          className="flex items-center gap-3 cursor-pointer group flex-1"
+                        >
+                          <div className="text-zinc-400 group-hover:text-black transition-colors shrink-0">
+                            {isExpanded ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
                           </div>
-                          <p className="text-xs text-zinc-500 mt-1">
-                            Placed on {new Date(order.createdAt || order.date || Date.now()).toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' })}
-                          </p>
-                        </div>
-
-                        <div className="flex items-center gap-3">
-                          <div className="text-left sm:text-right">
-                            <span className="text-[10px] text-zinc-400 block uppercase font-mono tracking-wider">Total Amount</span>
-                            <span className="font-bold text-base text-black">₹{order.total}</span>
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* Order Items - Picture in Vertical List Form */}
-                      <div className="space-y-3 divide-y divide-zinc-100">
-                        {order.items?.map((item, i) => (
-                          <div key={i} className={`flex items-center justify-between gap-4 ${i > 0 ? 'pt-3' : ''}`}>
-                            <div className="flex items-center gap-4">
-                              <img 
-                                src={item.image || 'https://images.unsplash.com/photo-1521572267360-ee0c2909d518?w=800&q=80'} 
-                                alt={item.name} 
-                                className="w-16 h-20 object-cover rounded-lg bg-zinc-100 border border-zinc-200 shrink-0" 
-                              />
-                              <div className="space-y-0.5">
-                                <h5 className="font-bold text-sm text-black">{item.name}</h5>
-                                <div className="flex flex-wrap items-center gap-2 text-xs text-zinc-500">
-                                  {item.size && <span>Size: <strong className="text-zinc-700">{item.size}</strong></span>}
-                                  {item.color && <span>• Color: <strong className="text-zinc-700">{item.color}</strong></span>}
-                                  <span>• Qty: <strong className="text-zinc-700">{item.quantity}</strong></span>
-                                </div>
-                                <p className="text-xs font-semibold text-zinc-900 pt-1">₹{item.unitPrice || item.price || item.basePrice}</p>
-                              </div>
+                          <div>
+                            <div className="flex items-center gap-2.5">
+                              <h4 className="font-bold text-base text-black group-hover:underline">Order #{order.orderNumber}</h4>
+                              <span className={`px-2.5 py-0.5 rounded-full text-xs font-semibold ${STATUS_STYLE[order.status] || 'bg-zinc-100 text-zinc-600'}`}>
+                                {STATUS[order.status] || order.status}
+                              </span>
                             </div>
+                            <p className="text-xs text-zinc-500 mt-0.5">
+                              Placed on {new Date(order.createdAt || order.date || Date.now()).toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' })}
+                              {' • '}₹{order.total}
+                            </p>
                           </div>
-                        ))}
+                        </div>
+
+                        {/* Quick Action Buttons */}
+                        <div className="flex items-center gap-2 shrink-0">
+                          <button 
+                            onClick={() => handleReorder(order)} 
+                            className="flex items-center gap-1.5 px-3.5 py-2 bg-zinc-100 hover:bg-zinc-200 text-black text-xs font-bold rounded-lg transition-colors uppercase tracking-wider"
+                          >
+                            <RotateCcw className="w-3.5 h-3.5" /> {reorderedId === order.id ? 'Added!' : 'Buy Again'}
+                          </button>
+                          <Link 
+                            to={`/order-success/${order.id}`} 
+                            className="flex items-center gap-1.5 px-4 py-2 bg-black hover:bg-zinc-800 text-white text-xs font-bold rounded-lg transition-colors uppercase tracking-wider"
+                          >
+                            Track Order <ArrowRight className="w-3.5 h-3.5" />
+                          </Link>
+                        </div>
+
                       </div>
 
-                      {/* Order Card Action Footer */}
-                      <div className="flex flex-col sm:flex-row items-center justify-end gap-2 pt-4 border-t border-zinc-100">
-                        <button 
-                          onClick={() => handleReorder(order)} 
-                          className="w-full sm:w-auto flex justify-center items-center gap-1.5 px-4 py-2 bg-zinc-100 hover:bg-zinc-200 text-black text-xs font-bold rounded-lg transition-colors uppercase tracking-wider"
-                        >
-                          <RotateCcw className="w-3.5 h-3.5" /> {reorderedId === order.id ? 'Added!' : 'Buy Again'}
-                        </button>
-                        <Link 
-                          to={`/order-success/${order.id}`} 
-                          className="w-full sm:w-auto flex justify-center items-center gap-1.5 px-5 py-2 bg-black hover:bg-zinc-800 text-white text-xs font-bold rounded-lg transition-colors uppercase tracking-wider"
-                        >
-                          Track Order <ArrowRight className="w-3.5 h-3.5" />
-                        </Link>
-                      </div>
+                      {/* ── Accordion Dropdown: T-Shirt Image with Name & Details in List Form ── */}
+                      {isExpanded && (
+                        <div className="p-5 border-t border-zinc-100 bg-zinc-50/50 space-y-3 animate-fade-in">
+                          <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest mb-1 font-mono">
+                            ORDER ITEMS ({order.items?.length || 0})
+                          </p>
+                          <div className="space-y-3 divide-y divide-zinc-200/60">
+                            {order.items?.map((item, i) => (
+                              <div key={i} className={`flex items-center justify-between gap-4 ${i > 0 ? 'pt-3' : ''}`}>
+                                <div className="flex items-center gap-4">
+                                  <img 
+                                    src={item.image || 'https://images.unsplash.com/photo-1521572267360-ee0c2909d518?w=800&q=80'} 
+                                    alt={item.name} 
+                                    className="w-16 h-20 object-cover rounded-lg bg-zinc-100 border border-zinc-200 shrink-0" 
+                                  />
+                                  <div className="space-y-0.5">
+                                    <h5 className="font-bold text-sm text-black">{item.name}</h5>
+                                    <div className="flex flex-wrap items-center gap-2 text-xs text-zinc-500">
+                                      {item.size && <span>Size: <strong className="text-zinc-700">{item.size}</strong></span>}
+                                      {item.color && <span>• Color: <strong className="text-zinc-700">{item.color}</strong></span>}
+                                      <span>• Qty: <strong className="text-zinc-700">{item.quantity}</strong></span>
+                                    </div>
+                                    <p className="text-xs font-semibold text-zinc-900 pt-1">₹{item.unitPrice || item.price || item.basePrice}</p>
+                                  </div>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
 
                     </div>
                   );
