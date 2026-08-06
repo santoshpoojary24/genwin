@@ -722,45 +722,6 @@ export default function Home() {
         )}
       </SR>
 
-      {/* ══ 8. EDITORIAL BANNER ══════════════════════════════════════════ */}
-      <SR className="max-w-7xl mx-auto px-6 lg:px-12 mt-20">
-        <div className="grid lg:grid-cols-2 border border-zinc-200 shadow-sm">
-          {/* Left: image */}
-          <div className="img-zoom border-b lg:border-b-0 lg:border-r border-zinc-200 relative overflow-hidden bg-black" style={{ aspectRatio: '4/3', minHeight: 280 }}>
-            <img
-              src="https://images.unsplash.com/photo-1620799140408-edc6dcb6d633?w=900&q=85"
-              alt="Fleece hoodie collection"
-              className="w-full h-full object-cover opacity-90"
-              loading="lazy"
-            />
-          </div>
-          {/* Right: copy */}
-          <div className="bg-zinc-50 p-8 sm:p-14 flex flex-col justify-between space-y-6">
-            <div>
-              <span className="section-num text-zinc-500 font-bold">MATERIAL SPOTLIGHT</span>
-              <h2 className="font-display font-black text-black uppercase mt-4 text-3xl sm:text-4xl tracking-tight leading-none">
-                380 GSM<br />FLEECE<br />HOODIE.
-              </h2>
-              <p className="font-mono text-zinc-500 text-xs uppercase tracking-wide mt-5 leading-relaxed max-w-xs">
-                Ultra-soft fleece lining. Kangaroo pocket. Ribbed cuffs. Built for cold-weather comfort — and turning heads.
-              </p>
-            </div>
-            <div className="space-y-4">
-              {['Available in S–XXL', '4 colourways', 'DTG & embroidery ready'].map(f => (
-                <div key={f} className="flex items-center gap-3 font-mono text-[11px] uppercase tracking-widest">
-                  <span className="w-1.5 h-1.5 bg-black shrink-0" />
-                  <span className="text-zinc-700">{f}</span>
-                </div>
-              ))}
-              <Link to="/shop?category=hoodies"
-                className="btn-magnetic press inline-flex items-center gap-2 mt-4 px-8 py-3.5 bg-black text-white font-mono font-black text-xs uppercase tracking-widest shadow-md">
-                SHOP HOODIES <ArrowRight className="w-3.5 h-3.5" />
-              </Link>
-            </div>
-          </div>
-        </div>
-      </SR>
-
       {/* ══ 11. FINAL CTA ════════════════════════════════════════════════ */}
       <SR className="max-w-7xl mx-auto px-6 lg:px-12 mt-16 mb-16">
         <div className="relative bg-black overflow-hidden flex flex-col lg:flex-row items-center justify-between gap-10 px-8 sm:px-14 py-16 border border-zinc-900 shadow-2xl">
