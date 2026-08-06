@@ -183,25 +183,42 @@ function ModelStrip({ onSelectGarment }) {
 }
 
 /* ── Promo carousel ────────────────────────────────────────────────────── */
-const ADS = [
+const DEFAULT_ADS = [
   { id: 1, eyebrow: 'LIMITED TIME', h1: '20% OFF', h2: 'SITE-WIDE.', body: 'Code GENWIN20 at checkout. Orders above ₹999.', cta: 'CLAIM OFFER', to: '/shop' },
   { id: 2, eyebrow: 'NEW ARRIVAL', h1: 'HEAVYWEIGHT', h2: 'CANVAS TEE.', body: '240 GSM premium combed cotton. 12 washed colourways.', cta: 'SHOP NOW', to: '/shop?category=t-shirts' },
   { id: 3, eyebrow: 'FREE SHIPPING', h1: 'ORDERS', h2: 'ABOVE ₹999.', body: 'All-India express delivery. Same-day dispatch before 2 PM.', cta: 'START SHOPPING', to: '/shop' },
   { id: 4, eyebrow: 'COLLEGE DROPS', h1: 'BULK', h2: 'PRICING.', body: '10+ pieces for clubs, teams, and events. Special rates apply.', cta: 'GET QUOTE', to: '/customizer' },
 ];
 
-function PromoSlider() {
+function PromoSlider({ customAds = [] }) {
+  const displayAds = customAds.length > 0 
+    ? customAds.map(a => {
+        const parts = a.headline ? a.headline.split(' ') : ['SALE'];
+        const h1 = parts[0];
+        const h2 = parts.slice(1).join(' ');
+        return {
+          id: a.id,
+          eyebrow: a.badge || 'PROMO',
+          h1: h1,
+          h2: h2,
+          body: a.sub || '',
+          cta: a.cta || 'SHOP NOW',
+          to: a.link || '/shop'
+        };
+      })
+    : DEFAULT_ADS;
+
   const [cur, setCur] = useState(0);
   const [paused, setPaused] = useState(false);
-  const next = useCallback(() => setCur(c => (c + 1) % ADS.length), []);
-  const prev = useCallback(() => setCur(c => (c - 1 + ADS.length) % ADS.length), []);
+  const next = useCallback(() => setCur(c => (c + 1) % displayAds.length), [displayAds.length]);
+  const prev = useCallback(() => setCur(c => (c - 1 + displayAds.length) % displayAds.length), [displayAds.length]);
 
   useEffect(() => {
     if (paused) return;
     const id = setInterval(next, 4500);
     return () => clearInterval(id);
   }, [paused, next]);
-  const ad = ADS[cur];
+  const ad = displayAds[cur] || displayAds[0];
 
   return (
     <div className="relative bg-black overflow-hidden border border-zinc-900 shadow-2xl"
@@ -250,7 +267,7 @@ function PromoSlider() {
 
       {/* Dots */}
       <div className="absolute bottom-4 left-8 sm:left-16 flex gap-1.5 z-20">
-        {ADS.map((_, i) => (
+        {displayAds.map((_, i) => (
           <button key={i} onClick={() => setCur(i)}
             className={`transition-all duration-300 h-px ${i === cur ? 'w-6 bg-white' : 'w-2 bg-zinc-700 hover:bg-zinc-500'}`} />
         ))}
@@ -265,16 +282,18 @@ function PromoSlider() {
 export default function Home() {
   const [products, setProducts] = useState(INITIAL_PRODUCTS);
   const [categories, setCategories] = useState(INITIAL_CATEGORIES);
+  const [ads, setAds] = useState([]);
   const [loading, setLoading] = useState(false);
   const [qv, setQv] = useState(null);
   const { settings } = useSettings();
   const navigate = useNavigate();
 
   useEffect(() => {
-    Promise.all([FirebaseService.getProducts(), FirebaseService.getCategories()])
-      .then(([p, c]) => {
+    Promise.all([FirebaseService.getProducts(), FirebaseService.getCategories(), FirebaseService.getAds()])
+      .then(([p, c, a]) => {
         if (p && p.length > 0) setProducts(p);
         if (c && c.length > 0) setCategories(c);
+        if (a && a.length > 0) setAds(a);
       })
       .finally(() => setLoading(false));
   }, []);
@@ -439,7 +458,7 @@ export default function Home() {
             All Products <ArrowUpRight className="w-3 h-3" />
           </Link>
         </div>
-        <PromoSlider />
+        <PromoSlider customAds={ads.filter(a => a.active && a.placement === 'homepage_hero')} />
       </SR>
 
       {/* ══ 4. LOOKBOOK STRIP (GPU LOW-END FRIENDLY) ═════════════════════ */}
