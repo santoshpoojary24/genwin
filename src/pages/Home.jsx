@@ -385,14 +385,7 @@ function PopupPromoModal({ ads = [] }) {
         className="relative bg-zinc-950 border border-zinc-800 text-white max-w-sm sm:max-w-md w-full overflow-hidden shadow-2xl space-y-0"
         onClick={e => e.stopPropagation()}
       >
-        {/* Prominent Top Close Button */}
-        <button 
-          onClick={handleClose} 
-          className="absolute top-3 right-3 z-30 px-2.5 py-1 bg-black/90 hover:bg-zinc-800 text-zinc-300 hover:text-white border border-zinc-700 text-[10px] font-mono font-bold uppercase tracking-widest flex items-center gap-1 transition-colors"
-          aria-label="Close Promo"
-        >
-          <span>CLOSE</span> <X className="w-3.5 h-3.5" />
-        </button>
+
 
         {/* Promo Image Header */}
         {image && (
