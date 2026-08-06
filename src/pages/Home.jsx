@@ -386,26 +386,56 @@ function HeroBannerCarousel({ customAds = [] }) {
 
 const PromoSlider = HeroBannerCarousel;
 
-/* ── Homepage Hero Banner (Placed After Shop By Category) ── */
+/* ── Homepage Hero Banner (Supports Multiple Rotating Hero Banners) ── */
 function HomepageHeroBanner({ customAds = [] }) {
-  const heroAd = (customAds || []).find(a => a.active !== false && a.placement === 'homepage_hero');
+  const heroAds = (customAds || []).filter(a => a.active !== false && a.placement === 'homepage_hero');
 
-  const rawHeadline = heroAd?.headline || heroAd?.title || 'WEAR YOUR IDENTITY.';
+  const defaultHero = {
+    id: 'default',
+    badge: 'SPRING / SUMMER 2026',
+    headline: 'WEAR YOUR IDENTITY.',
+    body: '240 GSM heavyweight cotton streetwear, acid-wash hoodies, and custom DTG prints.',
+    cta: 'EXPLORE CATALOG',
+    link: '/shop',
+    image: null
+  };
+
+  const slides = heroAds.length > 0 
+    ? heroAds.map((a, i) => ({
+        id: a.id || i,
+        badge: a.badge || 'SPRING / SUMMER 2026',
+        headline: a.headline || a.title || 'WEAR YOUR IDENTITY.',
+        body: a.sub || a.subtitle || '240 GSM heavyweight cotton streetwear, acid-wash hoodies, and custom DTG prints.',
+        cta: a.cta || a.linkText || 'EXPLORE CATALOG',
+        link: a.link || a.linkUrl || '/shop',
+        image: a.image || null
+      }))
+    : [defaultHero];
+
+  const [currentIndex, setCurrentIndex] = useState(0);
+
+  useEffect(() => {
+    if (slides.length <= 1) return;
+    const interval = setInterval(() => {
+      setCurrentIndex(prev => (prev + 1) % slides.length);
+    }, 4500);
+    return () => clearInterval(interval);
+  }, [slides.length]);
+
+  const currentSlide = slides[currentIndex] || slides[0];
+
+  const rawHeadline = currentSlide.headline;
   const parts = rawHeadline.split(' ');
   const h1 = parts[0] || 'WEAR';
   const h2 = parts[1] || 'YOUR';
   const h3 = parts.slice(2).join(' ') || 'IDENTITY.';
-  const body = heroAd?.sub || heroAd?.subtitle || '240 GSM heavyweight cotton streetwear, acid-wash hoodies, and custom DTG prints.';
-  const cta = heroAd?.cta || heroAd?.linkText || 'EXPLORE CATALOG';
-  const link = heroAd?.link || heroAd?.linkUrl || '/shop';
-  const bgImage = heroAd?.image || null;
 
   return (
-    <SR className="max-w-7xl mx-auto px-6 lg:px-12 mt-20">
-      <div className="relative bg-black border border-zinc-900 shadow-2xl overflow-hidden text-white font-mono p-8 sm:p-16">
-        {bgImage && (
+    <SR className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-12 mt-20">
+      <div className="relative bg-black border border-zinc-900 shadow-2xl overflow-hidden text-white font-mono p-8 sm:p-16 rounded-2xl">
+        {currentSlide.image && (
           <>
-            <img src={bgImage} alt="" className="absolute inset-0 w-full h-full object-cover opacity-40" />
+            <img src={currentSlide.image} alt="" className="absolute inset-0 w-full h-full object-cover opacity-40 transition-opacity duration-700" />
             <div className="absolute inset-0 bg-gradient-to-r from-black via-black/80 to-transparent" />
           </>
         )}
@@ -413,7 +443,7 @@ function HomepageHeroBanner({ customAds = [] }) {
           <div className="flex items-center gap-3">
             <FlashCountdown />
             <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">
-              {heroAd?.badge || 'SPRING / SUMMER 2026'}
+              {currentSlide.badge}
             </span>
           </div>
 
@@ -422,30 +452,42 @@ function HomepageHeroBanner({ customAds = [] }) {
           </h2>
 
           <p className="text-xs text-zinc-400 uppercase tracking-widest leading-relaxed max-w-md">
-            {body}
+            {currentSlide.body}
           </p>
 
           <div className="flex flex-wrap items-center gap-4 pt-2">
             {(() => {
-              const lp = getAdLinkProps(link);
+              const lp = getAdLinkProps(currentSlide.link);
               return lp.isExternal ? (
                 <a href={lp.url} target="_blank" rel="noreferrer"
-                  className="btn-magnetic press inline-flex items-center gap-2 px-8 py-4 bg-white text-black font-black text-xs uppercase tracking-widest shadow-xl hover:bg-zinc-200 transition-colors">
-                  {cta} <ArrowRight className="w-4 h-4" />
+                  className="btn-magnetic press inline-flex items-center gap-2 px-8 py-4 bg-white text-black font-black text-xs uppercase tracking-widest shadow-xl hover:bg-zinc-200 transition-colors rounded-xl">
+                  {currentSlide.cta} <ArrowRight className="w-4 h-4" />
                 </a>
               ) : (
                 <Link to={lp.url}
-                  className="btn-magnetic press inline-flex items-center gap-2 px-8 py-4 bg-white text-black font-black text-xs uppercase tracking-widest shadow-xl hover:bg-zinc-200 transition-colors">
-                  {cta} <ArrowRight className="w-4 h-4" />
+                  className="btn-magnetic press inline-flex items-center gap-2 px-8 py-4 bg-white text-black font-black text-xs uppercase tracking-widest shadow-xl hover:bg-zinc-200 transition-colors rounded-xl">
+                  {currentSlide.cta} <ArrowRight className="w-4 h-4" />
                 </Link>
               );
             })()}
 
             <Link to="/customizer"
-              className="press inline-flex items-center gap-2 px-8 py-4 bg-zinc-900 border border-zinc-800 text-white hover:border-zinc-500 font-bold text-xs uppercase tracking-widest transition-colors">
+              className="press inline-flex items-center gap-2 px-8 py-4 bg-zinc-900 border border-zinc-800 text-white hover:border-zinc-500 font-bold text-xs uppercase tracking-widest transition-colors rounded-xl">
               <Sparkles className="w-4 h-4 text-emerald-400" /> CUSTOM PRINT STUDIO
             </Link>
           </div>
+
+          {slides.length > 1 && (
+            <div className="flex items-center gap-2 pt-4">
+              {slides.map((s, idx) => (
+                <button
+                  key={s.id || idx}
+                  onClick={() => setCurrentIndex(idx)}
+                  className={`h-1.5 transition-all duration-300 rounded-full ${idx === currentIndex ? 'w-8 bg-white' : 'w-2 bg-zinc-700 hover:bg-zinc-500'}`}
+                />
+              ))}
+            </div>
+          )}
 
           <div className="pt-6 border-t border-zinc-900 grid grid-cols-3 gap-6">
             <Stat value={240} suffix=" GSM" label="HEAVY COTTON" delay={0} />
