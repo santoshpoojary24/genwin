@@ -419,6 +419,13 @@ export default function Customizer() {
     setCurrentItems(prev => prev.map(it => it.id === id ? { ...it, x, y } : it));
   }, [setCurrentItems]);
 
+  const resizeItem = useCallback((id, newSize) => {
+    setCurrentItems(prev => prev.map(it => it.id === id ? { ...it, size: newSize } : it));
+  }, [setCurrentItems]);
+
+  // get the currently active item object
+  const activeItem = currentItems.find(it => it.id === activeId) || null;
+
   const deleteActive = () => {
     setCurrentItems(prev => prev.filter(it => it.id !== activeId));
     setActiveId(null);
@@ -531,14 +538,44 @@ export default function Customizer() {
             {view === 'front' ? '📌 Chest print area' : '📌 Full back print area'} · Drag to reposition
           </p>
 
-          {/* Selected item controls */}
-          {activeId && (
-            <button
-              onClick={deleteActive}
-              className="mt-3 px-4 py-2 bg-red-900/40 hover:bg-red-900/70 border border-red-800 text-red-400 text-[11px] font-bold uppercase rounded-xl transition-all"
-            >
-              🗑 Remove selected
-            </button>
+          {/* ── Active item controls ── */}
+          {activeItem && (
+            <div className="mt-3 w-full max-w-[320px] bg-zinc-800/80 border border-zinc-700 rounded-2xl p-3 space-y-3">
+              {/* Resize slider — only for images */}
+              {activeItem.type === 'image' && (
+                <div>
+                  <div className="flex items-center justify-between mb-1.5">
+                    <span className="text-[10px] text-zinc-400 uppercase tracking-widest">Resize Image</span>
+                    <span className="text-[10px] font-bold text-violet-400">{activeItem.size || 80}px</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => resizeItem(activeItem.id, Math.max(30, (activeItem.size || 80) - 10))}
+                      className="w-8 h-8 bg-zinc-700 hover:bg-zinc-600 border border-zinc-600 rounded-lg text-white font-bold flex items-center justify-center text-lg leading-none"
+                    >−</button>
+                    <input
+                      type="range"
+                      min={30}
+                      max={220}
+                      value={activeItem.size || 80}
+                      onChange={e => resizeItem(activeItem.id, Number(e.target.value))}
+                      className="flex-1 h-1.5 accent-violet-500 cursor-pointer"
+                    />
+                    <button
+                      onClick={() => resizeItem(activeItem.id, Math.min(220, (activeItem.size || 80) + 10))}
+                      className="w-8 h-8 bg-zinc-700 hover:bg-zinc-600 border border-zinc-600 rounded-lg text-white font-bold flex items-center justify-center text-lg leading-none"
+                    >+</button>
+                  </div>
+                </div>
+              )}
+              {/* Delete */}
+              <button
+                onClick={deleteActive}
+                className="w-full py-2 bg-red-900/40 hover:bg-red-900/70 border border-red-800 text-red-400 text-[11px] font-bold uppercase rounded-xl transition-all"
+              >
+                🗑 Remove selected
+              </button>
+            </div>
           )}
 
           {/* Size Selector */}
