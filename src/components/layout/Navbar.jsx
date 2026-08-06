@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link, NavLink, useNavigate } from 'react-router-dom';
-import { ShoppingBag, Heart, User, Search, Menu, X, ArrowRight, LogIn } from 'lucide-react';
+import { ShoppingCart, Heart, User, Search, Menu, X, ArrowRight, LogIn } from 'lucide-react';
 import { useCart } from '../../context/CartContext';
 import { useAuth } from '../../context/AuthContext';
 import { useSettings } from '../../context/SettingsContext';
@@ -12,6 +12,7 @@ export default function Navbar() {
   const { settings } = useSettings();
 
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [scrolled, setScrolled] = useState(false);
 
@@ -32,13 +33,14 @@ export default function Navbar() {
     if (searchQuery.trim()) {
       navigate(`/shop?search=${encodeURIComponent(searchQuery.trim())}`);
       setSearchQuery('');
+      setSearchOpen(false);
       setMobileMenuOpen(false);
     }
   };
 
   const navLinkClass = ({ isActive }) =>
-    `text-xs font-bold uppercase tracking-wider transition-colors font-mono ${
-      isActive ? 'text-black' : 'text-zinc-500 hover:text-black'
+    `text-xs font-black uppercase tracking-wider transition-colors font-mono ${
+      isActive ? 'text-black underline underline-offset-4' : 'text-black/70 hover:text-black'
     }`;
 
   const NAV_LINKS = [
@@ -54,103 +56,104 @@ export default function Navbar() {
 
   return (
     <>
-      <header className={`sticky top-0 z-40 bg-white transition-shadow ${scrolled ? 'shadow-md border-b border-zinc-200' : 'border-b border-zinc-100'}`}>
+      <header className={`sticky top-0 z-40 bg-[#FFC700] text-black transition-shadow ${scrolled ? 'shadow-md border-b border-black/20' : 'border-b border-black/10'}`}>
 
-        {/* Dynamic Announcement Banner */}
+        {/* Top Black Announcement Bar */}
         {settings.announcementEnabled !== false && (
-          <div className="bg-black text-white text-[10px] sm:text-[11px] py-2 px-4 text-center font-mono tracking-wider uppercase flex items-center justify-center gap-2">
-            <span>{settings.announcementText || `FREE SHIPPING OVER ₹${settings.freeShippingThreshold || 999}`}</span>
-            <span className="text-zinc-600">·</span>
-            <span>CODE <strong className="underline underline-offset-2 cursor-pointer text-white">GENWIN20</strong> FOR 20% OFF</span>
+          <div className="bg-black text-white text-[10px] sm:text-[11px] py-1.5 px-4 text-center font-mono tracking-wider uppercase flex items-center justify-center gap-2">
+            <span>⚡ EMI available 💡</span>
+            <span className="text-zinc-500">•</span>
+            <span>{settings.announcementText || `Free Home Delivery for Paid Orders`}</span>
           </div>
         )}
 
-        {/* Main Bar */}
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-3 sm:gap-6">
+        {/* Main Yellow Navigation Bar (Matching Reference Image) */}
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-4 select-none">
 
-          {/* Left: Mobile menu toggle & Logo */}
-          <div className="flex items-center gap-3">
+          {/* Left Action Icons: Menu + Search */}
+          <div className="flex items-center gap-4 sm:gap-5">
             <button
               onClick={() => setMobileMenuOpen(true)}
-              className="md:hidden p-1.5 text-zinc-800 hover:text-black transition-colors"
-              aria-label="Open menu"
+              className="p-1 text-black hover:scale-105 transition-transform"
+              aria-label="Open Menu"
             >
-              <Menu className="w-5 h-5" />
+              <Menu className="w-6 h-6 stroke-[2.2]" />
             </button>
 
-            <Link to="/" className="flex items-center gap-2 shrink-0">
-              <span className="font-display font-black text-2xl sm:text-3xl tracking-tighter text-black">
-                {settings.storeName || 'जेनwin.'}
-              </span>
-            </Link>
+            <button
+              onClick={() => setSearchOpen(!searchOpen)}
+              className="p-1 text-black hover:scale-105 transition-transform"
+              aria-label="Search"
+            >
+              <Search className="w-6 h-6 stroke-[2.2]" />
+            </button>
           </div>
 
-          {/* Center: Desktop Navigation */}
-          <nav className="hidden md:flex items-center gap-6">
-            <NavLink to="/shop" className={navLinkClass}>All</NavLink>
-            <NavLink to="/shop?category=t-shirts" className={navLinkClass}>T-Shirts</NavLink>
-            <NavLink to="/shop?category=hoodies" className={navLinkClass}>Hoodies</NavLink>
-            <NavLink to="/shop?category=jackets" className={navLinkClass}>Jackets</NavLink>
-            <NavLink to="/shop?category=accessories" className={navLinkClass}>Accessories</NavLink>
-          </nav>
+          {/* Center Brand Monogram / Logo */}
+          <Link to="/" className="flex items-center justify-center">
+            <span className="font-display font-black text-2xl sm:text-3xl tracking-tighter text-black uppercase">
+              {settings.storeName || 'जेनwin.'}
+            </span>
+          </Link>
 
-          {/* Right: Search & Actions */}
-          <div className="flex items-center gap-2 sm:gap-3 ml-auto">
+          {/* Right Action Icons: Wishlist + Shopping Cart */}
+          <div className="flex items-center gap-4 sm:gap-5">
+            {/* Desktop Quick Nav Links */}
+            <nav className="hidden lg:flex items-center gap-5 mr-2">
+              <NavLink to="/shop" className={navLinkClass}>SHOP</NavLink>
+              <NavLink to="/shop?category=t-shirts" className={navLinkClass}>TEES</NavLink>
+              <NavLink to="/shop?category=hoodies" className={navLinkClass}>HOODIES</NavLink>
+            </nav>
 
-            {/* Desktop Search Input */}
-            <form onSubmit={handleSearch} className="hidden lg:flex relative w-44 focus-within:w-60 transition-all duration-300">
-              <input
-                type="text"
-                placeholder="SEARCH..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full bg-zinc-50 border border-zinc-200 text-xs py-2 pl-3 pr-8 focus:outline-none focus:border-black placeholder:text-zinc-400 font-mono uppercase"
-              />
-              <button type="submit" className="absolute right-2.5 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-black">
-                <Search className="w-3.5 h-3.5" />
-              </button>
-            </form>
-
-            {/* Account / Profile Dropdown Trigger (Desktop Only) */}
-            <Link
-              to="/account"
-              className="hidden md:flex items-center gap-2 px-3 py-2 border border-zinc-200 text-zinc-700 hover:text-black hover:border-black text-xs font-mono font-bold uppercase tracking-wider transition-all"
-              title="My Account"
-            >
-              <User className="w-4 h-4" />
-              <span>{user ? user.name?.split(' ')[0] : 'SIGN IN'}</span>
-            </Link>
-
-            {/* Wishlist Button */}
+            {/* Wishlist / Heart Icon */}
             <Link
               to="/wishlist"
-              className="p-2 border border-transparent hover:border-zinc-200 text-zinc-700 hover:text-black relative transition-all"
+              className="p-1 text-black relative hover:scale-105 transition-transform"
               title="Wishlist"
             >
-              <Heart className="w-4 h-4 sm:w-4.5 sm:h-4.5" />
+              <Heart className="w-6 h-6 stroke-[2.2]" />
               {wishlist.length > 0 && (
-                <span className="absolute -top-1 -right-1 bg-black text-white text-[8px] font-mono font-bold w-4 h-4 rounded-full flex items-center justify-center anim-pop-in">
+                <span className="absolute -top-1 -right-1 bg-black text-white text-[9px] font-mono font-bold w-4 h-4 rounded-full flex items-center justify-center">
                   {wishlist.length}
                 </span>
               )}
             </Link>
 
-
-            {/* Cart / Bag Button — Bold & Interactive */}
+            {/* Shopping Cart Icon */}
             <button
               onClick={() => setIsCartOpen(true)}
-              className="btn-magnetic press flex items-center gap-2 bg-black hover:bg-zinc-800 text-white px-3.5 py-2 text-xs font-mono font-bold uppercase tracking-wider transition-all shadow-sm"
+              className="p-1 text-black relative hover:scale-105 transition-transform"
               title="Cart / Shopping Bag"
             >
-              <ShoppingBag className="w-4 h-4" />
-              <span className="hidden sm:inline">BAG</span>
-              <span className="bg-white text-black font-extrabold text-[10px] px-1.5 py-0.5 min-w-[18px] text-center">
-                {totalCount}
-              </span>
+              <ShoppingCart className="w-6 h-6 stroke-[2.2]" />
+              {totalCount > 0 && (
+                <span className="absolute -top-1 -right-1 bg-black text-[#FFC700] font-extrabold text-[9px] w-4 h-4 rounded-full flex items-center justify-center border border-black">
+                  {totalCount}
+                </span>
+              )}
             </button>
-
           </div>
+
         </div>
+
+        {/* Dropdown Search Bar when Search Icon is tapped */}
+        {searchOpen && (
+          <div className="bg-black p-3 border-t border-zinc-800 animate-fade-in">
+            <form onSubmit={handleSearch} className="max-w-xl mx-auto relative flex items-center">
+              <input
+                type="text"
+                autoFocus
+                placeholder="SEARCH FOR SHIRTS, HOODIES, PANTS..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full bg-zinc-900 border border-zinc-700 text-white text-xs py-2.5 pl-4 pr-10 focus:outline-none focus:border-[#FFC700] uppercase font-mono tracking-wider"
+              />
+              <button type="submit" className="absolute right-3 text-[#FFC700]">
+                <Search className="w-4 h-4" />
+              </button>
+            </form>
+          </div>
+        )}
       </header>
 
       {/* ── Left-slide Mobile Drawer ───────────────────────────────────────── */}
@@ -172,22 +175,20 @@ export default function Navbar() {
         }}
       >
         {/* Drawer Header */}
-        <div className="flex items-center justify-between px-5 py-5 bg-black text-white border-b border-zinc-800">
-          <div className="flex items-center gap-2">
-            <span className="font-display font-black text-2xl tracking-tighter">
-              {settings.storeName || 'जेनwin.'}
-            </span>
-          </div>
+        <div className="flex items-center justify-between px-5 py-5 bg-[#FFC700] text-black border-b border-black/20">
+          <span className="font-display font-black text-2xl tracking-tighter uppercase">
+            {settings.storeName || 'जेनwin.'}
+          </span>
           <button
             onClick={() => setMobileMenuOpen(false)}
-            className="p-1.5 text-zinc-400 hover:text-white transition-colors"
+            className="p-1.5 text-black hover:scale-110 transition-transform"
             aria-label="Close menu"
           >
-            <X className="w-5 h-5" />
+            <X className="w-6 h-6 stroke-[2.2]" />
           </button>
         </div>
 
-        {/* User Status Bar in Drawer displaying Gmail Avatar */}
+        {/* User Status Bar in Drawer */}
         <div className="px-5 py-3.5 bg-zinc-50 border-b border-zinc-100 flex items-center justify-between font-mono">
           {user ? (
             <div className="flex items-center gap-3">
@@ -215,7 +216,7 @@ export default function Navbar() {
                 onClick={() => setMobileMenuOpen(false)}
                 className="text-[10px] font-bold text-black uppercase underline flex items-center gap-1"
               >
-                SIGN IN <LogIn className="w-3 h-3" />
+                SIGN IN <LogIn className="w-3.5 h-3.5" />
               </Link>
             </div>
           )}
@@ -232,7 +233,7 @@ export default function Navbar() {
               className="w-full bg-zinc-50 border border-zinc-200 text-xs py-2.5 pl-4 pr-9 focus:outline-none focus:border-black uppercase font-mono"
             />
             <button type="submit" className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-black">
-              <Search className="w-3.5 h-3.5" />
+              <Search className="w-4 h-4" />
             </button>
           </div>
         </form>
@@ -244,20 +245,13 @@ export default function Navbar() {
               key={label}
               to={to}
               onClick={() => setMobileMenuOpen(false)}
-              className="flex items-center justify-between px-5 py-4 text-xs font-bold uppercase tracking-widest text-black hover:bg-zinc-50 hover:pl-7 transition-all duration-150"
+              className="flex items-center justify-between px-5 py-4 text-xs font-bold uppercase tracking-widest text-black hover:bg-[#FFC700]/20 hover:pl-7 transition-all duration-150"
             >
               <span>{label}</span>
-              <ArrowRight className="w-3 h-3 text-zinc-300" />
+              <ArrowRight className="w-3.5 h-3.5 text-zinc-400" />
             </Link>
           ))}
         </nav>
-
-        {/* Drawer Footer */}
-        <div className="px-5 py-4 border-t border-zinc-100 bg-zinc-50">
-          <p className="text-[10px] font-mono text-zinc-500 uppercase tracking-widest">
-            USE CODE <strong className="text-black">GENWIN20</strong> FOR 20% OFF
-          </p>
-        </div>
       </div>
     </>
   );
