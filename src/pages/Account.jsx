@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useSearchParams, Link, useNavigate } from 'react-router-dom';
 import {
   Package, MapPin, LogOut, ArrowRight, ShoppingBag, User, Plus, Edit2, Trash2,
-  Home, Briefcase, X, Crown, Sparkles, Navigation, RotateCcw, ChevronDown, ChevronUp
+  Home, Briefcase, X, Crown, Sparkles, Navigation, RotateCcw, Eye
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
@@ -237,84 +237,78 @@ export default function Account() {
             ) : (
               <div className="space-y-4">
                 {filteredUserOrders.map(order => {
-                  const isExpanded = expandedOrderId === order.id;
-
                   return (
-                    <div key={order.id} className="bg-white rounded-xl border border-zinc-200 shadow-sm overflow-hidden transition-all">
+                    <div key={order.id} className="bg-white rounded-xl border border-zinc-200 shadow-sm p-5 sm:p-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-5 transition-all">
                       
-                      {/* ── Main Collapsed Bar: Order No, Status, Buy Again & Track Order ── */}
-                      <div className="p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white">
-                        
-                        {/* Clickable Order Info to toggle Accordion Dropdown */}
-                        <div 
-                          onClick={() => setExpandedOrderId(isExpanded ? null : order.id)}
-                          className="flex items-center gap-3 cursor-pointer group flex-1"
-                        >
-                          <div className="text-zinc-400 group-hover:text-black transition-colors shrink-0">
-                            {isExpanded ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
+                      {/* Left Column: Order No, Status, Date, Items Info, Action Buttons */}
+                      <div className="space-y-3 flex-1 min-w-0">
+                        <div>
+                          <div className="flex flex-wrap items-center gap-2.5">
+                            <h4 className="font-bold text-base text-black">Order #{order.orderNumber}</h4>
+                            <span className={`px-2.5 py-0.5 rounded-full text-xs font-semibold ${STATUS_STYLE[order.status] || 'bg-zinc-100 text-zinc-600'}`}>
+                              {STATUS[order.status] || order.status}
+                            </span>
                           </div>
-                          <div>
-                            <div className="flex items-center gap-2.5">
-                              <h4 className="font-bold text-base text-black group-hover:underline">Order #{order.orderNumber}</h4>
-                              <span className={`px-2.5 py-0.5 rounded-full text-xs font-semibold ${STATUS_STYLE[order.status] || 'bg-zinc-100 text-zinc-600'}`}>
-                                {STATUS[order.status] || order.status}
-                              </span>
-                            </div>
-                            <p className="text-xs text-zinc-500 mt-0.5">
-                              Placed on {new Date(order.createdAt || order.date || Date.now()).toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' })}
-                              {' • '}₹{order.total}
-                            </p>
-                          </div>
+                          <p className="text-xs text-zinc-500 mt-1">
+                            Placed on {new Date(order.createdAt || order.date || Date.now()).toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' })}
+                            {' • '}Total: <strong className="text-black">₹{order.total}</strong>
+                          </p>
                         </div>
 
-                        {/* Quick Action Buttons */}
-                        <div className="flex items-center gap-2 shrink-0">
+                        {/* Item Info Summary */}
+                        <div className="space-y-1 text-xs text-zinc-600 border-t border-zinc-100 pt-2">
+                          {order.items?.map((item, idx) => (
+                            <p key={idx} className="truncate">
+                              <strong className="text-black">{item.name}</strong> 
+                              {item.size && <span> (Size: {item.size})</span>}
+                              {item.quantity && <span> × {item.quantity}</span>}
+                              <span className="text-zinc-400 font-semibold ml-1.5">₹{item.unitPrice || item.price || item.basePrice}</span>
+                            </p>
+                          ))}
+                        </div>
+
+                        {/* Action Buttons */}
+                        <div className="flex items-center gap-2 pt-1">
                           <button 
                             onClick={() => handleReorder(order)} 
-                            className="flex items-center gap-1.5 px-3.5 py-2 bg-zinc-100 hover:bg-zinc-200 text-black text-xs font-bold rounded-lg transition-colors uppercase tracking-wider"
+                            className="flex items-center gap-1.5 px-3.5 py-1.5 bg-zinc-100 hover:bg-zinc-200 text-black text-xs font-bold rounded-lg transition-colors uppercase tracking-wider"
                           >
                             <RotateCcw className="w-3.5 h-3.5" /> {reorderedId === order.id ? 'Added!' : 'Buy Again'}
                           </button>
                           <Link 
                             to={`/order-success/${order.id}`} 
-                            className="flex items-center gap-1.5 px-4 py-2 bg-black hover:bg-zinc-800 text-white text-xs font-bold rounded-lg transition-colors uppercase tracking-wider"
+                            className="flex items-center gap-1.5 px-4 py-1.5 bg-black hover:bg-zinc-800 text-white text-xs font-bold rounded-lg transition-colors uppercase tracking-wider"
                           >
                             Track Order <ArrowRight className="w-3.5 h-3.5" />
                           </Link>
                         </div>
-
                       </div>
 
-                      {/* ── Accordion Dropdown: T-Shirt Image with Name & Details in List Form ── */}
-                      {isExpanded && (
-                        <div className="p-5 border-t border-zinc-100 bg-zinc-50/50 space-y-3 animate-fade-in">
-                          <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest mb-1 font-mono">
-                            ORDER ITEMS ({order.items?.length || 0})
-                          </p>
-                          <div className="space-y-3 divide-y divide-zinc-200/60">
-                            {order.items?.map((item, i) => (
-                              <div key={i} className={`flex items-center justify-between gap-4 ${i > 0 ? 'pt-3' : ''}`}>
-                                <div className="flex items-center gap-4">
-                                  <img 
-                                    src={item.image || 'https://images.unsplash.com/photo-1521572267360-ee0c2909d518?w=800&q=80'} 
-                                    alt={item.name} 
-                                    className="w-16 h-20 object-cover rounded-lg bg-zinc-100 border border-zinc-200 shrink-0" 
-                                  />
-                                  <div className="space-y-0.5">
-                                    <h5 className="font-bold text-sm text-black">{item.name}</h5>
-                                    <div className="flex flex-wrap items-center gap-2 text-xs text-zinc-500">
-                                      {item.size && <span>Size: <strong className="text-zinc-700">{item.size}</strong></span>}
-                                      {item.color && <span>• Color: <strong className="text-zinc-700">{item.color}</strong></span>}
-                                      <span>• Qty: <strong className="text-zinc-700">{item.quantity}</strong></span>
-                                    </div>
-                                    <p className="text-xs font-semibold text-zinc-900 pt-1">₹{item.unitPrice || item.price || item.basePrice}</p>
-                                  </div>
-                                </div>
+                      {/* Right Column: Product Picture(s) right side of the order, clicking redirects to dress on website */}
+                      <div className="flex items-center gap-2 shrink-0 self-start sm:self-center">
+                        {order.items?.map((item, idx) => {
+                          const itemSlug = item.slug || item.productId || item.id;
+                          const itemLink = itemSlug ? `/product/${itemSlug}` : '/shop';
+
+                          return (
+                            <Link 
+                              key={idx} 
+                              to={itemLink} 
+                              title={`View ${item.name || 'garment'} on website`}
+                              className="group relative overflow-hidden rounded-lg border border-zinc-200 hover:border-black transition-all shadow-sm block bg-zinc-100 shrink-0"
+                            >
+                              <img 
+                                src={item.image || 'https://images.unsplash.com/photo-1521572267360-ee0c2909d518?w=800&q=80'} 
+                                alt={item.name || 'Order Item'} 
+                                className="w-16 h-20 sm:w-20 sm:h-24 object-cover object-top group-hover:scale-105 transition-transform duration-300" 
+                              />
+                              <div className="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                                <Eye className="w-4 h-4 text-white drop-shadow-md" />
                               </div>
-                            ))}
-                          </div>
-                        </div>
-                      )}
+                            </Link>
+                          );
+                        })}
+                      </div>
 
                     </div>
                   );
