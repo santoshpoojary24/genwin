@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import { Sparkles, ArrowLeft, Check, Type, Upload, ShoppingCart, Smile } from 'lucide-react';
+import { Sparkles, ArrowLeft, Check, Type, Upload, ShoppingCart } from 'lucide-react';
 import { FirebaseService } from '../services/firebaseService';
 import { useCart } from '../context/CartContext';
 
@@ -295,15 +295,7 @@ function PrintLayer({ items, activeId, setActiveId, printZone, onMove, onScale }
               height={item.size || 70}
             />
           )}
-          {item.type === 'sticker' && (
-            <text
-              textAnchor="middle"
-              dominantBaseline="middle"
-              fontSize={item.size || 36}
-            >
-              {item.emoji}
-            </text>
-          )}
+
           {/* Selection box */}
           {activeId === item.id && (() => {
             const hw = item.type === 'text' ? 55 : (item.size || 70) / 2 + 6;
@@ -319,16 +311,7 @@ function PrintLayer({ items, activeId, setActiveId, printZone, onMove, onScale }
   );
 }
 
-/* ═══════════════════════════════════════════════════════════════
-   Sticker Panel Emojis
-═══════════════════════════════════════════════════════════════ */
-const STICKERS = [
-  '🔥','⚡','💎','👑','🌟','💯','🎯','🚀','🏆','💪',
-  '❤️','💜','🖤','🤍','💙','🧡','💛','💚','😍','💋',
-  '😂','😎','🥶','🤯','👻','💀','☠️','👾','🤖','🦊',
-  '🎨','🎵','🎸','🎮','🎤','🎧','🎭','🎬','🎲','🏆',
-  '🌿','🌴','🌸','🌺','🌙','⭐','☀️','🌈','❄️','🦁',
-];
+
 
 /* ═══════════════════════════════════════════════════════════════
    Main Customizer
@@ -365,7 +348,7 @@ export default function Customizer() {
   const [backItems, setBackItems] = useState([]);
   const [activeId, setActiveId] = useState(null);
 
-  const [tool, setTool] = useState('sticker'); // 'text' | 'image' | 'sticker'
+  const [tool, setTool] = useState('text'); // 'text' | 'image'
 
 
   // Text tool state
@@ -416,14 +399,7 @@ export default function Customizer() {
     setTextInput('');
   };
 
-  const addSticker = (emoji) => {
-    setCurrentItems(prev => [...prev, {
-      id: Date.now(), type: 'sticker', emoji,
-      x: cx + (Math.random() * 40 - 20),
-      y: cy + (Math.random() * 40 - 20),
-      size: 36,
-    }]);
-  };
+
 
   const handleImageUpload = (e) => {
     const file = e.target.files?.[0];
@@ -604,9 +580,8 @@ export default function Customizer() {
           {/* Tool Tabs */}
           <div className="flex border-b border-white/10 shrink-0">
             {[
-              { id: 'sticker', label: '😊 Stickers', icon: <Smile className="w-3.5 h-3.5" /> },
-              { id: 'text',    label: '✏️ Text',     icon: <Type className="w-3.5 h-3.5" /> },
-              { id: 'image',   label: '🖼 Upload',   icon: <Upload className="w-3.5 h-3.5" /> },
+              { id: 'text',  label: '✏️ Add Text',    icon: <Type className="w-3.5 h-3.5" /> },
+              { id: 'image', label: '🖼 Upload Image', icon: <Upload className="w-3.5 h-3.5" /> },
             ].map(t => (
               <button
                 key={t.id}
@@ -620,29 +595,6 @@ export default function Customizer() {
           </div>
 
           <div className="flex-1 overflow-y-auto p-4 space-y-5">
-
-            {/* ══ STICKER TOOL ══ */}
-            {tool === 'sticker' && (
-              <div className="space-y-3">
-                <p className="text-[10px] text-zinc-500 uppercase tracking-widest">
-                  TAP TO ADD TO {view === 'front' ? 'CHEST' : 'BACK'}
-                </p>
-                <div className="grid grid-cols-5 gap-2">
-                  {STICKERS.map((emoji, i) => (
-                    <button
-                      key={i}
-                      onClick={() => addSticker(emoji)}
-                      className="aspect-square bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 hover:border-violet-500 rounded-xl text-2xl flex items-center justify-center transition-all hover:scale-110 active:scale-95"
-                    >
-                      {emoji}
-                    </button>
-                  ))}
-                </div>
-                <p className="text-[9px] text-zinc-600 text-center">
-                  Tap to add · Drag on shirt to reposition
-                </p>
-              </div>
-            )}
 
             {/* ══ TEXT TOOL ══ */}
             {tool === 'text' && (
