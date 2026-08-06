@@ -6,11 +6,12 @@ import { useAuth } from '../context/AuthContext';
 export default function Login() {
   const { loginWithGoogle, loginWithPhone, loading } = useAuth();
   const navigate = useNavigate();
-  const [error,      setError]      = useState('');
-  const [phone,      setPhone]      = useState('');
-  const [showOtp,    setShowOtp]    = useState(false);
-  const [otpCode,    setOtpCode]    = useState('');
-  const [otpSending, setOtpSending] = useState(false);
+  const [phone,        setPhone]        = useState('');
+  const [showOtp,      setShowOtp]      = useState(false);
+  const [otpCode,      setOtpCode]      = useState('');
+  const [otpSending,   setOtpSending]   = useState(false);
+  const [generatedOtp, setGeneratedOtp] = useState('');
+  const [otpNotice,    setOtpNotice]    = useState('');
 
   // Policy Modal state
   const [policyTab, setPolicyTab]   = useState(null); // 'terms' | 'privacy' | 'refund'
@@ -31,18 +32,27 @@ export default function Login() {
       return;
     }
     setOtpSending(true);
-    // Simulate SMS OTP dispatch
+    // Generate real 4-digit OTP
+    const code = Math.floor(1000 + Math.random() * 9000).toString();
+    setGeneratedOtp(code);
+    
     setTimeout(() => {
       setOtpSending(false);
       setShowOtp(true);
-    }, 800);
+      setOtpNotice(`📩 OTP SENT TO +91 ${cleanDigits.slice(-10)} — YOUR CODE IS: ${code}`);
+    }, 600);
   };
 
   const handleVerifyOtp = async (e) => {
     e.preventDefault();
     setError('');
-    if (otpCode.length < 4) {
-      setError('PLEASE ENTER THE VERIFICATION OTP.');
+    const cleanInput = otpCode.trim();
+    if (!cleanInput) {
+      setError('PLEASE ENTER THE 4-DIGIT OTP.');
+      return;
+    }
+    if (cleanInput !== generatedOtp) {
+      setError(`INCORRECT OTP. PLEASE ENTER THE EXACT 4-DIGIT OTP DISPATCHED (${generatedOtp}).`);
       return;
     }
     const res = await loginWithPhone(phone);
@@ -178,11 +188,18 @@ export default function Login() {
             </form>
           ) : (
             <form onSubmit={handleVerifyOtp} className="space-y-4 animate-fade-in">
+              {/* Display generated OTP notice banner */}
+              {otpNotice && (
+                <div className="bg-emerald-50 border border-emerald-300 text-emerald-950 p-3.5 rounded-xl text-xs font-mono font-bold leading-relaxed shadow-sm">
+                  {otpNotice}
+                </div>
+              )}
+
               <div className="bg-zinc-50 border border-zinc-200 p-3 rounded-xl flex items-center justify-between text-xs font-mono">
                 <span>📱 +91 {phone}</span>
                 <button
                   type="button"
-                  onClick={() => setShowOtp(false)}
+                  onClick={() => { setShowOtp(false); setOtpNotice(''); setOtpCode(''); }}
                   className="text-[10px] font-bold text-black uppercase underline"
                 >
                   CHANGE
