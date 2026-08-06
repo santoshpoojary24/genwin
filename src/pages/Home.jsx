@@ -6,10 +6,9 @@ import {
   Eye, Heart, Flame, Clock, Truck, Star, RefreshCw, Mail, Phone, Instagram, MessageCircle, X
 } from 'lucide-react';
 import { FirebaseService } from '../services/firebaseService';
-import { INITIAL_PRODUCTS, INITIAL_CATEGORIES } from '../data/seedData';
+import { useSettings } from '../context/SettingsContext';
 import ProductCard from '../components/shop/ProductCard';
 import QuickViewModal from '../components/shop/QuickViewModal';
-import { useSettings } from '../context/SettingsContext';
 
 /* ── Scroll-reveal hook ────────────────────────────────────────────────── */
 function useSR(threshold = 0.1) {
@@ -468,8 +467,8 @@ function PopupPromoModal({ ads = [] }) {
    HOME PAGE
    ══════════════════════════════════════════════════════ */
 export default function Home() {
-  const [products, setProducts] = useState(INITIAL_PRODUCTS);
-  const [categories, setCategories] = useState(INITIAL_CATEGORIES);
+  const [products, setProducts] = useState([]);
+  const [categories, setCategories] = useState([]);
   const [ads, setAds] = useState([]);
   const [loading, setLoading] = useState(false);
   const [qv, setQv] = useState(null);
@@ -479,9 +478,9 @@ export default function Home() {
   useEffect(() => {
     Promise.all([FirebaseService.getProducts(), FirebaseService.getCategories(), FirebaseService.getAds()])
       .then(([p, c, a]) => {
-        if (p && p.length > 0) setProducts(p);
-        if (c && c.length > 0) setCategories(c);
-        if (a && a.length > 0) setAds(a);
+        setProducts(p || []);
+        setCategories(c || []);
+        setAds(a || []);
       })
       .finally(() => setLoading(false));
   }, []);

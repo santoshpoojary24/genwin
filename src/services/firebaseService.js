@@ -3,7 +3,6 @@ import {
   collection, doc, getDocs, getDoc, setDoc, updateDoc, deleteDoc, onSnapshot
 } from 'firebase/firestore';
 import { ref, set, get, child, remove, onValue } from 'firebase/database';
-import { INITIAL_PRODUCTS, INITIAL_CATEGORIES, INITIAL_ADS, INITIAL_COUPONS } from '../data/seedData';
 
 const API_BASE_URL = 'http://localhost:5000/api';
 const CACHE_VERSION = 'v10';
@@ -125,24 +124,15 @@ export const FirebaseService = {
   /** 1. Products (Firebase Cloud Firestore & Realtime DB) */
   async getProducts() {
     try {
-      const snap = await withTimeout(getDocs(collection(db, 'products')));
-      if (!snap.empty) {
-        const remote = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-        ls.set(KEYS.products, remote);
-        return remote;
-      } else {
-        // Seed initial products into Firestore if cloud is empty
-        INITIAL_PRODUCTS.forEach(p => {
-          setDoc(doc(db, 'products', p.id), p).catch(() => {});
-        });
-        ls.set(KEYS.products, INITIAL_PRODUCTS);
-        return INITIAL_PRODUCTS;
-      }
+      const snap = await getDocs(collection(db, 'products'));
+      const remote = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      ls.set(KEYS.products, remote);
+      return remote;
     } catch (err) {
-      console.error("Firebase getProducts error, falling back to cache:", err);
+      console.error("Firebase getProducts error:", err);
     }
 
-    return ls.get(KEYS.products, INITIAL_PRODUCTS);
+    return ls.get(KEYS.products, []);
   },
 
   async getProductBySlug(slug) {
@@ -163,7 +153,7 @@ export const FirebaseService = {
 
     syncCloudDatabases('products', id, payload);
 
-    const current = ls.get(KEYS.products, INITIAL_PRODUCTS);
+    const current = ls.get(KEYS.products, []);
     const updated = isEdit ? current.map(p => p.id === id ? payload : p) : [payload, ...current];
     ls.set(KEYS.products, updated);
     return payload;
@@ -171,7 +161,7 @@ export const FirebaseService = {
 
   async deleteProduct(id) {
     syncCloudDatabases('products', id, null, true);
-    const current = ls.get(KEYS.products, INITIAL_PRODUCTS);
+    const current = ls.get(KEYS.products, []);
     const updated = current.filter(p => p.id !== id);
     ls.set(KEYS.products, updated);
   },
@@ -194,7 +184,7 @@ export const FirebaseService = {
 
     // First Come, First Served Stock Reduction & Sold Out Trigger
     if (payload.items && Array.isArray(payload.items)) {
-      const currentProducts = ls.get(KEYS.products, INITIAL_PRODUCTS);
+      const currentProducts = ls.get(KEYS.products, []);
       const updatedProducts = currentProducts.map(p => {
         const orderedItem = payload.items.find(item => item.productId === p.id || item.id === p.id || item.slug === p.slug);
         if (orderedItem) {
@@ -344,26 +334,18 @@ export const FirebaseService = {
   /** 4. Categories Collection */
   async getCategories() {
     try {
-      const snap = await withTimeout(getDocs(collection(db, 'categories')));
-      if (!snap.empty) {
-        const remote = snap.docs.map(d => ({
-          id: d.id,
-          ...d.data(),
-          isFeatured: d.data().isFeatured ?? true,
-          description: d.data().description || 'Premium heavyweight streetwear collection.',
-        }));
-        ls.set(KEYS.categories, remote);
-        return remote;
-      } else {
-        INITIAL_CATEGORIES.forEach(c => {
-          setDoc(doc(db, 'categories', c.id), c).catch(() => {});
-        });
-        ls.set(KEYS.categories, INITIAL_CATEGORIES);
-        return INITIAL_CATEGORIES;
-      }
+      const snap = await getDocs(collection(db, 'categories'));
+      const remote = snap.docs.map(d => ({
+        id: d.id,
+        ...d.data(),
+        isFeatured: d.data().isFeatured ?? true,
+        description: d.data().description || 'Premium heavyweight streetwear collection.',
+      }));
+      ls.set(KEYS.categories, remote);
+      return remote;
     } catch (_) {}
 
-    return ls.get(KEYS.categories, INITIAL_CATEGORIES).map(c => ({
+    return ls.get(KEYS.categories, []).map(c => ({
       ...c,
       isFeatured: c.isFeatured ?? true,
       description: c.description || 'Premium heavyweight streetwear collection.',
@@ -382,7 +364,7 @@ export const FirebaseService = {
 
     syncCloudDatabases('categories', id, payload);
 
-    const current = ls.get(KEYS.categories, INITIAL_CATEGORIES);
+    const current = ls.get(KEYS.categories, []);
     const exists = current.some(c => c.id === id || c.slug === payload.slug);
     const updated = exists
       ? current.map(c => (c.id === id || c.slug === payload.slug) ? payload : c)
@@ -394,7 +376,7 @@ export const FirebaseService = {
   async deleteCategory(id) {
     syncCloudDatabases('categories', id, null, true);
 
-    const current = ls.get(KEYS.categories, INITIAL_CATEGORIES);
+    const current = ls.get(KEYS.categories, []);
     const updated = current.filter(c => c.id !== id && c.slug !== id);
     ls.set(KEYS.categories, updated);
   },
@@ -402,15 +384,13 @@ export const FirebaseService = {
   /** 5. Coupons */
   async getCoupons() {
     try {
-      const snap = await withTimeout(getDocs(collection(db, 'coupons')));
-      if (!snap.empty) {
-        const remote = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-        ls.set(KEYS.coupons, remote);
-        return remote;
-      }
+      const snap = await getDocs(collection(db, 'coupons'));
+      const remote = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      ls.set(KEYS.coupons, remote);
+      return remote;
     } catch (_) {}
 
-    return ls.get(KEYS.coupons, INITIAL_COUPONS);
+    return ls.get(KEYS.coupons, []);
   },
 
   async saveCoupon(coupon) {
@@ -468,22 +448,13 @@ export const FirebaseService = {
   /** 6. Advertisements */
   async getAds() {
     try {
-      const snap = await withTimeout(getDocs(collection(db, 'ads')));
-      if (!snap.empty) {
-        const remote = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-        ls.set(KEYS.ads, remote);
-        return remote;
-      } else {
-        INITIAL_ADS.forEach(a => {
-          const adId = a.id ? a.id.toString() : 'ad_' + Date.now();
-          setDoc(doc(db, 'ads', adId), { ...a, id: adId }).catch(() => {});
-        });
-        ls.set(KEYS.ads, INITIAL_ADS);
-        return INITIAL_ADS;
-      }
+      const snap = await getDocs(collection(db, 'ads'));
+      const remote = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      ls.set(KEYS.ads, remote);
+      return remote;
     } catch (_) {}
 
-    return ls.get(KEYS.ads, INITIAL_ADS);
+    return ls.get(KEYS.ads, []);
   },
 
   async saveAd(ad) {

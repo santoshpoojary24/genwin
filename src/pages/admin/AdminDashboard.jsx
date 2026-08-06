@@ -11,7 +11,6 @@ import {
 } from 'lucide-react';
 import { FirebaseService } from '../../services/firebaseService';
 import { useSettings } from '../../context/SettingsContext';
-import { INITIAL_PRODUCTS, INITIAL_CATEGORIES } from '../../data/seedData';
 
 // ── File Upload Picker Component ──────────────────────────────────────────
 function FileUploadPicker({ value, onChange, label = "UPLOAD IMAGE / FILE (JPG, PNG, WEBP, PDF)" }) {
@@ -181,27 +180,8 @@ export default function AdminDashboard() {
 
   const [productViewMode, setProductViewMode] = useState('grid'); // 'grid' or 'table'
 
-  const [products, setProducts] = useState(() => {
-    try {
-      const s = localStorage.getItem('genwin_products_v8');
-      if (s) {
-        const parsed = JSON.parse(s);
-        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
-      }
-    } catch (_) {}
-    return INITIAL_PRODUCTS;
-  });
-
-  const [categories, setCategories] = useState(() => {
-    try {
-      const s = localStorage.getItem('genwin_categories');
-      if (s) {
-        const parsed = JSON.parse(s);
-        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
-      }
-    } catch (_) {}
-    return INITIAL_CATEGORIES;
-  });
+  const [products, setProducts] = useState([]);
+  const [categories, setCategories] = useState([]);
 
   const [orders, setOrders] = useState([]);
   const [coupons, setCoupons] = useState([]);
