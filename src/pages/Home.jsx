@@ -619,15 +619,44 @@ export default function Home() {
       {/* ══ 1. HERO BANNER CAROUSEL (5-6 SWIPEABLE PHOTOS WITH DIRECT CATEGORY LINKS) ══ */}
       <HeroBannerCarousel customAds={ads} />
 
-      {/* ══ 2. WEEK'S TOP PICKS ═════════════════════════════════════════ */}
-      <SR className="max-w-7xl mx-auto px-6 lg:px-12 mt-12 space-y-6">
-        <div className="text-center space-y-1 border-b border-zinc-200 pb-4">
-          <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">CURATED APPAREL</span>
-          <h2 className="font-display font-black text-2xl sm:text-4xl uppercase tracking-tight text-black">
+      {/* ══ 2. WEEK'S TOP PICKS (SWIPEABLE HORIZONTAL CAROUSEL) ═══════════════ */}
+      <SR className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-12 mt-10 space-y-6">
+        <div className="text-center py-2">
+          <h2 className="font-display font-black text-xl sm:text-3xl uppercase tracking-tight text-black">
             WEEK'S TOP PICKS
           </h2>
         </div>
-        <ModelStrip products={products} />
+
+        {/* Swipeable Product Cards Row */}
+        <div className="flex overflow-x-auto gap-4 pb-4 snap-x snap-mandatory scrollbar-none">
+          {loading
+            ? [1, 2, 3, 4].map(n => <div key={n} className="w-[220px] sm:w-[260px] shrink-0 aspect-[3/4] skeleton rounded-2xl" />)
+            : (bestsellers.length > 0 ? bestsellers : products.slice(0, 6)).map(p => (
+                <div key={p.id} className="w-[220px] sm:w-[260px] shrink-0 snap-start">
+                  <ProductCard product={p} onQuickView={setQv} />
+                </div>
+              ))
+          }
+        </div>
+
+        {/* NEW ARRIVALS Section */}
+        <div className="text-center pt-8 pb-2">
+          <h2 className="font-display font-black text-xl sm:text-3xl uppercase tracking-tight text-black">
+            NEW ARRIVALS
+          </h2>
+        </div>
+
+        {/* Swipeable Product Cards Row for New Arrivals */}
+        <div className="flex overflow-x-auto gap-4 pb-4 snap-x snap-mandatory scrollbar-none">
+          {loading
+            ? [1, 2, 3, 4].map(n => <div key={n} className="w-[220px] sm:w-[260px] shrink-0 aspect-[3/4] skeleton rounded-2xl" />)
+            : (products.filter(p => p.isNew).length > 0 ? products.filter(p => p.isNew) : products.slice(4, 10)).map(p => (
+                <div key={p.id} className="w-[220px] sm:w-[260px] shrink-0 snap-start">
+                  <ProductCard product={p} onQuickView={setQv} />
+                </div>
+              ))
+          }
+        </div>
       </SR>
 
       {/* ══ 5. CATEGORIES ════════════════════════════════════════════════ */}
@@ -687,35 +716,7 @@ export default function Home() {
         </div>
       </div>
 
-      {/* ══ 7. BESTSELLERS & DRESSES ═════════════════════════════════════ */}
-      <SR className="max-w-7xl mx-auto px-6 lg:px-12 mt-20 space-y-8">
-        <div className="flex items-end justify-between border-b border-zinc-200 pb-5">
-          <div>
-            <EyeBrow n="05" label="BESTSELLERS &amp; TRENDING DRESSES" />
-            <h2 className="font-display font-black text-black uppercase mt-2 text-2xl sm:text-4xl tracking-tight">
-              TOP APPAREL DROPS
-            </h2>
-          </div>
-          <Link to="/shop"
-            className="underline-wipe font-mono text-[10px] uppercase tracking-widest text-zinc-500 hover:text-black flex items-center gap-1 transition-colors shrink-0">
-            Explore All <ArrowUpRight className="w-3 h-3" />
-          </Link>
-        </div>
 
-        {loading ? (
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-            {[1, 2, 3, 4].map(n => <div key={n} className="skeleton border border-zinc-200" style={{ aspectRatio: '3/4' }} />)}
-          </div>
-        ) : (
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-            {bestsellers.map((p) => (
-              <div key={p.id} className="w-full">
-                <ProductCard product={p} onQuickView={setQv} />
-              </div>
-            ))}
-          </div>
-        )}
-      </SR>
 
       {/* ══ 11. FINAL CTA ════════════════════════════════════════════════ */}
       <SR className="max-w-7xl mx-auto px-6 lg:px-12 mt-16 mb-16">
