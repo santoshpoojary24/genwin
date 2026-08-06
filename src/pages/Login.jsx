@@ -101,123 +101,59 @@ export default function Login() {
         </div>
 
         {/* Form Container */}
-        <div className="w-full max-w-sm mx-auto space-y-6 my-auto py-8">
+        <div className="w-full max-w-sm mx-auto space-y-8 my-auto py-12">
 
           {/* Logo (mobile only) */}
           <div className="lg:hidden">
-            <p className="font-display font-black text-black text-2xl tracking-tighter">जेनwin.</p>
+            <p className="font-display font-black text-black text-3xl tracking-tighter">जेनwin.</p>
           </div>
 
-          <div>
-            <h1 className="font-display font-black text-black text-3xl uppercase tracking-tighter">
-              {isRegister ? 'CREATE ACCOUNT' : 'SIGN IN'}
+          <div className="space-y-2">
+            <h1 className="font-display font-black text-black text-3xl sm:text-4xl uppercase tracking-tighter">
+              SIGN IN
             </h1>
-            <p className="text-[10px] text-zinc-400 uppercase tracking-widest mt-1">
-              {isRegister ? 'Join for exclusive access & order tracking' : 'Welcome back to जेनwin.'}
+            <p className="text-xs text-zinc-500 uppercase tracking-widest leading-relaxed">
+              Sign in with your Google account for 1-tap checkout, order tracking &amp; exclusive drops.
             </p>
           </div>
 
-          <button
-            type="button"
-            onClick={handleGoogleSignIn}
-            disabled={loading}
-            className="w-full py-3.5 bg-zinc-50 border border-zinc-300 hover:border-black text-black font-bold text-xs uppercase tracking-wider flex items-center justify-center gap-3 transition-colors press disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            {loading ? (
-              <div className="w-4 h-4 border-2 border-black border-t-transparent rounded-full animate-spin" />
-            ) : (
-              <svg className="w-4 h-4" viewBox="0 0 24 24">
-                <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
-                <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
-                <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z" />
-                <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z" />
-              </svg>
-            )}
-            <span>{loading ? 'CONNECTING TO GOOGLE...' : 'CONTINUE WITH GOOGLE'}</span>
-          </button>
-
-          {/* Divider */}
-          <div className="relative flex items-center justify-center">
-            <div className="border-t border-zinc-200 w-full" />
-            <span className="bg-white px-3 text-[9px] text-zinc-400 font-bold uppercase tracking-widest shrink-0 absolute">
-              OR EMAIL SIGN IN
-            </span>
-          </div>
-
-          {/* Tab toggle */}
-          <div className="flex border border-zinc-200">
-            {[['SIGN IN', false],['REGISTER', true]].map(([label, val]) => (
-              <button key={label} onClick={() => { setIsRegister(val); setError(''); }}
-                className={`flex-1 py-3 text-[11px] font-bold uppercase tracking-widest transition-all ${
-                  isRegister === val ? 'bg-black text-white' : 'text-zinc-400 hover:text-black'
-                }`}>{label}</button>
-            ))}
-          </div>
-
-          {/* Error */}
+          {/* Error display */}
           {error && (
-            <div className="flex items-start gap-2 border border-zinc-900 bg-zinc-950 text-white p-3 text-[10px] uppercase tracking-wide animate-shake">
-              <span>⚠</span> {error}
+            <div className="flex items-start gap-2 border border-black bg-black text-white p-4 text-xs uppercase tracking-wide rounded-xl animate-shake font-mono">
+              <span className="text-amber-400">⚠</span> {error}
             </div>
           )}
 
-          {/* Form */}
-          <form onSubmit={handleSubmit} className="space-y-3">
-            {isRegister && (
-              <div className="relative">
-                <User className="w-4 h-4 text-zinc-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
-                <input type="text" placeholder="Full Name" value={form.name}
-                  onChange={set('name')} required={isRegister} className={field} />
-              </div>
-            )}
-            <div className="relative">
-              <Mail className="w-4 h-4 text-zinc-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
-              <input type="email" placeholder="Email Address" value={form.email}
-                onChange={set('email')} required className={field} />
-            </div>
-            {isRegister && (
-              <div className="relative">
-                <span className="text-[10px] font-bold text-zinc-400 absolute left-4 top-1/2 -translate-y-1/2">+91</span>
-                <input type="tel" placeholder="Phone Number" value={form.phone}
-                  onChange={set('phone')} className={`${field} pl-12`} />
-              </div>
-            )}
-            <div className="relative">
-              <Lock className="w-4 h-4 text-zinc-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
-              <input type={showPass ? 'text' : 'password'} placeholder="Password"
-                value={form.password} onChange={set('password')} required className={field} />
-              <button type="button" onClick={() => setShowPass(s => !s)}
-                className="absolute right-4 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-black transition-colors">
-                {showPass ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-              </button>
-            </div>
-
-            {!isRegister && (
-              <div className="text-right">
-                <button
-                  type="button"
-                  onClick={() => setShowForgot(true)}
-                  className="text-[10px] text-zinc-400 hover:text-black uppercase tracking-widest underline underline-offset-2 transition-colors font-bold"
-                >
-                  FORGOT PASSWORD?
-                </button>
-              </div>
-            )}
-
-            <button type="submit" disabled={loading}
-              className="btn-magnetic press w-full py-4 bg-black text-white font-black text-xs uppercase tracking-widest flex items-center justify-center gap-2 hover:bg-zinc-800 transition-colors disabled:opacity-40 disabled:cursor-not-allowed mt-2">
-              {loading
-                ? <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                : isRegister
-                  ? <><UserPlus className="w-4 h-4" /> CREATE ACCOUNT</>
-                  : <><LogIn className="w-4 h-4" /> SIGN IN</>
-              }
+          {/* Google One-Tap Primary Action Button */}
+          <div className="space-y-4 pt-2">
+            <button
+              type="button"
+              onClick={handleGoogleSignIn}
+              disabled={loading}
+              className="w-full py-4 bg-black text-white hover:bg-zinc-800 font-extrabold text-xs uppercase tracking-widest flex items-center justify-center gap-3 transition-all rounded-xl shadow-xl press disabled:opacity-50 disabled:cursor-not-allowed border border-black"
+            >
+              {loading ? (
+                <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+              ) : (
+                <svg className="w-5 h-5 shrink-0" viewBox="0 0 24 24">
+                  <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
+                  <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
+                  <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z" />
+                  <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z" />
+                </svg>
+              )}
+              <span>{loading ? 'CONNECTING TO GOOGLE...' : 'CONTINUE WITH GOOGLE'}</span>
             </button>
-          </form>
+
+            <div className="flex items-center gap-2 justify-center text-[10px] text-zinc-400 font-bold uppercase tracking-wider pt-2">
+              <Shield className="w-3.5 h-3.5 text-zinc-500" />
+              <span>100% SECURE &amp; ENCRYPTED GOOGLE AUTH</span>
+            </div>
+          </div>
 
           {/* Footer Terms & Policy Links */}
-          <div className="text-center pt-2 text-[10px] text-zinc-400 uppercase leading-relaxed font-mono">
-            By logging in, you accept our{' '}
+          <div className="text-center pt-4 text-[10px] text-zinc-400 uppercase leading-relaxed font-mono border-t border-zinc-100">
+            By continuing, you agree to जेनwin.'s{' '}
             <button
               type="button"
               onClick={() => setPolicyTab('terms')}
