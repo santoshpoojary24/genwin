@@ -926,11 +926,13 @@ export default function AdminDashboard() {
                         
                         {/* Overlay Stock Badge */}
                         <span className={`absolute top-2 left-2 px-1.5 py-0.5 text-[8px] sm:text-[9px] font-mono font-bold uppercase tracking-wider ${
-                          (p.stockQty || 10) < (settings.lowStockThreshold || 5)
-                            ? 'bg-red-950 text-red-300 border border-red-800'
-                            : 'bg-black/80 text-zinc-300 border border-zinc-700'
+                          (p.stockQty <= 0 || p.isSoldOut)
+                            ? 'bg-red-600 text-white font-extrabold shadow-md'
+                            : (p.stockQty < (settings.lowStockThreshold || 5))
+                              ? 'bg-red-950 text-red-300 border border-red-800'
+                              : 'bg-black/80 text-zinc-300 border border-zinc-700'
                         }`}>
-                          QTY: {p.stockQty || 10}
+                          {(p.stockQty <= 0 || p.isSoldOut) ? 'SOLD OUT' : `QTY: ${p.stockQty}`}
                         </span>
 
                         {/* Customizable Badge */}
@@ -1010,9 +1012,13 @@ export default function AdminDashboard() {
                           </td>
                           <td className="p-4">
                             <span className={`px-2 py-0.5 text-[10px] font-bold uppercase ${
-                              (p.stockQty || 10) < (settings.lowStockThreshold || 5) ? 'bg-red-950 text-red-400 border border-red-800' : 'text-zinc-300'
+                              (p.stockQty <= 0 || p.isSoldOut)
+                                ? 'bg-red-600 text-white font-extrabold shadow-sm'
+                                : (p.stockQty < (settings.lowStockThreshold || 5))
+                                  ? 'bg-red-950 text-red-400 border border-red-800'
+                                  : 'text-zinc-300'
                             }`}>
-                              {p.stockQty || 10} IN STOCK
+                              {(p.stockQty <= 0 || p.isSoldOut) ? 'SOLD OUT (0 UNITS)' : `${p.stockQty} IN STOCK`}
                             </span>
                           </td>
                           <td className="p-4">
