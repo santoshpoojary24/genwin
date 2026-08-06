@@ -792,31 +792,6 @@ export default function Home() {
         </div>
       </SR>
 
-      {/* ══ 9. SOCIAL PROOF / REVIEWS ════════════════════════════════════ */}
-      <SR className="max-w-7xl mx-auto px-6 lg:px-12 mt-20">
-        <EyeBrow n="06" label="WHAT CUSTOMERS SAY" />
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-px bg-zinc-200 border border-zinc-200 mt-6 stagger">
-          {[
-            { name: 'ARJUN S.', rating: 5, text: 'Quality is insane. 240 GSM feels like a different league. Already ordered again.', product: 'Heavyweight Canvas Tee' },
-            { name: 'PRIYA M.', rating: 5, text: 'Hoodie fits oversized perfectly, fleece is incredibly soft. Arrived in 2 days!', product: 'Streetwear Fleece Hoodie' },
-            { name: 'RAHUL K.', rating: 5, text: 'Denim jacket is exactly as described. The washed look is next level. 10/10.', product: 'Vintage Wash Denim Jacket' },
-          ].map((r, i) => (
-            <div key={i} className="sr bg-white p-8 space-y-5">
-              <div className="flex gap-0.5">
-                {[1, 2, 3, 4, 5].map(s => (
-                  <svg key={s} className="w-3.5 h-3.5 fill-black" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" /></svg>
-                ))}
-              </div>
-              <p className="font-mono text-xs text-zinc-600 leading-relaxed">"{r.text}"</p>
-              <div className="border-t border-zinc-100 pt-4 font-mono">
-                <p className="text-[10px] font-black text-black uppercase tracking-widest">{r.name}</p>
-                <p className="text-[10px] text-zinc-400 uppercase tracking-wide mt-0.5">{r.product}</p>
-              </div>
-            </div>
-          ))}
-        </div>
-      </SR>
-
       {/* ══ 9.5 CUSTOMER SUPPORT & DIRECT CONNECT STRIP ═════════════════ */}
       <SR className="max-w-7xl mx-auto px-6 lg:px-12 mt-16">
         <div className="bg-zinc-950 border border-zinc-800 p-8 font-mono space-y-6">
