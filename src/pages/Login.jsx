@@ -1,12 +1,16 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { LogIn, UserPlus, Eye, EyeOff, Lock, Mail, User, ArrowLeft, CheckCircle2, X, Shield, FileText, RefreshCw } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
 export default function Login() {
-  const { loginWithGoogle, loading } = useAuth();
+  const { loginWithGoogle, setIsLoginOpen, loading } = useAuth();
   const navigate = useNavigate();
   const [error, setError] = useState('');
+
+  useEffect(() => {
+    setIsLoginOpen(true);
+  }, [setIsLoginOpen]);
 
   // Policy Modal state
   const [policyTab, setPolicyTab] = useState(null); // 'terms' | 'privacy' | 'refund'

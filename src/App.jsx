@@ -29,6 +29,7 @@ import { SettingsProvider } from './context/SettingsContext';
 import Navbar      from './components/layout/Navbar';
 import Footer      from './components/layout/Footer';
 import CartDrawer  from './components/cart/CartDrawer';
+import LoginModal  from './components/auth/LoginModal';
 
 import Home              from './pages/Home';
 import Shop              from './pages/Shop';
@@ -153,6 +154,7 @@ export default function App() {
                   <div className="min-h-screen min-h-[100dvh] w-full relative overflow-x-hidden flex flex-col bg-black text-zinc-900">
                     <Navbar />
                     <CartDrawer />
+                    <LoginModal />
                     <main className="flex-1 bg-white">
                       <Routes>
                         <Route path="/"                        element={<Home />} />

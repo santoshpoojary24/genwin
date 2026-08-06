@@ -17,6 +17,7 @@ export const AuthProvider = ({ children }) => {
     try { const s = localStorage.getItem(LOCAL_WISHLIST_KEY); return s ? JSON.parse(s) : []; }
     catch { return []; }
   });
+  const [isLoginOpen, setIsLoginOpen] = useState(false);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -181,6 +182,7 @@ export const AuthProvider = ({ children }) => {
   return (
     <AuthContext.Provider value={{
       user, login, logout, register, loginWithGoogle, loginWithPhone, loading, wishlist, toggleWishlist,
+      isLoginOpen, setIsLoginOpen,
       addAddress, updateAddress, deleteAddress, setDefaultAddress
     }}>
       {children}

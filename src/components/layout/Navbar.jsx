@@ -8,7 +8,7 @@ import { useSettings } from '../../context/SettingsContext';
 export default function Navbar() {
   const navigate = useNavigate();
   const { totalCount, setIsCartOpen } = useCart();
-  const { user, wishlist } = useAuth();
+  const { user, wishlist, setIsLoginOpen } = useAuth();
   const { settings } = useSettings();
 
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -211,13 +211,12 @@ export default function Navbar() {
           ) : (
             <div className="flex items-center justify-between w-full">
               <span className="text-[10px] text-zinc-500 font-bold uppercase">GUEST ACCOUNT</span>
-              <Link
-                to="/login"
-                onClick={() => setMobileMenuOpen(false)}
+              <button
+                onClick={() => { setMobileMenuOpen(false); setIsLoginOpen(true); }}
                 className="text-[10px] font-bold text-black uppercase underline flex items-center gap-1"
               >
                 SIGN IN <LogIn className="w-3.5 h-3.5" />
-              </Link>
+              </button>
             </div>
           )}
         </div>
