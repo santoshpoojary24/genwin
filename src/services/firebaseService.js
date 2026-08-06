@@ -6,16 +6,16 @@ import { ref, set, get, child, remove, onValue } from 'firebase/database';
 import { INITIAL_PRODUCTS, INITIAL_CATEGORIES, INITIAL_ADS, INITIAL_COUPONS } from '../data/seedData';
 
 const API_BASE_URL = 'http://localhost:5000/api';
-const CACHE_VERSION = 'v8';
+const CACHE_VERSION = 'v10';
 const KEYS = {
   products   : `genwin_products_${CACHE_VERSION}`,
-  orders     : 'genwin_orders',
+  orders     : `genwin_orders_${CACHE_VERSION}`,
   customs    : 'genwin_customizations',
-  categories : 'genwin_categories',
-  coupons    : 'genwin_coupons',
-  ads        : 'genwin_ads',
-  settings   : 'genwin_settings',
-  employees  : 'genwin_employees',
+  categories : `genwin_categories_${CACHE_VERSION}`,
+  coupons    : `genwin_coupons_${CACHE_VERSION}`,
+  ads        : `genwin_ads_${CACHE_VERSION}`,
+  settings   : `genwin_settings_${CACHE_VERSION}`,
+  employees  : `genwin_employees_${CACHE_VERSION}`,
 };
 
 const DEFAULT_EMPLOYEES = [
@@ -124,25 +124,25 @@ export const FirebaseService = {
 
   /** 1. Products (Firebase Cloud Firestore & Realtime DB) */
   async getProducts() {
-    const local = ls.get(KEYS.products, INITIAL_PRODUCTS);
     try {
       const snap = await withTimeout(getDocs(collection(db, 'products')));
       if (!snap.empty) {
         const remote = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-        const map = new Map();
-        remote.forEach(p => map.set(p.id, p));
-        local.forEach(p => {
-          if (p.id && !map.has(p.id)) map.set(p.id, p);
+        ls.set(KEYS.products, remote);
+        return remote;
+      } else {
+        // Seed initial products into Firestore if cloud is empty
+        INITIAL_PRODUCTS.forEach(p => {
+          setDoc(doc(db, 'products', p.id), p).catch(() => {});
         });
-        const merged = Array.from(map.values());
-        ls.set(KEYS.products, merged);
-        return merged;
+        ls.set(KEYS.products, INITIAL_PRODUCTS);
+        return INITIAL_PRODUCTS;
       }
     } catch (err) {
-      console.error("Firebase getProducts error:", err);
+      console.error("Firebase getProducts error, falling back to cache:", err);
     }
 
-    return local;
+    return ls.get(KEYS.products, INITIAL_PRODUCTS);
   },
 
   async getProductBySlug(slug) {
@@ -300,6 +300,12 @@ export const FirebaseService = {
         const remote = snap.docs.map(d => ({ id: d.id, ...d.data() }));
         ls.set(KEYS.employees, remote);
         return remote;
+      } else {
+        DEFAULT_EMPLOYEES.forEach(e => {
+          setDoc(doc(db, 'employees', e.id), e).catch(() => {});
+        });
+        ls.set(KEYS.employees, DEFAULT_EMPLOYEES);
+        return DEFAULT_EMPLOYEES;
       }
     } catch (_) {}
 
@@ -337,31 +343,27 @@ export const FirebaseService = {
 
   /** 4. Categories Collection */
   async getCategories() {
-    const local = ls.get(KEYS.categories, INITIAL_CATEGORIES);
     try {
       const snap = await withTimeout(getDocs(collection(db, 'categories')));
       if (!snap.empty) {
-        const remote = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-        const map = new Map();
-        remote.forEach(c => {
-          const key = c.slug || c.id;
-          if (key) map.set(key.toLowerCase(), c);
-        });
-        local.forEach(c => {
-          const key = c.slug || c.id;
-          if (key) map.set(key.toLowerCase(), c);
-        });
-        const merged = Array.from(map.values()).map(c => ({
-          ...c,
-          isFeatured: c.isFeatured ?? true,
-          description: c.description || 'Premium heavyweight streetwear collection.',
+        const remote = snap.docs.map(d => ({
+          id: d.id,
+          ...d.data(),
+          isFeatured: d.data().isFeatured ?? true,
+          description: d.data().description || 'Premium heavyweight streetwear collection.',
         }));
-        ls.set(KEYS.categories, merged);
-        return merged;
+        ls.set(KEYS.categories, remote);
+        return remote;
+      } else {
+        INITIAL_CATEGORIES.forEach(c => {
+          setDoc(doc(db, 'categories', c.id), c).catch(() => {});
+        });
+        ls.set(KEYS.categories, INITIAL_CATEGORIES);
+        return INITIAL_CATEGORIES;
       }
     } catch (_) {}
 
-    return local.map(c => ({
+    return ls.get(KEYS.categories, INITIAL_CATEGORIES).map(c => ({
       ...c,
       isFeatured: c.isFeatured ?? true,
       description: c.description || 'Premium heavyweight streetwear collection.',
@@ -471,11 +473,17 @@ export const FirebaseService = {
         const remote = snap.docs.map(d => ({ id: d.id, ...d.data() }));
         ls.set(KEYS.ads, remote);
         return remote;
+      } else {
+        INITIAL_ADS.forEach(a => {
+          const adId = a.id ? a.id.toString() : 'ad_' + Date.now();
+          setDoc(doc(db, 'ads', adId), { ...a, id: adId }).catch(() => {});
+        });
+        ls.set(KEYS.ads, INITIAL_ADS);
+        return INITIAL_ADS;
       }
     } catch (_) {}
 
-    const stored = ls.get(KEYS.ads, INITIAL_ADS);
-    return stored;
+    return ls.get(KEYS.ads, INITIAL_ADS);
   },
 
   async saveAd(ad) {
