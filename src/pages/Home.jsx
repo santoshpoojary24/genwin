@@ -422,6 +422,8 @@ function HeroBannerCarousel({ customAds = [] }) {
   );
 }
 
+const PromoSlider = HeroBannerCarousel;
+
 /* ── Front & Center Scroll-Triggered Promo Modal (One-Time Display) ───────── */
 function PopupPromoModal({ ads = [] }) {
   const [isOpen, setIsOpen] = useState(false);
@@ -592,17 +594,6 @@ export default function Home() {
           </h2>
         </div>
         <ModelStrip products={products} />
-      </SR>
-
-      {/* ══ 3. PROMO CAROUSEL ════════════════════════════════════════════ */}
-      <SR className="max-w-7xl mx-auto px-6 lg:px-12 space-y-5">
-        <div className="flex items-center justify-between">
-          <EyeBrow n="02" label="LATEST OFFERS & DROPS" />
-          <Link to="/shop" className="underline-wipe font-mono text-[10px] uppercase tracking-widest text-zinc-500 hover:text-black flex items-center gap-1 transition-colors">
-            All Products <ArrowUpRight className="w-3 h-3" />
-          </Link>
-        </div>
-        <PromoSlider customAds={ads.filter(a => a.active !== false && a.placement === 'homepage_hero')} />
       </SR>
 
       {/* ══ 5. CATEGORIES ════════════════════════════════════════════════ */}
