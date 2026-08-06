@@ -142,40 +142,42 @@ export default function QuickViewModal({ product, onClose }) {
             </p>
 
             {/* Size with Quantity according to Size */}
-            <div>
-              <div className="flex items-center justify-between mb-2">
-                <p className="text-[10px] font-mono font-bold text-zinc-500 uppercase tracking-widest">GARMENT SIZE</p>
-                <span className="text-[9px] font-mono font-bold text-emerald-600 uppercase">
-                  {(() => {
-                    const sq = getProductSizeStock(product, selectedSize);
-                    return sq > 0 ? `${sq} IN STOCK (${selectedSize})` : `OUT OF STOCK (${selectedSize})`;
-                  })()}
-                </span>
-              </div>
-              <div className="flex flex-wrap gap-1.5">
-                {product.sizes.map(size => {
-                  const sizeQty = getProductSizeStock(product, size);
-                  const isOut = sizeQty <= 0;
+            {product.hasSizes !== false && product.sizes?.length > 0 && (
+              <div>
+                <div className="flex items-center justify-between mb-2">
+                  <p className="text-[10px] font-mono font-bold text-zinc-500 uppercase tracking-widest">GARMENT SIZE</p>
+                  <span className="text-[9px] font-mono font-bold text-emerald-600 uppercase">
+                    {(() => {
+                      const sq = getProductSizeStock(product, selectedSize);
+                      return sq > 0 ? `${sq} IN STOCK (${selectedSize})` : `OUT OF STOCK (${selectedSize})`;
+                    })()}
+                  </span>
+                </div>
+                <div className="flex flex-wrap gap-1.5">
+                  {product.sizes.map(size => {
+                    const sizeQty = getProductSizeStock(product, size);
+                    const isOut = sizeQty <= 0;
 
-                  return (
-                    <button key={size} disabled={isOut} onClick={() => setSelectedSize(size)}
-                      className={`min-w-[48px] h-10 px-2 text-xs font-bold font-mono border transition-all flex flex-col items-center justify-center ${
-                        isOut
-                          ? 'bg-zinc-100 text-zinc-400 border-zinc-200 cursor-not-allowed opacity-60 line-through'
-                          : selectedSize === size
-                            ? 'bg-black text-white border-black shadow-sm'
-                            : 'border-zinc-300 text-zinc-700 hover:border-black'
-                      }`}
-                    >
-                      <span>{size}</span>
-                      <span className={`text-[7px] font-bold ${isOut ? 'text-red-500' : selectedSize === size ? 'text-zinc-300' : 'text-zinc-500'}`}>
-                        {isOut ? '0 Qty' : `${sizeQty} Qty`}
-                      </span>
-                    </button>
-                  );
-                })}
+                    return (
+                      <button key={size} disabled={isOut} onClick={() => setSelectedSize(size)}
+                        className={`min-w-[48px] h-10 px-2 text-xs font-bold font-mono border transition-all flex flex-col items-center justify-center ${
+                          isOut
+                            ? 'bg-zinc-100 text-zinc-400 border-zinc-200 cursor-not-allowed opacity-60 line-through'
+                            : selectedSize === size
+                              ? 'bg-black text-white border-black shadow-sm'
+                              : 'border-zinc-300 text-zinc-700 hover:border-black'
+                        }`}
+                      >
+                        <span>{size}</span>
+                        <span className={`text-[7px] font-bold ${isOut ? 'text-red-500' : selectedSize === size ? 'text-zinc-300' : 'text-zinc-500'}`}>
+                          {isOut ? '0 Qty' : `${sizeQty} Qty`}
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
-            </div>
+            )}
 
             {/* Color */}
             <div>

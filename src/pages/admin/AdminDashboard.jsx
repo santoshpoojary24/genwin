@@ -2581,57 +2581,121 @@ export default function AdminDashboard() {
               </div>
             </div>
 
-            {/* Per-Size Inventory Manager */}
+            {/* Size Toggle Switch & Inventory Manager */}
             <div className="space-y-3 pt-3 border-t border-zinc-800">
-              <div className="flex items-center justify-between">
-                <label className="block text-[10px] font-bold text-zinc-400 uppercase tracking-widest">
-                  STOCK QUANTITY ACCORDING TO SIZE (SIZE INVENTORY)
-                </label>
-                <span className="text-[10px] font-mono font-bold text-emerald-400 uppercase">
-                  TOTAL: {Object.values(editingProduct.sizeQuantities || { S: 5, M: 5, L: 5, XL: 5, XXL: 5 }).reduce((a, b) => a + (parseInt(b) || 0), 0)} UNITS
-                </span>
+              <div className="flex items-center justify-between bg-zinc-950 p-3 border border-zinc-800">
+                <div>
+                  <label htmlFor="hasSizesToggle" className="text-white font-bold text-xs uppercase tracking-wider cursor-pointer block">
+                    ENABLE GARMENT SIZES (S, M, L, XL, XXL)
+                  </label>
+                  <span className="text-[10px] text-zinc-400 block uppercase mt-0.5">
+                    {editingProduct.hasSizes !== false 
+                      ? 'ON — Apparel sizing enabled (S, M, L, XL, XXL).' 
+                      : 'OFF — Size-less product (Single size / Accessory / Bag / Poster).'
+                    }
+                  </span>
+                </div>
+                <input
+                  type="checkbox"
+                  id="hasSizesToggle"
+                  checked={editingProduct.hasSizes !== false}
+                  onChange={e => {
+                    const hasSizes = e.target.checked;
+                    const defaultSizeQty = Math.max(0, Math.floor((editingProduct.stockQty || 25) / 5));
+                    const defaultSizeQuantities = { S: defaultSizeQty, M: defaultSizeQty, L: defaultSizeQty, XL: defaultSizeQty, XXL: defaultSizeQty };
+                    const currentSizeQuantities = editingProduct.sizeQuantities || defaultSizeQuantities;
+                    const totalStock = hasSizes 
+                      ? Object.values(currentSizeQuantities).reduce((a, b) => a + (parseInt(b) || 0), 0)
+                      : (editingProduct.stockQty ?? 25);
+
+                    setEditingProduct({
+                      ...editingProduct,
+                      hasSizes,
+                      sizes: hasSizes ? ['S', 'M', 'L', 'XL', 'XXL'] : [],
+                      sizeQuantities: hasSizes ? currentSizeQuantities : null,
+                      stockQty: totalStock,
+                      isSoldOut: totalStock <= 0
+                    });
+                  }}
+                  className="accent-emerald-500 w-5 h-5 shrink-0 cursor-pointer"
+                />
               </div>
 
-              <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
-                {['S', 'M', 'L', 'XL', 'XXL'].map(size => {
-                  const defaultSizeQty = Math.max(0, Math.floor((editingProduct.stockQty || 25) / 5));
-                  const qty = editingProduct.sizeQuantities?.[size] !== undefined 
-                    ? editingProduct.sizeQuantities[size] 
-                    : defaultSizeQty;
+              {editingProduct.hasSizes !== false ? (
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <label className="block text-[10px] font-bold text-zinc-400 uppercase tracking-widest">
+                      STOCK QUANTITY ACCORDING TO SIZE (SIZE INVENTORY)
+                    </label>
+                    <span className="text-[10px] font-mono font-bold text-emerald-400 uppercase">
+                      TOTAL: {Object.values(editingProduct.sizeQuantities || { S: 5, M: 5, L: 5, XL: 5, XXL: 5 }).reduce((a, b) => a + (parseInt(b) || 0), 0)} UNITS
+                    </span>
+                  </div>
 
-                  return (
-                    <div key={size} className="bg-zinc-950 border border-zinc-800 p-2.5 space-y-1 rounded">
-                      <span className="text-[10px] font-mono font-bold text-zinc-300 block uppercase">
-                        SIZE {size}
-                      </span>
-                      <input
-                        type="number"
-                        min="0"
-                        value={qty}
-                        onChange={e => {
-                          const val = Math.max(0, parseInt(e.target.value) || 0);
-                          const existingSizes = editingProduct.sizeQuantities || { 
-                            S: defaultSizeQty, M: defaultSizeQty, L: defaultSizeQty, XL: defaultSizeQty, XXL: defaultSizeQty 
-                          };
-                          const updatedSizeQuantities = {
-                            ...existingSizes,
-                            [size]: val
-                          };
-                          const totalStock = Object.values(updatedSizeQuantities).reduce((a, b) => a + (parseInt(b) || 0), 0);
+                  <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
+                    {['S', 'M', 'L', 'XL', 'XXL'].map(size => {
+                      const defaultSizeQty = Math.max(0, Math.floor((editingProduct.stockQty || 25) / 5));
+                      const qty = editingProduct.sizeQuantities?.[size] !== undefined 
+                        ? editingProduct.sizeQuantities[size] 
+                        : defaultSizeQty;
 
-                          setEditingProduct({
-                            ...editingProduct,
-                            sizeQuantities: updatedSizeQuantities,
-                            stockQty: totalStock,
-                            isSoldOut: totalStock <= 0
-                          });
-                        }}
-                        className="w-full bg-zinc-900 border border-zinc-700 p-1.5 text-white text-xs font-mono font-bold text-center focus:border-white focus:outline-none"
-                      />
-                    </div>
-                  );
-                })}
-              </div>
+                      return (
+                        <div key={size} className="bg-zinc-950 border border-zinc-800 p-2.5 space-y-1 rounded">
+                          <span className="text-[10px] font-mono font-bold text-zinc-300 block uppercase">
+                            SIZE {size}
+                          </span>
+                          <input
+                            type="number"
+                            min="0"
+                            value={qty}
+                            onChange={e => {
+                              const val = Math.max(0, parseInt(e.target.value) || 0);
+                              const existingSizes = editingProduct.sizeQuantities || { 
+                                S: defaultSizeQty, M: defaultSizeQty, L: defaultSizeQty, XL: defaultSizeQty, XXL: defaultSizeQty 
+                              };
+                              const updatedSizeQuantities = {
+                                ...existingSizes,
+                                [size]: val
+                              };
+                              const totalStock = Object.values(updatedSizeQuantities).reduce((a, b) => a + (parseInt(b) || 0), 0);
+
+                              setEditingProduct({
+                                ...editingProduct,
+                                sizeQuantities: updatedSizeQuantities,
+                                stockQty: totalStock,
+                                isSoldOut: totalStock <= 0
+                              });
+                            }}
+                            className="w-full bg-zinc-900 border border-zinc-700 p-1.5 text-white text-xs font-mono font-bold text-center focus:border-white focus:outline-none"
+                          />
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              ) : (
+                <div className="space-y-1 bg-zinc-950 p-3 border border-zinc-800">
+                  <label className="block text-[10px] font-bold text-zinc-400 uppercase tracking-widest">
+                    TOTAL STOCK QUANTITY (SINGLE SIZE / NO SIZES)
+                  </label>
+                  <input
+                    type="number"
+                    min="0"
+                    required
+                    value={editingProduct.stockQty ?? 25}
+                    onChange={e => {
+                      const stockQty = Math.max(0, parseInt(e.target.value) || 0);
+                      setEditingProduct({
+                        ...editingProduct,
+                        stockQty,
+                        isSoldOut: stockQty <= 0
+                      });
+                    }}
+                    className="w-full bg-zinc-900 border border-zinc-700 p-2 text-white text-xs font-mono font-bold focus:border-white focus:outline-none"
+                    placeholder="25"
+                  />
+                </div>
+              )}
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">

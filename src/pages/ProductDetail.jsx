@@ -262,44 +262,46 @@ export default function ProductDetail() {
             </p>
 
             {/* Size Selector with Quantity according to Size */}
-            <div className="space-y-2 pt-2">
-              <div className="flex items-center justify-between">
-                <label className="text-[10px] font-bold text-black uppercase tracking-wider">GARMENT SIZE</label>
-                <button
-                  onClick={() => setShowSizeGuide(true)}
-                  className="text-[10px] text-zinc-400 hover:text-black uppercase underline flex items-center gap-1 transition-colors"
-                >
-                  <Ruler className="w-3 h-3" /> SIZE CHART
-                </button>
-              </div>
+            {product.hasSizes !== false && product.sizes?.length > 0 && (
+              <div className="space-y-2 pt-2">
+                <div className="flex items-center justify-between">
+                  <label className="text-[10px] font-bold text-black uppercase tracking-wider">GARMENT SIZE</label>
+                  <button
+                    onClick={() => setShowSizeGuide(true)}
+                    className="text-[10px] text-zinc-400 hover:text-black uppercase underline flex items-center gap-1 transition-colors"
+                  >
+                    <Ruler className="w-3 h-3" /> SIZE CHART
+                  </button>
+                </div>
 
-              <div className="grid grid-cols-5 gap-2">
-                {product.sizes?.map(size => {
-                  const sizeQty = getProductSizeStock(product, size);
-                  const isOut = sizeQty <= 0;
+                <div className="grid grid-cols-5 gap-2">
+                  {product.sizes.map(size => {
+                    const sizeQty = getProductSizeStock(product, size);
+                    const isOut = sizeQty <= 0;
 
-                  return (
-                    <button
-                      key={size}
-                      disabled={isOut}
-                      onClick={() => { setSelectedSize(size); setQuantity(1); }}
-                      className={`py-2 px-1 text-center transition-all border relative flex flex-col items-center justify-center ${
-                        isOut
-                          ? 'bg-zinc-100 text-zinc-400 border-zinc-200 cursor-not-allowed opacity-60 line-through'
-                          : selectedSize === size 
-                            ? 'bg-black text-white border-black shadow-md' 
-                            : 'bg-white text-black border-zinc-200 hover:border-black'
-                      }`}
-                    >
-                      <span className="text-xs font-bold uppercase">{size}</span>
-                      <span className={`text-[8px] font-mono font-bold mt-0.5 ${isOut ? 'text-red-500' : selectedSize === size ? 'text-zinc-300' : 'text-zinc-500'}`}>
-                        {isOut ? '0 Left' : `${sizeQty} Qty`}
-                      </span>
-                    </button>
-                  );
-                })}
+                    return (
+                      <button
+                        key={size}
+                        disabled={isOut}
+                        onClick={() => { setSelectedSize(size); setQuantity(1); }}
+                        className={`py-2 px-1 text-center transition-all border relative flex flex-col items-center justify-center ${
+                          isOut
+                            ? 'bg-zinc-100 text-zinc-400 border-zinc-200 cursor-not-allowed opacity-60 line-through'
+                            : selectedSize === size 
+                              ? 'bg-black text-white border-black shadow-md' 
+                              : 'bg-white text-black border-zinc-200 hover:border-black'
+                        }`}
+                      >
+                        <span className="text-xs font-bold uppercase">{size}</span>
+                        <span className={`text-[8px] font-mono font-bold mt-0.5 ${isOut ? 'text-red-500' : selectedSize === size ? 'text-zinc-300' : 'text-zinc-500'}`}>
+                          {isOut ? '0 Left' : `${sizeQty} Qty`}
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
-            </div>
+            )}
 
             {/* Color Swatches */}
             {product.colors?.length > 0 && (

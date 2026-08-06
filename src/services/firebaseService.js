@@ -121,9 +121,22 @@ function withTimeout(promise, ms = 2500) {
 export function normalizeProduct(p) {
   if (!p) return p;
 
-  const sizes = p.sizes && p.sizes.length > 0 ? p.sizes : ['S', 'M', 'L', 'XL', 'XXL'];
+  const hasSizes = p.hasSizes !== false && (p.sizes === undefined || (Array.isArray(p.sizes) && p.sizes.length > 0));
   const rawStock = p.stockQty !== undefined && p.stockQty !== null ? parseInt(p.stockQty) : 25;
   const totalStock = isNaN(rawStock) ? 25 : Math.max(0, rawStock);
+
+  if (!hasSizes) {
+    return {
+      ...p,
+      hasSizes: false,
+      sizes: [],
+      sizeQuantities: null,
+      stockQty: totalStock,
+      isSoldOut: totalStock <= 0 || p.isSoldOut === true
+    };
+  }
+
+  const sizes = p.sizes && p.sizes.length > 0 ? p.sizes : ['S', 'M', 'L', 'XL', 'XXL'];
 
   let sizeQuantities = p.sizeQuantities;
   if (!sizeQuantities || typeof sizeQuantities !== 'object') {
@@ -146,6 +159,7 @@ export function normalizeProduct(p) {
 
   return {
     ...p,
+    hasSizes: true,
     sizes,
     sizeQuantities,
     stockQty: calculatedTotalStock,
