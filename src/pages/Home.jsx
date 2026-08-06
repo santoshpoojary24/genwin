@@ -3,7 +3,7 @@ import { createPortal } from 'react-dom';
 import { Link, useNavigate } from 'react-router-dom';
 import {
   ArrowRight, ArrowUpRight, ChevronLeft, ChevronRight, Tag, Sparkles, Zap, ShieldCheck,
-  Eye, Heart, Flame, Clock, Truck, Star, RefreshCw, Mail, Phone, Instagram, MessageCircle, X
+  Eye, Heart, Flame, Clock, Truck, Star, RefreshCw, Mail, Phone, Instagram, MessageCircle, MessageSquare, X
 } from 'lucide-react';
 import { FirebaseService } from '../services/firebaseService';
 import { useSettings } from '../context/SettingsContext';
