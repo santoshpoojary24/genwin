@@ -1,26 +1,29 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { X, Shield } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 
 export default function LoginModal() {
-  const { isLoginOpen, setIsLoginOpen, loginWithGoogle, loginWithPhone, loading } = useAuth();
-  const [phone, setPhone] = useState('');
-  const [notifyMe, setNotifyMe] = useState(true);
-  const [showOtp, setShowOtp] = useState(false);
-  const [otpCode, setOtpCode] = useState('');
-  const [generatedOtp, setGeneratedOtp] = useState('');
-  const [otpNotice, setOtpNotice] = useState('');
+  const { isLoginOpen, setIsLoginOpen, loginWithGoogle, loading } = useAuth();
+  const location = useLocation();
+  const navigate = useNavigate();
   const [error, setError] = useState('');
+
+  useEffect(() => {
+    if (location.pathname === '/login') {
+      setIsLoginOpen(true);
+    }
+  }, [location.pathname, setIsLoginOpen]);
 
   if (!isLoginOpen) return null;
 
   const handleClose = () => {
     setIsLoginOpen(false);
     setError('');
-    setShowOtp(false);
-    setOtpNotice('');
-    setOtpCode('');
+    if (location.pathname === '/login') {
+      navigate('/', { replace: true });
+    }
   };
 
   const handleGoogleSignIn = async () => {

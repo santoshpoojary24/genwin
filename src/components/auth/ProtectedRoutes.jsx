@@ -35,15 +35,21 @@ export function EmployeeProtectedRoute({ children }) {
 
 /**
  * Customer Account Route Guard - Protects /account, /checkout
- * Redirects unauthenticated store customers to /login
+ * Opens LoginModal popup for unauthenticated store customers
  */
 export function CustomerProtectedRoute({ children }) {
-  const { user } = useAuth();
+  const { user, setIsLoginOpen } = useAuth();
   const location = useLocation();
   const localUser = localStorage.getItem('genwin_user');
 
+  React.useEffect(() => {
+    if (!user && !localUser) {
+      setIsLoginOpen(true);
+    }
+  }, [user, localUser, setIsLoginOpen]);
+
   if (!user && !localUser) {
-    return <Navigate to="/login" state={{ from: location }} replace />;
+    return <Navigate to="/" replace />;
   }
 
   return children;

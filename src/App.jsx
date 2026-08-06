@@ -39,7 +39,6 @@ import Customizer        from './pages/Customizer';
 import Checkout          from './pages/Checkout';
 import OrderTracker      from './pages/OrderTracker';
 import Account           from './pages/Account';
-import Login             from './pages/Login';
 import AdminDashboard    from './pages/admin/AdminDashboard';
 import AdminLoginPage    from './pages/admin/AdminLoginPage';
 import EmployeeLoginPage from './pages/admin/EmployeeLoginPage';
@@ -120,7 +119,6 @@ export default function App() {
               {/* Standalone Login Portals (Clean layout without storefront Navbar & Footer) */}
               <Route path="/admin/login"    element={<AdminLoginPage />} />
               <Route path="/employee/login" element={<EmployeeLoginPage />} />
-              <Route path="/login"          element={<Login />} />
 
               {/* Protected Admin Console Route */}
               <Route
