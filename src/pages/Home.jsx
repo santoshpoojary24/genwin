@@ -286,7 +286,7 @@ function PromoSlider({ customAds = [] }) {
   );
 }
 
-/* ── Popup Promo Modal ─────────────────────────────────────────────────── */
+/* ── Non-intrusive Floating Promo Card (Shows ONLY on Scroll) ────────── */
 function PopupPromoModal({ ads = [] }) {
   const [isOpen, setIsOpen] = useState(false);
   const [dismissed, setDismissed] = useState(false);
@@ -298,20 +298,15 @@ function PopupPromoModal({ ads = [] }) {
     if (!popupAd || dismissed) return;
 
     const handleScroll = () => {
-      if (window.scrollY > 250 && !dismissed) {
+      if (window.scrollY > 400 && !dismissed) {
         setIsOpen(true);
+      } else if (window.scrollY <= 150) {
+        setIsOpen(false);
       }
     };
 
     window.addEventListener('scroll', handleScroll, { passive: true });
-    const timer = setTimeout(() => {
-      if (!dismissed) setIsOpen(true);
-    }, 3000);
-
-    return () => {
-      window.removeEventListener('scroll', handleScroll);
-      clearTimeout(timer);
-    };
+    return () => window.removeEventListener('scroll', handleScroll);
   }, [popupAd, dismissed]);
 
   if (!isOpen || !popupAd || dismissed) return null;
@@ -321,60 +316,54 @@ function PopupPromoModal({ ads = [] }) {
     setDismissed(true);
   };
 
-  const rawHeadline = popupAd.headline || popupAd.title || 'SPECIAL STORE DISCOUNT';
-  const subtext = popupAd.sub || popupAd.subtitle || '240 GSM organic cotton drop. Limited availability.';
-  const badge = popupAd.badge || 'FLASH PROMO';
-  const cta = popupAd.cta || popupAd.linkText || 'EXPLORE COLLECTION';
+  const rawHeadline = popupAd.headline || popupAd.title || 'SPECIAL PROMO DROP';
+  const subtext = popupAd.sub || popupAd.subtitle || '240 GSM organic cotton streetwear drop.';
+  const badge = popupAd.badge || 'PROMO BANNER';
+  const cta = popupAd.cta || popupAd.linkText || 'EXPLORE NOW';
   const link = popupAd.link || popupAd.linkUrl || '/shop';
-  const image = popupAd.image || 'https://images.unsplash.com/photo-1503342217505-b0a15ec3261c?w=800&q=80';
+  const image = popupAd.image || null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-xs animate-fade-in" onClick={handleClose}>
-      <div 
-        className="relative bg-zinc-950 border border-zinc-800 text-white max-w-sm sm:max-w-md w-full overflow-hidden shadow-2xl space-y-0"
-        onClick={e => e.stopPropagation()}
-      >
+    <div className="fixed bottom-4 left-4 right-4 sm:left-auto sm:right-6 sm:w-96 z-40 animate-fade-in pointer-events-auto">
+      <div className="relative bg-zinc-950 border border-zinc-800 text-white shadow-2xl overflow-hidden p-4 sm:p-5 space-y-3 font-mono">
         <button 
           onClick={handleClose} 
-          className="absolute top-3 right-3 z-20 w-8 h-8 rounded-full bg-black/80 text-zinc-400 hover:text-white border border-zinc-700 flex items-center justify-center transition-colors"
+          className="absolute top-2.5 right-2.5 z-20 p-1 text-zinc-400 hover:text-white bg-zinc-900/80 border border-zinc-800 transition-colors"
           aria-label="Close Promo"
         >
-          <X className="w-4 h-4" />
+          <X className="w-3.5 h-3.5" />
         </button>
 
         {image && (
-          <div className="h-44 w-full relative overflow-hidden bg-zinc-900 border-b border-zinc-800">
-            <img src={image} alt={rawHeadline} className="w-full h-full object-cover opacity-80" />
-            <div className="absolute inset-0 bg-gradient-to-t from-zinc-950 via-zinc-950/40 to-transparent" />
-            <div className="absolute bottom-3 left-4">
-              <span className="px-2.5 py-1 text-[9px] font-mono font-bold bg-white text-black uppercase tracking-widest shadow-md">
-                {badge}
-              </span>
-            </div>
+          <div className="h-28 w-full relative overflow-hidden bg-zinc-900 border border-zinc-800 mb-2">
+            <img src={image} alt={rawHeadline} className="w-full h-full object-cover opacity-85" />
+            <span className="absolute top-2 left-2 px-2 py-0.5 text-[8px] font-mono font-bold bg-white text-black uppercase tracking-widest">
+              {badge}
+            </span>
           </div>
         )}
 
-        <div className="p-6 space-y-4 font-mono">
+        <div className="space-y-1 pr-6">
           {!image && (
-            <span className="px-2.5 py-1 text-[9px] font-mono font-bold bg-white text-black uppercase tracking-widest inline-block">
+            <span className="px-2 py-0.5 text-[8px] font-mono font-bold bg-white text-black uppercase tracking-widest inline-block mb-1">
               {badge}
             </span>
           )}
-          <h3 className="font-display font-black text-xl sm:text-2xl uppercase tracking-tight text-white leading-tight">
+          <h4 className="font-display font-black text-base sm:text-lg uppercase tracking-tight text-white leading-tight">
             {rawHeadline}
-          </h3>
-          <p className="text-xs text-zinc-400 uppercase leading-relaxed">
+          </h4>
+          <p className="text-[11px] text-zinc-400 uppercase leading-snug line-clamp-2">
             {subtext}
           </p>
-
-          <Link
-            to={link}
-            onClick={handleClose}
-            className="btn-magnetic press w-full py-3.5 bg-white text-black font-mono font-black text-xs uppercase tracking-widest flex items-center justify-center gap-2 shadow-lg hover:bg-zinc-200 transition-colors"
-          >
-            {cta} <ArrowRight className="w-4 h-4" />
-          </Link>
         </div>
+
+        <Link
+          to={link}
+          onClick={handleClose}
+          className="btn-magnetic press w-full py-2.5 bg-white text-black font-black text-[11px] uppercase tracking-widest flex items-center justify-center gap-1.5 shadow-md hover:bg-zinc-200 transition-colors"
+        >
+          {cta} <ArrowRight className="w-3.5 h-3.5" />
+        </Link>
       </div>
     </div>
   );
