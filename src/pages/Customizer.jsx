@@ -207,9 +207,9 @@ function TshirtBack({ color, showZone }) {
 /* ═══════════════════════════════════════════════════════════════
    Draggable Print / Sticker Layer
 ═══════════════════════════════════════════════════════════════ */
-function PrintLayer({ items, activeId, setActiveId, printZone, onMove, onScale }) {
+function PrintLayer({ items, activeId, setActiveId, printZone, onMove }) {
   const svgRef = useRef(null);
-  const dragging = useRef(null);
+  const dragging = useRef(null); // { id, startPos, startX, startY, hasMoved }
 
   const getSVGPos = useCallback((clientX, clientY) => {
     const svg = svgRef.current;
@@ -223,40 +223,55 @@ function PrintLayer({ items, activeId, setActiveId, printZone, onMove, onScale }
   const handlePointerDown = (e, id) => {
     e.stopPropagation();
     e.preventDefault();
-    setActiveId(id);
-    const cx = e.clientX ?? e.touches?.[0]?.clientX;
-    const cy = e.clientY ?? e.touches?.[0]?.clientY;
-    const startPos = getSVGPos(cx, cy);
+    const clientX = e.clientX ?? e.touches?.[0]?.clientX;
+    const clientY = e.clientY ?? e.touches?.[0]?.clientY;
+    const startPos = getSVGPos(clientX, clientY);
     const item = items.find(i => i.id === id);
-    dragging.current = { id, startPos, startX: item.x, startY: item.y };
+    if (!item) return;
+    // Select on mousedown so resize panel appears immediately
+    setActiveId(id);
+    dragging.current = { id, startPos, startX: item.x, startY: item.y, hasMoved: false };
   };
 
   useEffect(() => {
-    const move = (e) => {
+    const MOVE_THRESHOLD = 4; // SVG units — below this = a click, not a drag
+
+    const handleMove = (e) => {
       if (!dragging.current) return;
-      const cx = e.clientX ?? e.touches?.[0]?.clientX;
-      const cy = e.clientY ?? e.touches?.[0]?.clientY;
-      if (cx == null) return;
-      const pos = getSVGPos(cx, cy);
+      const clientX = e.clientX ?? e.touches?.[0]?.clientX;
+      const clientY = e.clientY ?? e.touches?.[0]?.clientY;
+      if (clientX == null) return;
+      const pos = getSVGPos(clientX, clientY);
       const dx = pos.x - dragging.current.startPos.x;
       const dy = pos.y - dragging.current.startPos.y;
+      if (!dragging.current.hasMoved) {
+        if (Math.abs(dx) < MOVE_THRESHOLD && Math.abs(dy) < MOVE_THRESHOLD) return;
+        dragging.current.hasMoved = true;
+      }
       const z = printZone;
       const nx = Math.max(z.x + 10, Math.min(z.x + z.w - 10, dragging.current.startX + dx));
       const ny = Math.max(z.y + 10, Math.min(z.y + z.h - 10, dragging.current.startY + dy));
       onMove(dragging.current.id, nx, ny);
     };
-    const up = () => { dragging.current = null; };
-    window.addEventListener('mousemove', move);
-    window.addEventListener('touchmove', move, { passive: false });
-    window.addEventListener('mouseup', up);
-    window.addEventListener('touchend', up);
+
+    const handleUp = () => { dragging.current = null; };
+
+    window.addEventListener('mousemove', handleMove);
+    window.addEventListener('touchmove', handleMove, { passive: false });
+    window.addEventListener('mouseup', handleUp);
+    window.addEventListener('touchend', handleUp);
     return () => {
-      window.removeEventListener('mousemove', move);
-      window.removeEventListener('touchmove', move);
-      window.removeEventListener('mouseup', up);
-      window.removeEventListener('touchend', up);
+      window.removeEventListener('mousemove', handleMove);
+      window.removeEventListener('touchmove', handleMove);
+      window.removeEventListener('mouseup', handleUp);
+      window.removeEventListener('touchend', handleUp);
     };
   }, [printZone, onMove, getSVGPos]);
+
+  // Clicking directly on the SVG background (not on a child) deselects
+  const handleBgDown = (e) => {
+    if (e.target === svgRef.current) setActiveId(null);
+  };
 
   return (
     <svg
@@ -264,53 +279,72 @@ function PrintLayer({ items, activeId, setActiveId, printZone, onMove, onScale }
       viewBox="0 0 400 440"
       className="absolute inset-0 w-full h-full"
       style={{ touchAction: 'none' }}
-      onClick={() => setActiveId(null)}
+      onMouseDown={handleBgDown}
+      onTouchStart={handleBgDown}
     >
-      {items.map(item => (
-        <g
-          key={item.id}
-          transform={`translate(${item.x},${item.y})`}
-          onMouseDown={e => handlePointerDown(e, item.id)}
-          onTouchStart={e => handlePointerDown(e, item.id)}
-          style={{ cursor: 'move', userSelect: 'none' }}
-        >
-          {item.type === 'text' && (
-            <text
-              textAnchor="middle"
-              dominantBaseline="middle"
-              fontSize={item.fontSize || 20}
-              fontFamily={item.fontFamily || 'Arial'}
-              fill={item.color || '#000'}
-              fontWeight={item.bold ? 'bold' : 'normal'}
-            >
-              {item.text}
-            </text>
-          )}
-          {item.type === 'image' && (
-            <image
-              href={item.src}
-              x={-(item.size || 70) / 2}
-              y={-(item.size || 70) / 2}
-              width={item.size || 70}
-              height={item.size || 70}
-            />
-          )}
+      {items.map(item => {
+        const isActive = activeId === item.id;
+        const hw = item.type === 'text'
+          ? Math.max(44, (item.text?.length || 4) * (item.fontSize || 20) * 0.32)
+          : (item.size || 70) / 2 + 6;
+        const hh = item.type === 'text'
+          ? (item.fontSize || 20) / 2 + 8
+          : (item.size || 70) / 2 + 6;
 
-          {/* Selection box */}
-          {activeId === item.id && (() => {
-            const hw = item.type === 'text' ? 55 : (item.size || 70) / 2 + 6;
-            const hh = item.type === 'text' ? (item.fontSize || 20) / 2 + 6 : (item.size || 70) / 2 + 6;
-            return (
-              <rect x={-hw} y={-hh} width={hw * 2} height={hh * 2}
-                fill="none" stroke="#6366f1" strokeWidth="1.5" strokeDasharray="5,3" rx="4" />
-            );
-          })()}
-        </g>
-      ))}
+        return (
+          <g
+            key={item.id}
+            transform={`translate(${item.x},${item.y})`}
+            onMouseDown={e => handlePointerDown(e, item.id)}
+            onTouchStart={e => handlePointerDown(e, item.id)}
+            style={{ cursor: 'move', userSelect: 'none' }}
+          >
+            {/* Transparent hit-area — makes entire bounding box clickable */}
+            <rect x={-hw} y={-hh} width={hw * 2} height={hh * 2} fill="transparent" stroke="none" />
+
+            {item.type === 'text' && (
+              <text
+                textAnchor="middle"
+                dominantBaseline="middle"
+                fontSize={item.fontSize || 20}
+                fontFamily={item.fontFamily || 'Arial'}
+                fill={item.color || '#000'}
+                fontWeight={item.bold ? 'bold' : 'normal'}
+                style={{ pointerEvents: 'none' }}
+              >
+                {item.text}
+              </text>
+            )}
+            {item.type === 'image' && (
+              <image
+                href={item.src}
+                x={-(item.size || 70) / 2}
+                y={-(item.size || 70) / 2}
+                width={item.size || 70}
+                height={item.size || 70}
+                style={{ pointerEvents: 'none' }}
+              />
+            )}
+
+            {/* Selection outline */}
+            {isActive && (
+              <rect
+                x={-hw} y={-hh}
+                width={hw * 2} height={hh * 2}
+                fill="rgba(99,102,241,0.06)"
+                stroke="#6366f1"
+                strokeWidth="1.5"
+                strokeDasharray="5,3"
+                rx="4"
+                style={{ pointerEvents: 'none' }}
+              />
+            )}
+          </g>
+        );
+      })}
     </svg>
   );
 }
-
 
 
 /* ═══════════════════════════════════════════════════════════════
