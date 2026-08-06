@@ -193,7 +193,8 @@ const DEFAULT_ADS = [
 function PromoSlider({ customAds = [] }) {
   const displayAds = customAds.length > 0 
     ? customAds.map(a => {
-        const parts = a.headline ? a.headline.split(' ') : ['SALE'];
+        const rawHeadline = a.headline || a.title || 'SALE';
+        const parts = rawHeadline.split(' ');
         const h1 = parts[0];
         const h2 = parts.slice(1).join(' ');
         return {
@@ -201,9 +202,10 @@ function PromoSlider({ customAds = [] }) {
           eyebrow: a.badge || 'PROMO',
           h1: h1,
           h2: h2,
-          body: a.sub || '',
-          cta: a.cta || 'SHOP NOW',
-          to: a.link || '/shop'
+          body: a.sub || a.subtitle || '',
+          cta: a.cta || a.linkText || 'SHOP NOW',
+          to: a.link || a.linkUrl || '/shop',
+          image: a.image || null
         };
       })
     : DEFAULT_ADS;
@@ -223,6 +225,14 @@ function PromoSlider({ customAds = [] }) {
   return (
     <div className="relative bg-black overflow-hidden border border-zinc-900 shadow-2xl"
       onMouseEnter={() => setPaused(true)} onMouseLeave={() => setPaused(false)}>
+
+      {/* Background Image if available */}
+      {ad.image && (
+        <>
+          <img src={ad.image} alt="" className="absolute inset-0 w-full h-full object-cover opacity-50" />
+          <div className="absolute inset-0 bg-gradient-to-r from-black via-black/80 to-transparent" />
+        </>
+      )}
 
       {/* Dot texture */}
       <div className="absolute inset-0 opacity-[0.06] pointer-events-none"
@@ -458,7 +468,7 @@ export default function Home() {
             All Products <ArrowUpRight className="w-3 h-3" />
           </Link>
         </div>
-        <PromoSlider customAds={ads.filter(a => a.active && a.placement === 'homepage_hero')} />
+        <PromoSlider customAds={ads.filter(a => a.active !== false && a.placement === 'homepage_hero')} />
       </SR>
 
       {/* ══ 4. LOOKBOOK STRIP (GPU LOW-END FRIENDLY) ═════════════════════ */}
