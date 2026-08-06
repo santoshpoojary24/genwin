@@ -864,37 +864,6 @@ export default function Home() {
         </div>
       </SR>
 
-      {/* ══ 10. CUSTOMER SUPPORT TICKET BANNER ════════════════════════════ */}
-      <SR className="max-w-7xl mx-auto px-6 lg:px-12 mt-16">
-        <div className="bg-zinc-950 border border-zinc-800 p-8 sm:p-12 flex flex-col md:flex-row items-center justify-between gap-8 text-white font-mono shadow-2xl">
-          <div className="space-y-2 text-center md:text-left">
-            <div className="inline-flex items-center gap-2 px-3 py-1 bg-emerald-950 border border-emerald-800 text-emerald-400 text-[10px] font-bold uppercase tracking-widest">
-              <Sparkles className="w-3.5 h-3.5" /> DEDICATED SUPPORT STAFF TEAM
-            </div>
-            <h3 className="font-display font-black text-2xl sm:text-3xl uppercase tracking-tight text-white">
-              NEED HELP WITH AN ORDER OR CUSTOM PRINT?
-            </h3>
-            <p className="text-xs text-zinc-400 max-w-xl uppercase leading-relaxed font-mono">
-              Create an official support ticket for size exchanges, address changes, or custom DTG printing assistance. Full customer details and real-time employee resolution tracking.
-            </p>
-          </div>
-          <div className="flex flex-col sm:flex-row gap-3 shrink-0 w-full md:w-auto">
-            <Link
-              to="/support"
-              className="px-8 py-4 bg-white text-black font-extrabold text-xs uppercase tracking-widest hover:bg-zinc-200 transition-colors text-center shadow-lg"
-            >
-              CREATE SUPPORT TICKET →
-            </Link>
-            <Link
-              to="/support?tab=lookup"
-              className="px-8 py-4 bg-zinc-900 border border-zinc-700 text-white font-bold text-xs uppercase tracking-widest hover:bg-zinc-800 transition-colors text-center"
-            >
-              CHECK TICKET STATUS
-            </Link>
-          </div>
-        </div>
-      </SR>
-
       {/* ══ 11. FINAL CTA ════════════════════════════════════════════════ */}
       <SR className="max-w-7xl mx-auto px-6 lg:px-12 mt-16 mb-16">
         <div className="relative bg-black overflow-hidden flex flex-col lg:flex-row items-center justify-between gap-10 px-8 sm:px-14 py-16 border border-zinc-900 shadow-2xl">
