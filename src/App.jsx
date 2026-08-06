@@ -140,10 +140,10 @@ export default function App() {
                 }
               />
 
-              {/* Standalone DTG Print Studio Customizer */}
-              <Route path="/customize/:productId" element={<Customizer />} />
-              <Route path="/customize"           element={<Customizer />} />
-              <Route path="/customizer"          element={<Customizer />} />
+              {/* Standalone DTG Print Studio Customizer — login required */}
+              <Route path="/customize/:productId" element={<CustomerProtectedRoute><Customizer /></CustomerProtectedRoute>} />
+              <Route path="/customize"           element={<CustomerProtectedRoute><Customizer /></CustomerProtectedRoute>} />
+              <Route path="/customizer"          element={<CustomerProtectedRoute><Customizer /></CustomerProtectedRoute>} />
 
               {/* Storefront routes (with storefront Navbar and Footer) */}
               <Route
