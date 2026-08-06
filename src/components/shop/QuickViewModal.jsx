@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { X, Star, ShoppingBag, ArrowRight, Heart } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
-import { useCart } from '../../context/CartContext';
+import { useCart, getProductSizeStock } from '../../context/CartContext';
 import { useAuth } from '../../context/AuthContext';
 
 export default function QuickViewModal({ product, onClose }) {
@@ -147,18 +147,14 @@ export default function QuickViewModal({ product, onClose }) {
                 <p className="text-[10px] font-mono font-bold text-zinc-500 uppercase tracking-widest">GARMENT SIZE</p>
                 <span className="text-[9px] font-mono font-bold text-emerald-600 uppercase">
                   {(() => {
-                    const sq = product.sizeQuantities?.[selectedSize] !== undefined
-                      ? product.sizeQuantities[selectedSize]
-                      : (product.stockQty ?? 10);
+                    const sq = getProductSizeStock(product, selectedSize);
                     return sq > 0 ? `${sq} IN STOCK (${selectedSize})` : `OUT OF STOCK (${selectedSize})`;
                   })()}
                 </span>
               </div>
               <div className="flex flex-wrap gap-1.5">
                 {product.sizes.map(size => {
-                  const sizeQty = product.sizeQuantities?.[size] !== undefined
-                    ? product.sizeQuantities[size]
-                    : Math.max(0, Math.floor((product.stockQty ?? 25) / 5));
+                  const sizeQty = getProductSizeStock(product, size);
                   const isOut = sizeQty <= 0;
 
                   return (

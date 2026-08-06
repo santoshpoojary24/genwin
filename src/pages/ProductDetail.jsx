@@ -5,7 +5,7 @@ import {
   CheckCircle2, Lock, MessageSquare, ShieldCheck, ThumbsUp
 } from 'lucide-react';
 import { FirebaseService } from '../services/firebaseService';
-import { useCart } from '../context/CartContext';
+import { useCart, getProductSizeStock } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
 import ProductCard from '../components/shop/ProductCard';
 import QuickViewModal from '../components/shop/QuickViewModal';
@@ -109,11 +109,20 @@ export default function ProductDetail() {
     : 0;
 
   const handleAddToCart = () => {
+    const sizeStock = getProductSizeStock(product, selectedSize);
+    if (sizeStock <= 0) {
+      alert(`Sorry! Size ${selectedSize} is currently out of stock.`);
+      return;
+    }
+    if (quantity > sizeStock) {
+      alert(`Only ${sizeStock} left in stock for size ${selectedSize}.`);
+      return;
+    }
     if (!user) {
       navigate('/login');
       return;
     }
-    addToCart(product, selectedSize, selectedColor, quantity);
+    addToCart(product, selectedSize, selectedColor, Math.min(quantity, sizeStock));
     setAddedToCart(true);
     setTimeout(() => setAddedToCart(false), 2000);
   };
@@ -208,9 +217,7 @@ export default function ProductDetail() {
               <div className="flex items-center justify-between">
                 <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">{product.category}</span>
                 {(() => {
-                  const sizeQty = product.sizeQuantities?.[selectedSize] !== undefined
-                    ? product.sizeQuantities[selectedSize]
-                    : (product.stockQty ?? 10);
+                  const sizeQty = getProductSizeStock(product, selectedSize);
                   
                   if (sizeQty <= 0 || product.stockQty <= 0 || product.isSoldOut) {
                     return (
@@ -268,9 +275,7 @@ export default function ProductDetail() {
 
               <div className="grid grid-cols-5 gap-2">
                 {product.sizes?.map(size => {
-                  const sizeQty = product.sizeQuantities?.[size] !== undefined
-                    ? product.sizeQuantities[size]
-                    : Math.max(0, Math.floor((product.stockQty ?? 25) / 5));
+                  const sizeQty = getProductSizeStock(product, size);
                   const isOut = sizeQty <= 0;
 
                   return (
@@ -337,9 +342,7 @@ export default function ProductDetail() {
                 </button>
                 <span className="px-5 font-bold text-xs">{quantity}</span>
                 {(() => {
-                  const sizeStockLimit = product.sizeQuantities?.[selectedSize] !== undefined
-                    ? product.sizeQuantities[selectedSize]
-                    : (product.stockQty ?? 10);
+                  const sizeStockLimit = getProductSizeStock(product, selectedSize);
                   const isMax = quantity >= sizeStockLimit || sizeStockLimit <= 0 || product.isSoldOut;
 
                   return (

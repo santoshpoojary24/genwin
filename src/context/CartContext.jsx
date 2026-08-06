@@ -5,6 +5,23 @@ const CartContext = createContext();
 
 const LOCAL_CART_KEY = 'genwin_cart_items';
 
+export function getProductSizeStock(product, size) {
+  if (!product) return 0;
+  const sizeStr = size || 'M';
+
+  if (product.sizeQuantities && product.sizeQuantities[sizeStr] !== undefined && product.sizeQuantities[sizeStr] !== null) {
+    return Math.max(0, parseInt(product.sizeQuantities[sizeStr]) || 0);
+  }
+
+  const sizes = product.sizes && product.sizes.length > 0 ? product.sizes : ['S', 'M', 'L', 'XL', 'XXL'];
+  const rawStock = product.stockQty !== undefined && product.stockQty !== null ? parseInt(product.stockQty) : 25;
+  const totalStock = isNaN(rawStock) ? 25 : Math.max(0, rawStock);
+
+  if (totalStock <= 0 || product.isSoldOut) return 0;
+
+  return Math.max(0, Math.floor(totalStock / sizes.length));
+}
+
 export const CartProvider = ({ children }) => {
   const [cartItems, setCartItems] = useState(() => {
     try {
@@ -27,9 +44,7 @@ export const CartProvider = ({ children }) => {
     if (!product) return;
 
     const sizeStr = selectedSize || product.sizes?.[0] || 'M';
-    const sizeStockLimit = product.sizeQuantities?.[sizeStr] !== undefined
-      ? product.sizeQuantities[sizeStr]
-      : (product.stockQty !== undefined ? product.stockQty : 999);
+    const sizeStockLimit = getProductSizeStock(product, sizeStr);
 
     if (sizeStockLimit <= 0 || product.isSoldOut) {
       alert(`Sorry! Size ${sizeStr} for this garment is currently sold out.`);

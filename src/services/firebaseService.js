@@ -118,6 +118,41 @@ function withTimeout(promise, ms = 2500) {
   ]);
 }
 
+export function normalizeProduct(p) {
+  if (!p) return p;
+
+  const sizes = p.sizes && p.sizes.length > 0 ? p.sizes : ['S', 'M', 'L', 'XL', 'XXL'];
+  const rawStock = p.stockQty !== undefined && p.stockQty !== null ? parseInt(p.stockQty) : 25;
+  const totalStock = isNaN(rawStock) ? 25 : Math.max(0, rawStock);
+
+  let sizeQuantities = p.sizeQuantities;
+  if (!sizeQuantities || typeof sizeQuantities !== 'object') {
+    const perSize = Math.max(0, Math.floor(totalStock / sizes.length));
+    sizeQuantities = sizes.reduce((acc, sz) => {
+      acc[sz] = perSize;
+      return acc;
+    }, {});
+  } else {
+    sizes.forEach(sz => {
+      if (sizeQuantities[sz] === undefined || sizeQuantities[sz] === null || isNaN(parseInt(sizeQuantities[sz]))) {
+        sizeQuantities[sz] = Math.max(0, Math.floor(totalStock / sizes.length));
+      } else {
+        sizeQuantities[sz] = Math.max(0, parseInt(sizeQuantities[sz]));
+      }
+    });
+  }
+
+  const calculatedTotalStock = Object.values(sizeQuantities).reduce((a, b) => a + (parseInt(b) || 0), 0);
+
+  return {
+    ...p,
+    sizes,
+    sizeQuantities,
+    stockQty: calculatedTotalStock,
+    isSoldOut: calculatedTotalStock <= 0 || p.isSoldOut === true
+  };
+}
+
 // ── Service ───────────────────────────────────────────────────────────────
 export const FirebaseService = {
 
@@ -125,14 +160,15 @@ export const FirebaseService = {
   async getProducts() {
     try {
       const snap = await getDocs(collection(db, 'products'));
-      const remote = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      const remote = snap.docs.map(d => normalizeProduct({ id: d.id, ...d.data() }));
       ls.set(KEYS.products, remote);
       return remote;
     } catch (err) {
       console.error("Firebase getProducts error:", err);
     }
 
-    return ls.get(KEYS.products, []);
+    const localProds = ls.get(KEYS.products, []);
+    return localProds.map(p => normalizeProduct(p));
   },
 
   async getProductBySlug(slug) {
@@ -143,8 +179,10 @@ export const FirebaseService = {
   async saveProduct(product) {
     const isEdit = !!product.id;
     const id = product.id || 'prod_' + Date.now();
+    const normalized = normalizeProduct(product);
+
     const payload = {
-      ...product,
+      ...normalized,
       id,
       slug: product.slug || product.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, ''),
       updatedAt: new Date().toISOString(),
