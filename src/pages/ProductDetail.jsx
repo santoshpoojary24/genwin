@@ -336,13 +336,22 @@ export default function ProductDetail() {
                   <Minus className="w-3.5 h-3.5" />
                 </button>
                 <span className="px-5 font-bold text-xs">{quantity}</span>
-                <button 
-                  onClick={() => setQuantity(q => Math.min(product.stockQty ?? 999, q + 1))} 
-                  disabled={(product.stockQty !== undefined && quantity >= product.stockQty) || product.stockQty <= 0 || product.isSoldOut}
-                  className="px-3.5 py-2.5 hover:bg-zinc-50 text-black font-bold border-l border-zinc-200 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
-                >
-                  <Plus className="w-3.5 h-3.5" />
-                </button>
+                {(() => {
+                  const sizeStockLimit = product.sizeQuantities?.[selectedSize] !== undefined
+                    ? product.sizeQuantities[selectedSize]
+                    : (product.stockQty ?? 10);
+                  const isMax = quantity >= sizeStockLimit || sizeStockLimit <= 0 || product.isSoldOut;
+
+                  return (
+                    <button 
+                      onClick={() => setQuantity(q => Math.min(sizeStockLimit, q + 1))} 
+                      disabled={isMax}
+                      className="px-3.5 py-2.5 hover:bg-zinc-50 text-black font-bold border-l border-zinc-200 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+                    >
+                      <Plus className="w-3.5 h-3.5" />
+                    </button>
+                  );
+                })()}
               </div>
             </div>
 

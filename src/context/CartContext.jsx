@@ -25,16 +25,20 @@ export const CartProvider = ({ children }) => {
 
   const addToCart = (product, selectedSize = 'M', selectedColor = 'Default', quantity = 1, customization = null) => {
     if (!product) return;
-    const stockLimit = product.stockQty !== undefined ? product.stockQty : 999;
-    if (stockLimit <= 0 || product.isSoldOut) {
-      alert("Sorry! This garment is sold out.");
+
+    const sizeStr = selectedSize || product.sizes?.[0] || 'M';
+    const sizeStockLimit = product.sizeQuantities?.[sizeStr] !== undefined
+      ? product.sizeQuantities[sizeStr]
+      : (product.stockQty !== undefined ? product.stockQty : 999);
+
+    if (sizeStockLimit <= 0 || product.isSoldOut) {
+      alert(`Sorry! Size ${sizeStr} for this garment is currently sold out.`);
       return;
     }
 
     const colorStr = typeof selectedColor === 'object' && selectedColor !== null
       ? (selectedColor.name || 'Default')
       : (selectedColor || 'Default');
-    const sizeStr = selectedSize || product.sizes?.[0] || 'M';
     const cartItemId = `${product.id}_${sizeStr}_${colorStr}_${customization?.id || 'standard'}`;
     
     // Calculate price
@@ -43,16 +47,19 @@ export const CartProvider = ({ children }) => {
     const finalUnitPrice = basePrice + extraCustomFee;
 
     const requestedQty = Math.max(1, parseInt(quantity) || 1);
-    const validQty = Math.min(stockLimit, requestedQty);
+    const validQty = Math.min(sizeStockLimit, requestedQty);
     const validUnitPrice = isNaN(finalUnitPrice) || finalUnitPrice <= 0 ? (basePrice || 999) : finalUnitPrice;
 
     setCartItems(prev => {
       const existing = prev.find(item => item.cartItemId === cartItemId);
       if (existing) {
-        const combinedQty = Math.min(stockLimit, (existing.quantity || 1) + validQty);
+        const combinedQty = Math.min(sizeStockLimit, (existing.quantity || 1) + validQty);
+        if ((existing.quantity || 1) + validQty > sizeStockLimit) {
+          alert(`Only ${sizeStockLimit} left in stock for size ${sizeStr}.`);
+        }
         return prev.map(item =>
           item.cartItemId === cartItemId
-            ? { ...item, quantity: combinedQty, stockQty: stockLimit }
+            ? { ...item, quantity: combinedQty, stockQty: sizeStockLimit }
             : item
         );
       }
@@ -70,7 +77,7 @@ export const CartProvider = ({ children }) => {
           basePrice,
           customizationFee: extraCustomFee,
           quantity: validQty,
-          stockQty: stockLimit,
+          stockQty: sizeStockLimit,
           customization,
         }
       ];
@@ -88,6 +95,9 @@ export const CartProvider = ({ children }) => {
       prev.map(item => {
         if (item.cartItemId === cartItemId) {
           const maxAllowed = item.stockQty !== undefined ? item.stockQty : 999;
+          if (newQty > maxAllowed) {
+            alert(`Only ${maxAllowed} left in stock for size ${item.size}.`);
+          }
           const cappedQty = Math.min(maxAllowed, newQty);
           return { ...item, quantity: cappedQty };
         }
