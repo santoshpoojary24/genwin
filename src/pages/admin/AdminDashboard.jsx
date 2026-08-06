@@ -265,6 +265,17 @@ export default function AdminDashboard() {
 
   useEffect(() => {
     refreshData();
+
+    // Live multi-device cloud subscription for customer orders
+    const unsubscribe = FirebaseService.subscribeToOrders((liveOrders) => {
+      if (liveOrders && liveOrders.length > 0) {
+        setOrders(liveOrders);
+      }
+    });
+
+    return () => {
+      if (typeof unsubscribe === 'function') unsubscribe();
+    };
   }, []);
 
   // ── GENUINE ANALYTICS CALCULATIONS FROM ACTUAL ORDERS & PRODUCTS ──────────

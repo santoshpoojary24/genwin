@@ -280,18 +280,95 @@ export const FirebaseService = {
   },
 
   async getAllOrders() {
+    let cloudOrders = [];
+    const orderMap = new Map();
+
+    // 1. Try Firestore Cloud DB
     try {
-      const snap = await withTimeout(getDocs(collection(db, 'orders')));
+      const snap = await withTimeout(getDocs(collection(db, 'orders')), 6000);
       if (!snap.empty) {
-        const remote = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-        ls.set(KEYS.orders, remote);
-        return remote;
+        snap.docs.forEach(d => {
+          const item = { id: d.id, ...d.data() };
+          const key = item.id || item.orderNumber;
+          if (key) orderMap.set(key.toString(), item);
+        });
       }
     } catch (err) {
-      console.error("Firebase getAllOrders error:", err);
+      console.error("Firebase Firestore getAllOrders error:", err);
     }
 
-    return ls.get(KEYS.orders, []);
+    // 2. Try Realtime Database merge
+    if (rtdb) {
+      try {
+        const rtdbSnap = await withTimeout(get(child(ref(rtdb), 'orders')), 6000);
+        if (rtdbSnap.exists()) {
+          const val = rtdbSnap.val();
+          const list = Array.isArray(val) ? val : Object.values(val);
+          list.forEach(item => {
+            if (item) {
+              const key = item.id || item.orderNumber;
+              if (key) {
+                const existing = orderMap.get(key.toString());
+                orderMap.set(key.toString(), { ...existing, ...item });
+              }
+            }
+          });
+        }
+      } catch (err) {
+        console.error("Firebase RTDB getAllOrders error:", err);
+      }
+    }
+
+    if (orderMap.size > 0) {
+      cloudOrders = Array.from(orderMap.values());
+      cloudOrders.sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
+      ls.set(KEYS.orders, cloudOrders);
+      return cloudOrders;
+    }
+
+    const localFallback = ls.get(KEYS.orders, []);
+    localFallback.sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
+    return localFallback;
+  },
+
+  subscribeToOrders(callback) {
+    if (!callback) return () => {};
+
+    // Initial fetch to populate immediately
+    this.getAllOrders().then(orders => {
+      if (orders && orders.length > 0) callback(orders);
+    }).catch(() => {});
+
+    // 1. Firestore Realtime Listener
+    const unsubFS = onSnapshot(collection(db, 'orders'), (snap) => {
+      if (!snap.empty) {
+        const fsOrders = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+        fsOrders.sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
+        ls.set(KEYS.orders, fsOrders);
+        callback(fsOrders);
+      }
+    }, (err) => console.error("Firestore orders snapshot error:", err));
+
+    // 2. Realtime Database Listener
+    let unsubRTDB = () => {};
+    if (rtdb) {
+      const ordersRef = ref(rtdb, 'orders');
+      unsubRTDB = onValue(ordersRef, (snapshot) => {
+        if (snapshot.exists()) {
+          const val = snapshot.val();
+          const list = Array.isArray(val) ? val : Object.values(val);
+          const validOrders = list.filter(Boolean);
+          validOrders.sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
+          ls.set(KEYS.orders, validOrders);
+          callback(validOrders);
+        }
+      }, (err) => console.error("RTDB orders listener error:", err));
+    }
+
+    return () => {
+      try { unsubFS(); } catch (_) {}
+      try { if (typeof unsubRTDB === 'function') unsubRTDB(); } catch (_) {}
+    };
   },
 
   async updateOrderStatus(orderId, newStatus, note = '') {
