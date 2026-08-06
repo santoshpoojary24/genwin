@@ -227,112 +227,195 @@ function getAdLinkProps(targetUrl) {
   return { isExternal: false, url: internalUrl };
 }
 
-function PromoSlider({ customAds = [] }) {
-  const displayAds = customAds.length > 0 
-    ? customAds.map(a => {
-        const rawHeadline = a.headline || a.title || 'SALE';
-        const parts = rawHeadline.split(' ');
-        const h1 = parts[0];
-        const h2 = parts.slice(1).join(' ');
-        return {
-          id: a.id,
-          eyebrow: a.badge || 'PROMO',
-          h1: h1,
-          h2: h2,
-          body: a.sub || a.subtitle || '',
-          cta: a.cta || a.linkText || 'SHOP NOW',
-          to: a.link || a.linkUrl || '/shop',
-          image: a.image || null
-        };
-      })
-    : DEFAULT_ADS;
+function HeroBannerCarousel({ customAds = [] }) {
+  const heroAds = (customAds || []).filter(a => a.active !== false && (a.placement === 'homepage_hero' || a.placement === 'hero_banner' || a.placement === 'banner'));
+  
+  const HERO_BANNER_DEFAULTS = [
+    {
+      id: 'h1',
+      badge: 'NEW DROP',
+      headline: 'Gurkha Pants',
+      sub: 'Tailored For Comfort',
+      cta: 'SHOP NOW',
+      link: '/shop?category=pants',
+      image: 'https://images.unsplash.com/photo-1624378439575-d8705ad7ae80?w=1600&q=85'
+    },
+    {
+      id: 'h2',
+      badge: 'HEAVYWEIGHT 240 GSM',
+      headline: 'Oversized Shirts & Tees',
+      sub: 'Combed Organic Cotton Streetwear',
+      cta: 'SHOP SHIRTS',
+      link: '/shop?category=t-shirts',
+      image: 'https://images.unsplash.com/photo-1521572267360-ee0c2909d518?w=1600&q=85'
+    },
+    {
+      id: 'h3',
+      badge: 'COLD WEATHER FLEECE',
+      headline: '380 GSM Hoodies',
+      sub: 'Drop-Shoulder Street Oversized Fits',
+      cta: 'SHOP HOODIES',
+      link: '/shop?category=hoodies',
+      image: 'https://images.unsplash.com/photo-1556905055-8f358a7a47b2?w=1600&q=85'
+    },
+    {
+      id: 'h4',
+      badge: 'TACTICAL LAYERS',
+      headline: 'Denim & Washed Jackets',
+      sub: 'Vintage Overdyed Outerwear',
+      cta: 'SHOP JACKETS',
+      link: '/shop?category=jackets',
+      image: 'https://images.unsplash.com/photo-1551028719-00167b16eac5?w=1600&q=85'
+    },
+    {
+      id: 'h5',
+      badge: 'DTG PRINT STUDIO',
+      headline: 'Custom Graphic Printer',
+      sub: 'Print Your Own Art On Combed Cotton',
+      cta: 'START CREATING',
+      link: '/customizer',
+      image: 'https://images.unsplash.com/photo-1503342217505-b0a15ec3261c?w=1600&q=85'
+    }
+  ];
+
+  const displaySlides = heroAds.length > 0 
+    ? heroAds.map(a => ({
+        id: a.id || Math.random(),
+        badge: a.badge || 'PROMO DROP',
+        headline: a.headline || a.title || 'GENWIN STREETWEAR',
+        sub: a.sub || a.subtitle || '',
+        cta: a.cta || a.linkText || 'SHOP NOW',
+        link: a.link || a.linkUrl || '/shop',
+        image: a.image || 'https://images.unsplash.com/photo-1521572267360-ee0c2909d518?w=1600&q=85'
+      }))
+    : HERO_BANNER_DEFAULTS;
 
   const [cur, setCur] = useState(0);
+  const [touchStart, setTouchStart] = useState(0);
+  const [touchEnd, setTouchEnd] = useState(0);
   const [paused, setPaused] = useState(false);
-  const next = useCallback(() => setCur(c => (c + 1) % displayAds.length), [displayAds.length]);
-  const prev = useCallback(() => setCur(c => (c - 1 + displayAds.length) % displayAds.length), [displayAds.length]);
+  const navigate = useNavigate();
+
+  const next = useCallback(() => setCur(c => (c + 1) % displaySlides.length), [displaySlides.length]);
+  const prev = useCallback(() => setCur(c => (c - 1 + displaySlides.length) % displaySlides.length), [displaySlides.length]);
 
   useEffect(() => {
     if (paused) return;
-    const id = setInterval(next, 4500);
-    return () => clearInterval(id);
+    const timer = setInterval(next, 5000);
+    return () => clearInterval(timer);
   }, [paused, next]);
-  const ad = displayAds[cur] || displayAds[0];
+
+  const slide = displaySlides[cur] || displaySlides[0];
+
+  const handleTouchStart = (e) => setTouchStart(e.targetTouches[0].clientX);
+  const handleTouchMove = (e) => setTouchEnd(e.targetTouches[0].clientX);
+  const handleTouchEnd = () => {
+    if (!touchStart || !touchEnd) return;
+    const diff = touchStart - touchEnd;
+    if (diff > 40) next();
+    else if (diff < -40) prev();
+    setTouchStart(0);
+    setTouchEnd(0);
+  };
+
+  const handleSlideClick = () => {
+    const lp = getAdLinkProps(slide.link);
+    if (lp.isExternal) {
+      window.open(lp.url, '_blank');
+    } else {
+      navigate(lp.url);
+    }
+  };
 
   return (
-    <div className="relative bg-black overflow-hidden border border-zinc-900 shadow-2xl"
-      onMouseEnter={() => setPaused(true)} onMouseLeave={() => setPaused(false)}>
-
-      {/* Background Image if available */}
-      {ad.image && (
-        <>
-          <img src={ad.image} alt="" className="absolute inset-0 w-full h-full object-cover opacity-50" />
-          <div className="absolute inset-0 bg-gradient-to-r from-black via-black/80 to-transparent" />
-        </>
-      )}
-
-      {/* Dot texture */}
-      <div className="absolute inset-0 opacity-[0.06] pointer-events-none"
-        style={{ backgroundImage: 'radial-gradient(circle,#fff 1px,transparent 1px)', backgroundSize: '24px 24px' }} />
-
-      <div key={ad.id} className="relative z-10 px-8 sm:px-16 py-14 sm:py-20 text-white"
-        style={{ animation: 'slideAdIn 0.45s var(--ease-expo) both' }}>
-
-        <span className="anim-pop-in tag text-zinc-400 border-zinc-700 mb-6 inline-flex font-mono">
-          <Tag className="w-2.5 h-2.5 mr-1" />{ad.eyebrow}
-        </span>
-
-        <h2 className="font-display font-black uppercase leading-none text-display-lg tracking-tighter">
-          {ad.h1}<br /><span className="text-zinc-600">{ad.h2}</span>
-        </h2>
-
-        <p className="font-mono text-zinc-400 text-xs uppercase tracking-widest mt-4 max-w-sm leading-relaxed">
-          {ad.body}
-        </p>
-
-        {(() => {
-          const lp = getAdLinkProps(ad.to);
-          return lp.isExternal ? (
-            <a
-              href={lp.url}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="btn-magnetic press inline-flex items-center gap-2 mt-8 px-8 py-3.5 bg-white text-black font-mono font-black text-xs uppercase tracking-widest hover:bg-zinc-100 transition-colors"
-            >
-              {ad.cta} <ArrowRight className="w-3.5 h-3.5" />
-            </a>
-          ) : (
-            <Link
-              to={lp.url}
-              className="btn-magnetic press inline-flex items-center gap-2 mt-8 px-8 py-3.5 bg-white text-black font-mono font-black text-xs uppercase tracking-widest hover:bg-zinc-100 transition-colors"
-            >
-              {ad.cta} <ArrowRight className="w-3.5 h-3.5" />
-            </Link>
-          );
-        })()}
+    <div 
+      className="relative w-full overflow-hidden bg-black select-none border-b border-zinc-900 shadow-2xl min-h-[55vh] sm:min-h-[75vh] lg:min-h-[85vh] flex flex-col justify-end"
+      onMouseEnter={() => setPaused(true)}
+      onMouseLeave={() => setPaused(false)}
+      onTouchStart={handleTouchStart}
+      onTouchMove={handleTouchMove}
+      onTouchEnd={handleTouchEnd}
+    >
+      {/* Background Banner Image */}
+      <div 
+        key={slide.id}
+        onClick={handleSlideClick}
+        className="absolute inset-0 cursor-pointer group"
+      >
+        <img 
+          src={slide.image} 
+          alt={slide.headline} 
+          className="w-full h-full object-cover object-top opacity-85 group-hover:scale-105 transition-transform duration-700 ease-out" 
+        />
+        <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-black/20" />
       </div>
 
-      {/* Controls */}
-      <button onClick={prev} className="absolute left-4 top-1/2 -translate-y-1/2 z-20 w-9 h-9 border border-zinc-800 hover:border-zinc-500 text-zinc-400 hover:text-white flex items-center justify-center transition-all press bg-black/60">
-        <ChevronLeft className="w-4 h-4" />
-      </button>
-      <button onClick={next} className="absolute right-4 top-1/2 -translate-y-1/2 z-20 w-9 h-9 border border-zinc-800 hover:border-zinc-500 text-zinc-400 hover:text-white flex items-center justify-center transition-all press bg-black/60">
-        <ChevronRight className="w-4 h-4" />
-      </button>
-
-      {/* Progress */}
-      <div className="absolute bottom-0 inset-x-0 h-px bg-zinc-900">
-        {!paused && (
-          <div key={cur} className="h-full bg-emerald-400 origin-left"
-            style={{ animation: 'progressBar 4.5s linear forwards' }} />
+      {/* Content Overlay */}
+      <div className="relative z-10 max-w-7xl mx-auto w-full px-6 lg:px-12 pb-16 sm:pb-20 pt-20 text-white font-mono space-y-4 pointer-events-none">
+        {slide.badge && (
+          <span className="inline-block px-3 py-1 bg-white text-black font-extrabold text-[10px] uppercase tracking-widest shadow-lg pointer-events-auto">
+            {slide.badge}
+          </span>
         )}
+
+        <div className="space-y-1 max-w-2xl">
+          <h1 className="font-display font-black text-3xl sm:text-5xl lg:text-7xl uppercase tracking-tight text-white leading-tight drop-shadow-2xl">
+            {slide.headline}
+          </h1>
+          {slide.sub && (
+            <p className="text-xs sm:text-sm text-zinc-300 uppercase tracking-widest max-w-md leading-relaxed font-mono drop-shadow-md">
+              {slide.sub}
+            </p>
+          )}
+        </div>
+
+        <div className="pt-2 pointer-events-auto">
+          {(() => {
+            const lp = getAdLinkProps(slide.link);
+            return lp.isExternal ? (
+              <a
+                href={lp.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 px-8 py-4 bg-white text-black font-black text-xs uppercase tracking-widest hover:bg-zinc-200 transition-colors shadow-2xl rounded-xs"
+              >
+                {slide.cta} →
+              </a>
+            ) : (
+              <Link
+                to={lp.url}
+                className="inline-flex items-center gap-2 px-8 py-4 bg-white text-black font-black text-xs uppercase tracking-widest hover:bg-zinc-200 transition-colors shadow-2xl rounded-xs"
+              >
+                {slide.cta} →
+              </Link>
+            );
+          })()}
+        </div>
       </div>
 
-      {/* Dots */}
-      <div className="absolute bottom-4 left-8 sm:left-16 flex gap-1.5 z-20">
-        {displayAds.map((_, i) => (
-          <button key={i} onClick={() => setCur(i)}
-            className={`transition-all duration-300 h-px ${i === cur ? 'w-6 bg-white' : 'w-2 bg-zinc-700 hover:bg-zinc-500'}`} />
+      {/* Slide Navigation Arrows */}
+      <button 
+        onClick={(e) => { e.stopPropagation(); prev(); }} 
+        className="absolute left-4 top-1/2 -translate-y-1/2 z-20 w-10 h-10 border border-white/20 text-white bg-black/60 backdrop-blur-md flex items-center justify-center hover:bg-white hover:text-black transition-all press"
+      >
+        <ChevronLeft className="w-5 h-5" />
+      </button>
+
+      <button 
+        onClick={(e) => { e.stopPropagation(); next(); }} 
+        className="absolute right-4 top-1/2 -translate-y-1/2 z-20 w-10 h-10 border border-white/20 text-white bg-black/60 backdrop-blur-md flex items-center justify-center hover:bg-white hover:text-black transition-all press"
+      >
+        <ChevronRight className="w-5 h-5" />
+      </button>
+
+      {/* Progress Bar & Pagination Dots */}
+      <div className="absolute bottom-4 left-6 sm:left-12 flex items-center gap-2 z-20">
+        {displaySlides.map((s, i) => (
+          <button
+            key={s.id || i}
+            onClick={(e) => { e.stopPropagation(); setCur(i); }}
+            className={`transition-all duration-300 h-1 rounded-full ${i === cur ? 'w-8 bg-white' : 'w-2 bg-white/40 hover:bg-white/70'}`}
+          />
         ))}
       </div>
     </div>
@@ -493,139 +576,23 @@ export default function Home() {
 
   const filteredBestsellers = products.filter(p => p.isBestseller || p.rating >= 4.5);
   const bestsellers = (filteredBestsellers.length > 0 ? filteredBestsellers : products).slice(0, 4);
-  const featuredDress = products[0] || null;
-
-  const handleSelectModelGarment = (m) => {
-    const keywords = m.label.toUpperCase().split(' ');
-    const matched = products.find(p => {
-      const pName = (p.name || '').toUpperCase();
-      const pCat = (p.category || '').toUpperCase();
-      return keywords.some(k => k.length >= 3 && (pName.includes(k) || pCat.includes(k)));
-    }) || products[0];
-
-    if (matched) {
-      navigate(`/product/${matched.slug || matched.id}`);
-    } else {
-      navigate('/shop');
-    }
-  };
 
   return (
     <div className="page-enter font-mono">
 
-      {/* ══ 1. HERO SECTION WITH ANIMATED DRESS SHOWCASE ══════════════════ */}
-      <section className="relative bg-black min-h-[92vh] flex flex-col justify-between overflow-hidden">
+      {/* ══ 1. HERO BANNER CAROUSEL (5-6 SWIPEABLE PHOTOS WITH DIRECT CATEGORY LINKS) ══ */}
+      <HeroBannerCarousel customAds={ads} />
 
-        {/* Tactical Grid overlay */}
-        <div className="pointer-events-none absolute inset-0 opacity-[0.05]"
-          style={{ backgroundImage: 'repeating-linear-gradient(0deg,rgba(255,255,255,.04) 0,rgba(255,255,255,.04) 1px,transparent 0,transparent 80px),repeating-linear-gradient(90deg,rgba(255,255,255,.04) 0,rgba(255,255,255,.04) 1px,transparent 0,transparent 80px)' }} />
-
-        <div className="relative flex-1 max-w-7xl mx-auto w-full px-6 lg:px-12 pt-12 pb-12 grid lg:grid-cols-12 gap-10 items-center">
-
-          {/* ── Left copy ── */}
-          <div className="lg:col-span-7 space-y-7 z-10">
-
-            <div className="anim-fade-left d-100 flex items-center gap-3">
-              <FlashCountdown />
-              <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">SPRING / SUMMER 2026</span>
-            </div>
-
-            {/* Giant headline */}
-            <div className="space-y-0 overflow-hidden">
-              <p className="anim-fade-up d-150 font-display font-black text-white uppercase"
-                style={{ fontSize: 'clamp(3.5rem,7.5vw,7rem)', lineHeight: 0.95, letterSpacing: '-0.04em' }}>
-                WEAR
-              </p>
-              <p className="anim-fade-up d-200 font-display font-black text-zinc-700 uppercase"
-                style={{ fontSize: 'clamp(3.5rem,7.5vw,7rem)', lineHeight: 0.95, letterSpacing: '-0.04em' }}>
-                YOUR
-              </p>
-              <p className="anim-fade-up d-250 font-display font-black text-white uppercase"
-                style={{ fontSize: 'clamp(3.5rem,7.5vw,7rem)', lineHeight: 0.95, letterSpacing: '-0.04em' }}>
-                IDENTITY.
-              </p>
-            </div>
-
-            <p className="anim-fade-up d-350 text-zinc-400 text-xs uppercase tracking-[0.12em] max-w-md leading-relaxed">
-              240 GSM heavyweight cotton streetwear, acid-wash hoodies, and custom DTG prints. Low-end device friendly ultra smooth GPU performance.
-            </p>
-
-            {/* Action Buttons */}
-            <div className="anim-fade-up d-400 flex flex-wrap items-center gap-3 pt-2">
-              <Link to="/shop"
-                className="btn-magnetic press flex items-center gap-2 px-8 py-4 bg-white text-black font-black text-xs uppercase tracking-widest shadow-xl hover:bg-zinc-200 transition-all">
-                EXPLORE SHOP <ArrowRight className="w-4 h-4" />
-              </Link>
-              <Link to="/customizer"
-                className="press flex items-center gap-2 px-8 py-4 bg-zinc-900 border border-zinc-800 text-white hover:border-zinc-500 font-bold text-xs uppercase tracking-widest transition-colors">
-                <Sparkles className="w-4 h-4 text-emerald-400" /> CUSTOM T-SHIRT PRINTER
-              </Link>
-            </div>
-
-            {/* Animated stats row */}
-            <div className="anim-fade-up d-500 pt-6 border-t border-zinc-900 grid grid-cols-3 gap-6 stagger">
-              <Stat value={240} suffix=" GSM" label="HEAVY COTTON" delay={0} />
-              <Stat value={50} suffix="+" label="WASH PROOF" delay={80} />
-              <Stat value={49} suffix=" ★" label="RATING / 5" delay={160} />
-            </div>
-          </div>
-
-          {/* ── Right: Floating Animated Dress Showcase Card ── */}
-          {featuredDress && (
-            <div className="lg:col-span-5 anim-fade-right d-200 flex justify-center">
-              <div
-                onClick={() => navigate(`/product/${featuredDress.slug || featuredDress.id}`)}
-                className="garment-card-gpu anim-garment-float relative w-full max-w-sm bg-zinc-950 border border-zinc-800 hover:border-white p-4 space-y-3 cursor-pointer group shadow-2xl transition-all"
-              >
-                <div className="relative overflow-hidden aspect-[3/4] bg-zinc-900">
-                  <img
-                    src={featuredDress.images?.[0] || featuredDress.image || 'https://images.unsplash.com/photo-1576566588028-4147f3842f27?w=900&q=85'}
-                    alt={featuredDress.name || 'Featured Dress'}
-                    className="garment-img-zoom w-full h-full object-cover object-top opacity-90"
-                  />
-                  
-                  {/* Floating stock pill */}
-                  <div className="absolute top-3 left-3 bg-black/80 backdrop-blur-md border border-zinc-700 px-2.5 py-1 text-[9px] font-bold text-emerald-400 uppercase tracking-widest flex items-center gap-1.5">
-                    <span className="w-2 h-2 rounded-full bg-emerald-500 animate-ping" />
-                    <span>9 IN STOCK</span>
-                  </div>
-
-                  {/* Price Tag Badge */}
-                  <div className="absolute top-3 right-3 bg-white text-black px-2.5 py-1 font-black text-xs uppercase shadow-md">
-                    ₹{featuredDress.discountPrice || featuredDress.price || featuredDress.basePrice}
-                  </div>
-
-                  {/* Hover overlay button */}
-                  <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center p-4">
-                    <span className="bg-white text-black text-xs font-black px-5 py-3 uppercase tracking-widest flex items-center gap-2 shadow-2xl">
-                      VIEW DRESS DETAILS <Eye className="w-4 h-4" />
-                    </span>
-                  </div>
-                </div>
-
-                <div className="flex items-center justify-between pt-1">
-                  <div>
-                    <span className="text-[9px] font-bold text-zinc-500 uppercase tracking-widest block">{featuredDress.category || 'FEATURED DRESS'}</span>
-                    <h4 className="font-bold text-xs text-white uppercase truncate max-w-[200px]">{featuredDress.name}</h4>
-                  </div>
-                  <span className="text-[10px] font-bold text-zinc-400 uppercase group-hover:text-white transition-colors">TAP TO VIEW →</span>
-                </div>
-              </div>
-            </div>
-          )}
-
+      {/* ══ 2. WEEK'S TOP PICKS ═════════════════════════════════════════ */}
+      <SR className="max-w-7xl mx-auto px-6 lg:px-12 mt-12 space-y-6">
+        <div className="text-center space-y-1 border-b border-zinc-200 pb-4">
+          <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">CURATED APPAREL</span>
+          <h2 className="font-display font-black text-2xl sm:text-4xl uppercase tracking-tight text-black">
+            WEEK'S TOP PICKS
+          </h2>
         </div>
-
-        {/* Bottom ticker */}
-        <div className="border-t border-zinc-900 py-3 overflow-hidden select-none bg-black/50">
-          <div className="flex gap-8 whitespace-nowrap anim-marquee font-mono text-[10px] font-bold uppercase tracking-[0.18em] text-zinc-500">
-            {['240 GSM COTTON', '·', 'DTG PRINT', '·', 'SAME DAY DISPATCH', '·', 'ALL-INDIA DELIVERY', '·', '50+ WASH GUARANTEE', '·', '4.9 ★ RATING', '·',
-              '240 GSM COTTON', '·', 'DTG PRINT', '·', 'SAME DAY DISPATCH', '·', 'ALL-INDIA DELIVERY', '·', '50+ WASH GUARANTEE', '·', '4.9 ★ RATING', '·'].map((t, i) => (
-              <span key={i}>{t}</span>
-            ))}
-          </div>
-        </div>
-      </section>
+        <ModelStrip products={products} />
+      </SR>
 
       {/* ══ 3. PROMO CAROUSEL ════════════════════════════════════════════ */}
       <SR className="max-w-7xl mx-auto px-6 lg:px-12 space-y-5">
