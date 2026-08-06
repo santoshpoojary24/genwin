@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { createPortal } from 'react-dom';
 import { Link, useNavigate } from 'react-router-dom';
 import {
   ArrowRight, ArrowUpRight, ChevronLeft, ChevronRight, Tag, Sparkles, Zap, ShieldCheck,
@@ -368,9 +369,9 @@ function PopupPromoModal({ ads = [] }) {
   const link = popupAd.link || popupAd.linkUrl || '/shop';
   const image = popupAd.image || 'https://images.unsplash.com/photo-1503342217505-b0a15ec3261c?w=800&q=80';
 
-  return (
+  return createPortal(
     <div 
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-xs animate-fade-in"
+      className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/80 backdrop-blur-xs animate-fade-in"
       onClick={handleClose}
     >
       <div 
@@ -446,7 +447,8 @@ function PopupPromoModal({ ads = [] }) {
           </div>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }
 
