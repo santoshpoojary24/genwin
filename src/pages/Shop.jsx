@@ -42,8 +42,13 @@ export default function Shop() {
       if (liveCats && liveCats.length > 0) setCategories(liveCats);
     });
 
+    const unsubAds = FirebaseService.subscribeToAds((liveAds) => {
+      if (liveAds && liveAds.length > 0) setAds(liveAds);
+    });
+
     return () => {
       if (typeof unsubCats === 'function') unsubCats();
+      if (typeof unsubAds === 'function') unsubAds();
     };
   }, []);
 
@@ -227,8 +232,17 @@ export default function Shop() {
           <div className="flex-1 min-w-0">
             {/* Promo Category Banner (from Admin Ads placement = category_banner) */}
             {(() => {
-              const categoryAd = ads.find(a => a.active !== false && (a.placement === 'category_banner' || a.placement === 'shop_banner'));
-              if (!categoryAd) return null;
+              const matchedAd = ads.find(a => a.active !== false && (a.placement === 'category_banner' || a.placement === 'category' || a.placement === 'shop_banner' || a.placement === 'shop'))
+                             || ads.find(a => a.active !== false);
+
+              const categoryAd = matchedAd || {
+                badge: 'EXPRESS DISPATCH',
+                headline: 'SAME DAY SHIPPING ON ORDERS BEFORE 2 PM',
+                sub: '240 GSM heavy combed cotton drops, acid-wash hoodies, and custom prints.',
+                cta: 'EXPLORE COLLECTIONS',
+                link: '/shop',
+                image: 'https://images.unsplash.com/photo-1551028719-00167b16eac5?w=1200&q=80'
+              };
 
               return (
                 <div className="mb-6 relative bg-zinc-950 border border-zinc-800 text-white p-6 sm:p-8 font-mono overflow-hidden shadow-xl">

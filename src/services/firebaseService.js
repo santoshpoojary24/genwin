@@ -716,14 +716,48 @@ export const FirebaseService = {
 
   /** 6. Advertisements */
   async getAds() {
-    try {
-      const snap = await getDocs(collection(db, 'ads'));
-      const remote = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-      ls.set(KEYS.ads, remote);
-      return remote;
-    } catch (_) {}
+    let cloudAds = [];
+    const adMap = new Map();
 
-    return ls.get(KEYS.ads, []);
+    try {
+      const snap = await withTimeout(getDocs(collection(db, 'ads')), 5000);
+      if (!snap.empty) {
+        snap.docs.forEach(d => {
+          const item = { id: d.id, ...d.data(), active: d.data().active ?? true };
+          adMap.set(d.id, item);
+        });
+      }
+    } catch (err) {
+      console.error("Firebase Firestore getAds error:", err);
+    }
+
+    if (rtdb) {
+      try {
+        const rtdbSnap = await withTimeout(get(child(ref(rtdb), 'ads')), 5000);
+        if (rtdbSnap.exists()) {
+          const val = rtdbSnap.val();
+          const list = Array.isArray(val) ? val : Object.values(val);
+          list.forEach(item => {
+            if (item && item.id) {
+              const existing = adMap.get(item.id);
+              adMap.set(item.id, { ...existing, ...item, active: item.active ?? true });
+            }
+          });
+        }
+      } catch (err) {
+        console.error("Firebase RTDB getAds error:", err);
+      }
+    }
+
+    if (adMap.size > 0) {
+      cloudAds = Array.from(adMap.values());
+      ls.set(KEYS.ads, cloudAds);
+      try { localStorage.setItem('genwin_ads', JSON.stringify(cloudAds)); } catch (_) {}
+      return cloudAds;
+    }
+
+    const localFallback = ls.get(KEYS.ads, ls.get('genwin_ads', []));
+    return (localFallback || []).map(a => ({ ...a, active: a.active ?? true }));
   },
 
   async saveAd(ad) {
@@ -746,7 +780,44 @@ export const FirebaseService = {
       ? current.map(a => a.id === id ? payload : a)
       : [payload, ...current];
     ls.set(KEYS.ads, updated);
+    try { localStorage.setItem('genwin_ads', JSON.stringify(updated)); } catch (_) {}
     return payload;
+  },
+
+  subscribeToAds(callback) {
+    if (!callback) return () => {};
+
+    this.getAds().then(ads => {
+      if (ads && ads.length > 0) callback(ads);
+    }).catch(() => {});
+
+    const unsubFS = onSnapshot(collection(db, 'ads'), (snap) => {
+      if (!snap.empty) {
+        const fsAds = snap.docs.map(d => ({ id: d.id, ...d.data(), active: d.data().active ?? true }));
+        ls.set(KEYS.ads, fsAds);
+        try { localStorage.setItem('genwin_ads', JSON.stringify(fsAds)); } catch (_) {}
+        callback(fsAds);
+      }
+    }, () => {});
+
+    let unsubRTDB = () => {};
+    if (rtdb) {
+      unsubRTDB = onValue(ref(rtdb, 'ads'), (snapshot) => {
+        if (snapshot.exists()) {
+          const val = snapshot.val();
+          const list = Array.isArray(val) ? val : Object.values(val);
+          const valid = list.filter(Boolean).map(a => ({ ...a, active: a.active ?? true }));
+          ls.set(KEYS.ads, valid);
+          try { localStorage.setItem('genwin_ads', JSON.stringify(valid)); } catch (_) {}
+          callback(valid);
+        }
+      }, () => {});
+    }
+
+    return () => {
+      try { unsubFS(); } catch (_) {}
+      try { if (typeof unsubRTDB === 'function') unsubRTDB(); } catch (_) {}
+    };
   },
 
   async deleteAd(id) {
@@ -755,6 +826,7 @@ export const FirebaseService = {
     const current = await this.getAds();
     const updated = current.filter(a => a.id !== id);
     ls.set(KEYS.ads, updated);
+    try { localStorage.setItem('genwin_ads', JSON.stringify(updated)); } catch (_) {}
   },
 
   /** 7. Settings */
