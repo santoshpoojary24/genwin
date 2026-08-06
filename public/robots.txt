@@ -5,4 +5,4 @@ Disallow: /employee
 Disallow: /account
 Disallow: /checkout
 
-Sitemap: https://genwin.studio/sitemap.xml
+Sitemap: https://genwin-clothing.vercel.app/sitemap.xml
