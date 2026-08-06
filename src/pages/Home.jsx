@@ -610,8 +610,25 @@ export default function Home() {
     };
   }, []);
 
-  const filteredBestsellers = products.filter(p => p.isBestseller || p.rating >= 4.5);
-  const bestsellers = (filteredBestsellers.length > 0 ? filteredBestsellers : products).slice(0, 4);
+  const topPicksList = (() => {
+    const list = [...products.filter(p => p.isBestseller || p.rating >= 4.5)];
+    products.forEach(p => {
+      if (list.length < 10 && !list.some(item => item.id === p.id)) {
+        list.push(p);
+      }
+    });
+    return list.slice(0, 10);
+  })();
+
+  const newArrivalsList = (() => {
+    const list = [...products.filter(p => p.isNew)];
+    [...products].reverse().forEach(p => {
+      if (list.length < 10 && !list.some(item => item.id === p.id)) {
+        list.push(p);
+      }
+    });
+    return list.slice(0, 10);
+  })();
 
   return (
     <div className="page-enter font-mono">
@@ -619,7 +636,7 @@ export default function Home() {
       {/* ══ 1. HERO BANNER CAROUSEL (5-6 SWIPEABLE PHOTOS WITH DIRECT CATEGORY LINKS) ══ */}
       <HeroBannerCarousel customAds={ads} />
 
-      {/* ══ 2. WEEK'S TOP PICKS (SWIPEABLE HORIZONTAL CAROUSEL) ═══════════════ */}
+      {/* ══ 2. WEEK'S TOP PICKS (AT LEAST 10 PRODUCTS) ═══════════════ */}
       <SR className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-12 mt-10 space-y-6">
         <div className="text-center py-2">
           <h2 className="font-display font-black text-xl sm:text-3xl uppercase tracking-tight text-black">
@@ -627,31 +644,31 @@ export default function Home() {
           </h2>
         </div>
 
-        {/* Swipeable Product Cards Row */}
+        {/* Swipeable Product Cards Row (At Least 10 Products) */}
         <div className="flex overflow-x-auto gap-4 pb-4 snap-x snap-mandatory scrollbar-none">
           {loading
-            ? [1, 2, 3, 4].map(n => <div key={n} className="w-[220px] sm:w-[260px] shrink-0 aspect-[3/4] skeleton rounded-2xl" />)
-            : (bestsellers.length > 0 ? bestsellers : products.slice(0, 6)).map(p => (
-                <div key={p.id} className="w-[220px] sm:w-[260px] shrink-0 snap-start">
+            ? [1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map(n => <div key={n} className="w-[220px] sm:w-[260px] shrink-0 aspect-[3/4] skeleton rounded-2xl" />)
+            : topPicksList.map((p, idx) => (
+                <div key={p.id || idx} className="w-[220px] sm:w-[260px] shrink-0 snap-start">
                   <ProductCard product={p} onQuickView={setQv} />
                 </div>
               ))
           }
         </div>
 
-        {/* NEW ARRIVALS Section */}
+        {/* NEW ARRIVALS Section (AT LEAST 10 PRODUCTS) */}
         <div className="text-center pt-8 pb-2">
           <h2 className="font-display font-black text-xl sm:text-3xl uppercase tracking-tight text-black">
             NEW ARRIVALS
           </h2>
         </div>
 
-        {/* Swipeable Product Cards Row for New Arrivals */}
+        {/* Swipeable Product Cards Row for New Arrivals (At Least 10 Products) */}
         <div className="flex overflow-x-auto gap-4 pb-4 snap-x snap-mandatory scrollbar-none">
           {loading
-            ? [1, 2, 3, 4].map(n => <div key={n} className="w-[220px] sm:w-[260px] shrink-0 aspect-[3/4] skeleton rounded-2xl" />)
-            : (products.filter(p => p.isNew).length > 0 ? products.filter(p => p.isNew) : products.slice(4, 10)).map(p => (
-                <div key={p.id} className="w-[220px] sm:w-[260px] shrink-0 snap-start">
+            ? [1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map(n => <div key={n} className="w-[220px] sm:w-[260px] shrink-0 aspect-[3/4] skeleton rounded-2xl" />)
+            : newArrivalsList.map((p, idx) => (
+                <div key={p.id || idx} className="w-[220px] sm:w-[260px] shrink-0 snap-start">
                   <ProductCard product={p} onQuickView={setQv} />
                 </div>
               ))
