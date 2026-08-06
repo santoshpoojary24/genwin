@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import {
   Sparkles, Star, ShoppingBag, Truck, RefreshCw, Heart, ChevronRight, Plus, Minus, ArrowRight, X, Ruler,
@@ -586,16 +587,16 @@ export default function ProductDetail() {
       </div>
 
       {/* ── Genuine Size Guide Modal ────────────────────────────────────── */}
-      {showSizeGuide && (
-        <div className="fixed inset-0 z-50 bg-black/75 flex items-center justify-center p-4" onClick={() => setShowSizeGuide(false)}>
-          <div className="bg-white border border-zinc-200 max-w-md w-full p-6 space-y-5 font-mono" onClick={e => e.stopPropagation()}>
+      {showSizeGuide && createPortal(
+        <div className="fixed inset-0 z-[99999] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 animate-fade-in" onClick={() => setShowSizeGuide(false)}>
+          <div className="bg-white border border-zinc-200 max-w-md w-full p-6 space-y-5 font-mono shadow-2xl rounded-2xl" onClick={e => e.stopPropagation()}>
             <div className="flex items-center justify-between border-b border-zinc-100 pb-3">
               <div className="flex items-center gap-2">
-                <Ruler className="w-4 h-4" />
+                <Ruler className="w-5 h-5 text-black" />
                 <h3 className="font-display font-black text-black text-base uppercase">GARMENT SIZE CHART</h3>
               </div>
-              <button onClick={() => setShowSizeGuide(false)} className="p-1 text-zinc-400 hover:text-black">
-                <X className="w-4 h-4" />
+              <button onClick={() => setShowSizeGuide(false)} className="p-1 text-zinc-400 hover:text-black transition-colors">
+                <X className="w-5 h-5" />
               </button>
             </div>
 
@@ -603,7 +604,7 @@ export default function ProductDetail() {
               All measurements are in inches. Fits true to size with a relaxed streetwear drape.
             </p>
 
-            <div className="border border-zinc-200 overflow-hidden text-xs">
+            <div className="border border-zinc-200 overflow-hidden text-xs rounded-xl">
               <table className="w-full text-left">
                 <thead className="bg-black text-white text-[10px] uppercase tracking-wider">
                   <tr>
@@ -615,7 +616,7 @@ export default function ProductDetail() {
                 </thead>
                 <tbody className="divide-y divide-zinc-200">
                   {SIZE_CHART.map(row => (
-                    <tr key={row.size} className={selectedSize === row.size ? 'bg-zinc-100 font-bold' : ''}>
+                    <tr key={row.size} className={selectedSize === row.size ? 'bg-amber-100/60 font-bold' : ''}>
                       <td className="p-3 font-bold">{row.size}</td>
                       <td className="p-3">{row.chest}</td>
                       <td className="p-3">{row.length}</td>
@@ -626,11 +627,12 @@ export default function ProductDetail() {
               </table>
             </div>
 
-            <div className="bg-zinc-50 p-3 border border-zinc-200 text-[10px] text-zinc-600 uppercase">
+            <div className="bg-zinc-50 p-3.5 border border-zinc-200 text-[10px] text-zinc-600 uppercase rounded-xl">
               💡 <strong>TIP:</strong> For an extreme oversized fit, order 1 size up.
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
       {qvProduct && (
