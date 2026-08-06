@@ -48,6 +48,7 @@ export default function Navbar() {
     ['/shop?category=hoodies', 'HOODIES & SWEATSHIRTS'],
     ['/shop?category=jackets', 'JACKETS & OUTERWEAR'],
     ['/shop?category=accessories', 'CAPS & ACCESSORIES'],
+    ['/support', 'HELP & TICKETS'],
     [user ? '/account' : '/login', user ? 'MY ACCOUNT & ORDERS' : 'SIGN IN / REGISTER'],
   ];
 

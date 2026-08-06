@@ -135,6 +135,7 @@ export default function Footer() {
         <div>
           <h5 className="font-bold text-white text-xs uppercase tracking-widest mb-5">HELP &amp; POLICIES</h5>
           <ul className="space-y-3 text-xs text-zinc-500 uppercase">
+            <li><Link to="/support" className="text-emerald-400 font-bold hover:text-white transition-colors flex items-center gap-1">🎫 CREATE SUPPORT TICKET</Link></li>
             <li><Link to="/account" className="hover:text-white transition-colors">Track My Order</Link></li>
             <li><Link to="/account" className="hover:text-white transition-colors">My Account</Link></li>
             <li><button onClick={() => handleOpenPolicy('shipping')} className="hover:text-white transition-colors text-left">Shipping Policy</button></li>

@@ -714,4 +714,141 @@ export const FirebaseService = {
     ls.set(`genwin_reviews_${reviewData.productId}`, updated);
     return payload;
   },
+
+  /** 9. Support Ticket System (Customer & Employee real-time sync) */
+  async createTicket(payload) {
+    const ticketId = 'TKT-' + Math.floor(100000 + Math.random() * 900000);
+    const ticket = {
+      id: ticketId,
+      ticketId,
+      customerName: payload.customerName || 'Anonymous Customer',
+      customerEmail: payload.customerEmail || '',
+      customerPhone: payload.customerPhone || '',
+      customerAddress: payload.customerAddress || '',
+      orderId: payload.orderId || '',
+      issueType: payload.issueType || 'General Support',
+      subject: payload.subject || 'Support Request',
+      message: payload.message || '',
+      priority: payload.priority || 'MEDIUM',
+      status: 'OPEN',
+      assignedTo: payload.assignedTo || 'Unassigned Staff',
+      responseNote: '',
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+
+    syncCloudDatabases('tickets', ticketId, ticket);
+
+    const all = ls.get('genwin_tickets_v10', []);
+    ls.set('genwin_tickets_v10', [ticket, ...all]);
+    return ticket;
+  },
+
+  async getTickets() {
+    let cloudTickets = [];
+    const ticketMap = new Map();
+
+    try {
+      const snap = await withTimeout(getDocs(collection(db, 'tickets')), 6000);
+      if (!snap.empty) {
+        snap.docs.forEach(d => {
+          const item = { id: d.id, ...d.data() };
+          const key = item.id || item.ticketId;
+          if (key) ticketMap.set(key.toString(), item);
+        });
+      }
+    } catch (err) {
+      console.error("Firebase Firestore getTickets error:", err);
+    }
+
+    if (rtdb) {
+      try {
+        const rtdbSnap = await withTimeout(get(child(ref(rtdb), 'tickets')), 6000);
+        if (rtdbSnap.exists()) {
+          const val = rtdbSnap.val();
+          const list = Array.isArray(val) ? val : Object.values(val);
+          list.forEach(item => {
+            if (item) {
+              const key = item.id || item.ticketId;
+              if (key) {
+                const existing = ticketMap.get(key.toString());
+                ticketMap.set(key.toString(), { ...existing, ...item });
+              }
+            }
+          });
+        }
+      } catch (err) {
+        console.error("Firebase RTDB getTickets error:", err);
+      }
+    }
+
+    if (ticketMap.size > 0) {
+      cloudTickets = Array.from(ticketMap.values());
+      cloudTickets.sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
+      ls.set('genwin_tickets_v10', cloudTickets);
+      return cloudTickets;
+    }
+
+    const localFallback = ls.get('genwin_tickets_v10', []);
+    localFallback.sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
+    return localFallback;
+  },
+
+  async updateTicketStatus(ticketId, status, responseNote = '', assignedTo = '') {
+    const idStr = ticketId.toString();
+    const tickets = await this.getTickets();
+    const existing = tickets.find(t => t.id === idStr || t.ticketId === idStr);
+    const updated = {
+      ...existing,
+      id: idStr,
+      ticketId: idStr,
+      status: status || existing?.status || 'OPEN',
+      responseNote: responseNote !== undefined ? responseNote : (existing?.responseNote || ''),
+      assignedTo: assignedTo || existing?.assignedTo || 'Support Staff',
+      updatedAt: new Date().toISOString(),
+    };
+
+    syncCloudDatabases('tickets', idStr, updated);
+
+    const all = ls.get('genwin_tickets_v10', []);
+    const list = all.map(t => (t.id === idStr || t.ticketId === idStr) ? updated : t);
+    ls.set('genwin_tickets_v10', list);
+    return updated;
+  },
+
+  subscribeToTickets(callback) {
+    if (!callback) return () => {};
+
+    this.getTickets().then(tks => {
+      if (tks && tks.length > 0) callback(tks);
+    }).catch(() => {});
+
+    const unsubFS = onSnapshot(collection(db, 'tickets'), (snap) => {
+      if (!snap.empty) {
+        const fsTickets = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+        fsTickets.sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
+        ls.set('genwin_tickets_v10', fsTickets);
+        callback(fsTickets);
+      }
+    }, () => {});
+
+    let unsubRTDB = () => {};
+    if (rtdb) {
+      unsubRTDB = onValue(ref(rtdb, 'tickets'), (snapshot) => {
+        if (snapshot.exists()) {
+          const val = snapshot.val();
+          const list = Array.isArray(val) ? val : Object.values(val);
+          const valid = list.filter(Boolean);
+          valid.sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
+          ls.set('genwin_tickets_v10', valid);
+          callback(valid);
+        }
+      }, () => {});
+    }
+
+    return () => {
+      try { unsubFS(); } catch (_) {}
+      try { if (typeof unsubRTDB === 'function') unsubRTDB(); } catch (_) {}
+    };
+  },
 };

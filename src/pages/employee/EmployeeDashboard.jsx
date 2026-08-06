@@ -62,22 +62,23 @@ export default function EmployeeDashboard() {
   const [statusUpdatedToast, setStatusUpdatedToast] = useState('');
 
   // Support Tickets State
-  const [tickets, setTickets] = useState([
-    { id: 'TCK-1092', customer: 'Aman Verma', issue: 'Size exchange for Heavyweight Hoodie (XL to L)', status: 'OPEN', priority: 'HIGH', date: '2026-08-04' },
-    { id: 'TCK-1088', customer: 'Priya Patel', issue: 'Tracking update request for Order #GW-9821', status: 'IN_PROGRESS', priority: 'MEDIUM', date: '2026-08-04' },
-    { id: 'TCK-1074', customer: 'Karan Singh', issue: 'Address change before dispatch', status: 'RESOLVED', priority: 'URGENT', date: '2026-08-03' },
-  ]);
+  const [tickets, setTickets] = useState([]);
+  const [viewingTicket, setViewingTicket] = useState(null);
+  const [ticketSearch, setTicketSearch] = useState('');
+  const [ticketStatusFilter, setTicketStatusFilter] = useState('all');
 
   const loadEmployeeData = async () => {
     setLoading(true);
-    const [o, p, empList] = await Promise.all([
+    const [o, p, empList, tkts] = await Promise.all([
       FirebaseService.getAllOrders(),
       FirebaseService.getProducts(),
-      FirebaseService.getEmployees()
+      FirebaseService.getEmployees(),
+      FirebaseService.getTickets()
     ]);
     setOrders(o);
     setProducts(p);
     setEmployees(empList);
+    setTickets(tkts || []);
 
     // If current employee is found in admin employee list, sync latest profile image
     const matchingEmp = empList.find(e => e.employeeId === employee.employeeId || e.email === employee.email);
@@ -92,6 +93,15 @@ export default function EmployeeDashboard() {
 
   useEffect(() => {
     loadEmployeeData();
+
+    // Live subscription for support tickets
+    const unsubTickets = FirebaseService.subscribeToTickets((liveTickets) => {
+      if (liveTickets) setTickets(liveTickets);
+    });
+
+    return () => {
+      if (typeof unsubTickets === 'function') unsubTickets();
+    };
   }, []);
 
   // Employee Logout
@@ -109,6 +119,21 @@ export default function EmployeeDashboard() {
     if (viewingOrder && viewingOrder.id === orderId) {
       setViewingOrder(prev => ({ ...prev, status: newStatus }));
     }
+  };
+
+  // Save Ticket Resolution & Customer Note
+  const handleSaveTicketResolution = async (e) => {
+    e.preventDefault();
+    if (!viewingTicket) return;
+    const updated = await FirebaseService.updateTicketStatus(
+      viewingTicket.id || viewingTicket.ticketId,
+      viewingTicket.status || 'RESOLVED',
+      viewingTicket.responseNote || '',
+      viewingTicket.assignedTo || employee.name
+    );
+    setStatusUpdatedToast(`TICKET #${updated.ticketId || updated.id} RESOLUTION SAVED!`);
+    setTimeout(() => setStatusUpdatedToast(''), 3500);
+    setViewingTicket(null);
   };
 
   // Quick Stock Adjustment
@@ -639,41 +664,112 @@ export default function EmployeeDashboard() {
           )}
 
           {/* ═══════════════════════════════════════════════════════════════ */}
-          {/* TAB 4: CUSTOMER SUPPORT TICKETS                                 */}
+          {/* TAB 4: CUSTOMER SUPPORT TICKETS & RESOLUTION SYSTEM             */}
           {/* ═══════════════════════════════════════════════════════════════ */}
           {activeTab === 'tickets' && (
             <div className="space-y-6 animate-fade-in">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div className="relative flex-1 max-w-md">
+                  <Search className="w-4 h-4 text-zinc-500 absolute left-3 top-1/2 -translate-y-1/2" />
+                  <input
+                    type="text"
+                    placeholder="SEARCH TICKETS BY ID, CUSTOMER, OR EMAIL..."
+                    value={ticketSearch}
+                    onChange={e => setTicketSearch(e.target.value)}
+                    className="w-full bg-zinc-900 border border-zinc-800 text-xs py-2.5 pl-9 pr-3 uppercase focus:outline-none focus:border-zinc-500"
+                  />
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <span className="text-[10px] text-zinc-400 font-bold uppercase">FILTER:</span>
+                  <select
+                    value={ticketStatusFilter}
+                    onChange={e => setTicketStatusFilter(e.target.value)}
+                    className="bg-zinc-900 border border-zinc-800 text-xs text-white p-2 font-mono uppercase focus:outline-none cursor-pointer"
+                  >
+                    <option value="all">ALL STATUSES ({tickets.length})</option>
+                    <option value="OPEN">OPEN ({tickets.filter(t => (t.status || 'OPEN') === 'OPEN').length})</option>
+                    <option value="IN_PROGRESS">IN PROGRESS ({tickets.filter(t => t.status === 'IN_PROGRESS').length})</option>
+                    <option value="RESOLVED">RESOLVED ({tickets.filter(t => t.status === 'RESOLVED').length})</option>
+                    <option value="CLOSED">CLOSED ({tickets.filter(t => t.status === 'CLOSED').length})</option>
+                  </select>
+                </div>
+              </div>
+
               <div className="bg-zinc-900 border border-zinc-800 overflow-x-auto">
-                <table className="w-full text-left text-xs min-w-[650px]">
+                <table className="w-full text-left text-xs min-w-[750px]">
                   <thead className="bg-zinc-950 border-b border-zinc-800 text-[10px] text-zinc-400 uppercase tracking-wider">
                     <tr>
                       <th className="p-4">TICKET ID</th>
-                      <th className="p-4">CUSTOMER</th>
-                      <th className="p-4">ISSUE DESCRIPTION</th>
+                      <th className="p-4">CUSTOMER &amp; CONTACT</th>
+                      <th className="p-4">CATEGORY / SUBJECT</th>
+                      <th className="p-4">ORDER ID</th>
                       <th className="p-4">PRIORITY</th>
                       <th className="p-4">STATUS</th>
+                      <th className="p-4 text-right">ACTION</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-zinc-800">
-                    {tickets.map(t => (
-                      <tr key={t.id} className="hover:bg-zinc-800/40 transition-colors">
-                        <td className="p-4 font-bold text-white">{t.id}</td>
-                        <td className="p-4 text-zinc-200 font-bold">{t.customer}</td>
-                        <td className="p-4 text-zinc-300">{t.issue}</td>
-                        <td className="p-4">
-                          <span className={`px-2 py-0.5 text-[9px] font-bold uppercase ${
-                            t.priority === 'URGENT' ? 'bg-red-950 text-red-300 border border-red-800' : 'bg-amber-950 text-amber-300 border border-amber-800'
-                          }`}>
-                            {t.priority}
-                          </span>
-                        </td>
-                        <td className="p-4">
-                          <span className="px-2 py-0.5 text-[9px] font-bold bg-zinc-800 text-zinc-300 uppercase">
-                            {t.status}
-                          </span>
-                        </td>
-                      </tr>
-                    ))}
+                    {tickets
+                      .filter(t => {
+                        const matchesFilter = ticketStatusFilter === 'all' || (t.status || 'OPEN') === ticketStatusFilter;
+                        const query = ticketSearch.toLowerCase();
+                        const matchesQuery = !ticketSearch || 
+                          (t.ticketId && t.ticketId.toLowerCase().includes(query)) ||
+                          (t.id && t.id.toLowerCase().includes(query)) ||
+                          (t.customerName && t.customerName.toLowerCase().includes(query)) ||
+                          (t.customerEmail && t.customerEmail.toLowerCase().includes(query)) ||
+                          (t.orderId && t.orderId.toLowerCase().includes(query));
+                        return matchesFilter && matchesQuery;
+                      })
+                      .map(t => {
+                        const isUrgent = t.priority === 'URGENT';
+                        const isHigh = t.priority === 'HIGH';
+                        return (
+                          <tr key={t.id || t.ticketId} className="hover:bg-zinc-800/40 transition-colors">
+                            <td className="p-4 font-bold text-white font-mono">#{t.ticketId || t.id}</td>
+                            <td className="p-4">
+                              <strong className="block text-white uppercase font-bold">{t.customerName || t.customer || 'Anonymous'}</strong>
+                              <span className="text-[10px] text-zinc-400 block">{t.customerEmail}</span>
+                              {t.customerPhone && <span className="text-[9px] text-zinc-500 block">{t.customerPhone}</span>}
+                            </td>
+                            <td className="p-4">
+                              <span className="text-[10px] font-bold text-emerald-400 block uppercase">{t.issueType || t.issue}</span>
+                              <span className="text-zinc-300 line-clamp-1">{t.subject}</span>
+                            </td>
+                            <td className="p-4 font-mono font-bold text-zinc-300">
+                              {t.orderId ? `GW-${t.orderId.toString().replace('GW-', '')}` : '—'}
+                            </td>
+                            <td className="p-4">
+                              <span className={`px-2 py-0.5 text-[9px] font-bold uppercase border ${
+                                isUrgent ? 'bg-red-950 text-red-300 border-red-800' :
+                                isHigh ? 'bg-amber-950 text-amber-300 border-amber-800' :
+                                'bg-blue-950 text-blue-300 border-blue-800'
+                              }`}>
+                                {t.priority || 'MEDIUM'}
+                              </span>
+                            </td>
+                            <td className="p-4">
+                              <span className={`px-2 py-0.5 text-[9px] font-bold uppercase border ${
+                                t.status === 'RESOLVED' ? 'bg-emerald-950 text-emerald-300 border-emerald-800' :
+                                t.status === 'IN_PROGRESS' ? 'bg-blue-950 text-blue-300 border-blue-800' :
+                                t.status === 'CLOSED' ? 'bg-zinc-800 text-zinc-400 border-zinc-700' :
+                                'bg-amber-950 text-amber-300 border-amber-800'
+                              }`}>
+                                {t.status || 'OPEN'}
+                              </span>
+                            </td>
+                            <td className="p-4 text-right">
+                              <button
+                                onClick={() => setViewingTicket(t)}
+                                className="px-3 py-1.5 bg-white text-black font-extrabold text-[10px] uppercase hover:bg-zinc-200 transition-colors shadow-sm"
+                              >
+                                RESOLVE TICKET
+                              </button>
+                            </td>
+                          </tr>
+                        );
+                      })}
                   </tbody>
                 </table>
               </div>
@@ -707,6 +803,140 @@ export default function EmployeeDashboard() {
               </button>
               <button type="submit" className="flex-1 py-2.5 bg-white text-black font-extrabold uppercase">
                 SAVE STOCK
+              </button>
+            </div>
+          </form>
+        </div>
+      )}
+
+      {/* Ticket Details & Resolution Modal */}
+      {viewingTicket && (
+        <div className="fixed inset-0 z-50 bg-black/85 flex items-center justify-center p-3 sm:p-4 overflow-y-auto">
+          <form onSubmit={handleSaveTicketResolution} className="bg-zinc-900 border border-zinc-800 max-w-2xl w-full p-6 space-y-5 font-mono text-xs my-auto">
+            <div className="flex items-center justify-between border-b border-zinc-800 pb-3">
+              <div>
+                <span className="text-[10px] text-emerald-400 font-bold uppercase block">CUSTOMER SUPPORT TICKET #{viewingTicket.ticketId || viewingTicket.id}</span>
+                <h3 className="font-display font-black text-white text-lg uppercase">{viewingTicket.subject}</h3>
+              </div>
+              <button type="button" onClick={() => setViewingTicket(null)} className="p-1 text-zinc-400 hover:text-white">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Customer Full Details Card */}
+            <div className="bg-zinc-950 p-4 border border-zinc-800 space-y-2">
+              <strong className="block text-emerald-400 text-[10px] uppercase tracking-widest font-bold border-b border-zinc-900 pb-1">
+                CUSTOMER FULL CONTACT &amp; SHIPPING DETAILS
+              </strong>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
+                <div><span className="text-zinc-500 uppercase">NAME:</span> <strong className="text-white uppercase">{viewingTicket.customerName || viewingTicket.customer}</strong></div>
+                <div><span className="text-zinc-500 uppercase">EMAIL:</span> <strong className="text-white">{viewingTicket.customerEmail}</strong></div>
+                <div><span className="text-zinc-500 uppercase">PHONE:</span> <strong className="text-white">{viewingTicket.customerPhone || 'N/A'}</strong></div>
+                <div><span className="text-zinc-500 uppercase">ISSUE TYPE:</span> <strong className="text-emerald-400 uppercase">{viewingTicket.issueType || viewingTicket.issue}</strong></div>
+              </div>
+              {viewingTicket.customerAddress && (
+                <div className="pt-1">
+                  <span className="text-zinc-500 text-[10px] uppercase block">SHIPPING ADDRESS:</span>
+                  <p className="text-zinc-300 text-[11px] uppercase font-bold">{viewingTicket.customerAddress}</p>
+                </div>
+              )}
+            </div>
+
+            {/* Linked Order Info (if Order ID attached) */}
+            {viewingTicket.orderId && (() => {
+              const matchedOrder = orders.find(o => o.orderNumber.toString() === viewingTicket.orderId.toString().replace('GW-', '') || o.id === viewingTicket.orderId);
+              return (
+                <div className="bg-zinc-950 p-4 border border-zinc-800 space-y-2">
+                  <div className="flex items-center justify-between border-b border-zinc-900 pb-1">
+                    <strong className="text-amber-400 text-[10px] uppercase tracking-widest font-bold">
+                      LINKED STORE ORDER #{viewingTicket.orderId}
+                    </strong>
+                    {matchedOrder && <span className="text-[10px] text-blue-400 font-bold uppercase">{matchedOrder.status}</span>}
+                  </div>
+                  {matchedOrder ? (
+                    <div className="space-y-1.5">
+                      <div className="flex justify-between text-[11px] text-zinc-300 font-bold">
+                        <span>Total: ₹{matchedOrder.total} ({matchedOrder.paymentMethod || 'COD'})</span>
+                        <span>Date: {new Date(matchedOrder.createdAt).toLocaleDateString()}</span>
+                      </div>
+                      <div className="space-y-1 pt-1">
+                        {matchedOrder.items?.map((item, idx) => (
+                          <div key={idx} className="flex justify-between text-[10px] text-zinc-400 bg-zinc-900 p-1.5 border border-zinc-800">
+                            <span>{item.name} (Size: {item.size})</span>
+                            <span>Qty: {item.quantity}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  ) : (
+                    <p className="text-[10px] text-zinc-500 uppercase">Order ID #{viewingTicket.orderId} recorded by customer.</p>
+                  )}
+                </div>
+              );
+            })()}
+
+            {/* Customer Message Body */}
+            <div className="space-y-1">
+              <span className="text-[10px] text-zinc-400 uppercase font-bold">CUSTOMER MESSAGE &amp; REQUEST DETAILS:</span>
+              <div className="bg-zinc-950 p-3.5 border border-zinc-800 text-zinc-200 leading-relaxed text-xs">
+                {viewingTicket.message || viewingTicket.issue}
+              </div>
+            </div>
+
+            {/* Employee Actions */}
+            <div className="space-y-3 pt-2 border-t border-zinc-800">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-[10px] font-bold text-zinc-400 uppercase mb-1">UPDATE TICKET STATUS</label>
+                  <select
+                    value={viewingTicket.status || 'OPEN'}
+                    onChange={e => setViewingTicket({ ...viewingTicket, status: e.target.value })}
+                    className="w-full bg-zinc-950 border border-zinc-700 p-2 text-white text-xs font-mono font-bold uppercase focus:outline-none"
+                  >
+                    <option value="OPEN">OPEN — Awaiting Action</option>
+                    <option value="IN_PROGRESS">IN PROGRESS — Employee Working</option>
+                    <option value="RESOLVED">RESOLVED — Solved &amp; Approved</option>
+                    <option value="CLOSED">CLOSED — Finished</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-[10px] font-bold text-zinc-400 uppercase mb-1">ASSIGNED EMPLOYEE</label>
+                  <input
+                    type="text"
+                    value={viewingTicket.assignedTo || employee.name}
+                    onChange={e => setViewingTicket({ ...viewingTicket, assignedTo: e.target.value })}
+                    className="w-full bg-zinc-950 border border-zinc-700 p-2 text-white text-xs font-mono font-bold uppercase focus:outline-none"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-[10px] font-bold text-zinc-400 uppercase mb-1">
+                  OFFICIAL RESOLUTION RESPONSE / CUSTOMER NOTE
+                </label>
+                <textarea
+                  rows={3}
+                  value={viewingTicket.responseNote || ''}
+                  onChange={e => setViewingTicket({ ...viewingTicket, responseNote: e.target.value })}
+                  placeholder="WRITE RESOLUTION NOTE FOR CUSTOMER (e.g. Size L dispatched via express courier #GW-EX9021...)"
+                  className="w-full bg-zinc-950 border border-zinc-700 p-2.5 text-white text-xs font-mono focus:outline-none"
+                />
+              </div>
+            </div>
+
+            <div className="flex gap-2 pt-2">
+              <button
+                type="button"
+                onClick={() => setViewingTicket(null)}
+                className="flex-1 py-3 bg-zinc-800 text-zinc-300 uppercase font-bold text-xs hover:bg-zinc-700"
+              >
+                CANCEL
+              </button>
+              <button
+                type="submit"
+                className="flex-1 py-3 bg-white text-black font-extrabold uppercase text-xs hover:bg-zinc-200 shadow-md"
+              >
+                SAVE &amp; RESOLVE TICKET →
               </button>
             </div>
           </form>

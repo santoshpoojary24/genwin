@@ -43,6 +43,7 @@ import AdminDashboard    from './pages/admin/AdminDashboard';
 import AdminLoginPage    from './pages/admin/AdminLoginPage';
 import EmployeeLoginPage from './pages/admin/EmployeeLoginPage';
 import EmployeeDashboard from './pages/employee/EmployeeDashboard';
+import Support           from './pages/Support';
 
 import { AdminProtectedRoute, EmployeeProtectedRoute, CustomerProtectedRoute } from './components/auth/ProtectedRoutes';
 
@@ -168,6 +169,9 @@ export default function App() {
                             </CustomerProtectedRoute>
                           }
                         />
+                        <Route path="/support"                  element={<Support />} />
+                        <Route path="/help"                     element={<Support />} />
+                        <Route path="/tickets"                  element={<Support />} />
                         <Route path="*"                        element={<NotFound />} />
                       </Routes>
                     </main>
