@@ -659,13 +659,15 @@ export default function Home() {
         </div>
       </SR>
 
-      {/* ══ 5. CATEGORIES ════════════════════════════════════════════════ */}
-      <SR className="max-w-7xl mx-auto px-6 lg:px-12 mt-20 space-y-6">
-        <div className="flex items-center justify-between">
-          <EyeBrow n="04" label="SHOP BY CATEGORY" />
-          <Link to="/shop" className="underline-wipe font-mono text-[10px] uppercase tracking-widest text-zinc-500 hover:text-black flex items-center gap-1 transition-colors">
-            View All <ArrowUpRight className="w-3 h-3" />
-          </Link>
+      {/* ══ 4. HOMEPAGE HERO BANNER (PROMO HERO BANNER BEFORE CATEGORIES) ═════ */}
+      <HomepageHeroBanner customAds={ads} />
+
+      {/* ══ 5. CATEGORIES SECTION ════════════════════════════════════════════ */}
+      <SR className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-12 mt-16 space-y-6">
+        <div className="text-center py-2">
+          <h2 className="font-display font-black text-xl sm:text-3xl uppercase tracking-tight text-black">
+            SHOP BY CATEGORY
+          </h2>
         </div>
 
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 stagger">
@@ -675,10 +677,10 @@ export default function Home() {
                 const catImg = cat.image || cat.banner || cat.imageUrl || cat.bannerUrl || cat.heroImage || 'https://images.unsplash.com/photo-1521572267360-ee0c2909d518?w=800&q=80';
                 return (
                   <Link key={cat.id || cat.slug || i} to={`/shop?category=${cat.slug}`}
-                    className="garment-card-gpu group relative border border-zinc-200 overflow-hidden block bg-black shadow-sm hover:shadow-xl"
+                    className="garment-card-gpu group relative border border-zinc-200 overflow-hidden block bg-black shadow-sm hover:shadow-xl rounded-xl"
                     style={{ aspectRatio: '3/4' }}>
                     <img src={catImg} alt={cat.name || 'Category'} loading="lazy"
-                      className="garment-img-zoom w-full h-full object-cover opacity-90" />
+                      className="garment-img-zoom w-full h-full object-cover opacity-90 rounded-xl" />
                     {/* Hover overlay */}
                     <div className="absolute inset-0 bg-black/30 group-hover:bg-black/60 transition-colors duration-300 flex flex-col justify-end p-5">
                       <div className="translate-y-3 group-hover:translate-y-0 transition-transform duration-300 space-y-1">
@@ -701,9 +703,6 @@ export default function Home() {
           }
         </div>
       </SR>
-
-      {/* ══ 5.5 HOMEPAGE HERO BANNER (PLACED AFTER SHOP BY CATEGORY) ═════ */}
-      <HomepageHeroBanner customAds={ads} />
 
       {/* ══ 6. REVERSE TICKER ════════════════════════════════════════════ */}
       <div className="mt-20 border-y border-zinc-200 py-3 overflow-hidden select-none bg-zinc-50">
