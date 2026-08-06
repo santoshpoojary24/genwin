@@ -228,7 +228,7 @@ function getAdLinkProps(targetUrl) {
 }
 
 function HeroBannerCarousel({ customAds = [] }) {
-  const heroAds = (customAds || []).filter(a => a.active !== false && (a.placement === 'homepage_hero' || a.placement === 'hero_banner' || a.placement === 'banner'));
+  const heroAds = (customAds || []).filter(a => a.active !== false && (a.placement === 'header_slider' || a.placement === 'top_header_banner'));
   
   const HERO_BANNER_DEFAULTS = [
     {
@@ -385,6 +385,78 @@ function HeroBannerCarousel({ customAds = [] }) {
 }
 
 const PromoSlider = HeroBannerCarousel;
+
+/* ── Homepage Hero Banner (Placed After Shop By Category) ── */
+function HomepageHeroBanner({ customAds = [] }) {
+  const heroAd = (customAds || []).find(a => a.active !== false && a.placement === 'homepage_hero');
+
+  const rawHeadline = heroAd?.headline || heroAd?.title || 'WEAR YOUR IDENTITY.';
+  const parts = rawHeadline.split(' ');
+  const h1 = parts[0] || 'WEAR';
+  const h2 = parts[1] || 'YOUR';
+  const h3 = parts.slice(2).join(' ') || 'IDENTITY.';
+  const body = heroAd?.sub || heroAd?.subtitle || '240 GSM heavyweight cotton streetwear, acid-wash hoodies, and custom DTG prints.';
+  const cta = heroAd?.cta || heroAd?.linkText || 'EXPLORE CATALOG';
+  const link = heroAd?.link || heroAd?.linkUrl || '/shop';
+  const bgImage = heroAd?.image || null;
+
+  return (
+    <SR className="max-w-7xl mx-auto px-6 lg:px-12 mt-20">
+      <div className="relative bg-black border border-zinc-900 shadow-2xl overflow-hidden text-white font-mono p-8 sm:p-16">
+        {bgImage && (
+          <>
+            <img src={bgImage} alt="" className="absolute inset-0 w-full h-full object-cover opacity-40" />
+            <div className="absolute inset-0 bg-gradient-to-r from-black via-black/80 to-transparent" />
+          </>
+        )}
+        <div className="relative z-10 space-y-6 max-w-2xl">
+          <div className="flex items-center gap-3">
+            <FlashCountdown />
+            <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">
+              {heroAd?.badge || 'SPRING / SUMMER 2026'}
+            </span>
+          </div>
+
+          <h2 className="font-display font-black text-3xl sm:text-5xl lg:text-6xl uppercase tracking-tight leading-none text-white">
+            {h1} <span className="text-zinc-600">{h2}</span> {h3}
+          </h2>
+
+          <p className="text-xs text-zinc-400 uppercase tracking-widest leading-relaxed max-w-md">
+            {body}
+          </p>
+
+          <div className="flex flex-wrap items-center gap-4 pt-2">
+            {(() => {
+              const lp = getAdLinkProps(link);
+              return lp.isExternal ? (
+                <a href={lp.url} target="_blank" rel="noreferrer"
+                  className="btn-magnetic press inline-flex items-center gap-2 px-8 py-4 bg-white text-black font-black text-xs uppercase tracking-widest shadow-xl hover:bg-zinc-200 transition-colors">
+                  {cta} <ArrowRight className="w-4 h-4" />
+                </a>
+              ) : (
+                <Link to={lp.url}
+                  className="btn-magnetic press inline-flex items-center gap-2 px-8 py-4 bg-white text-black font-black text-xs uppercase tracking-widest shadow-xl hover:bg-zinc-200 transition-colors">
+                  {cta} <ArrowRight className="w-4 h-4" />
+                </Link>
+              );
+            })()}
+
+            <Link to="/customizer"
+              className="press inline-flex items-center gap-2 px-8 py-4 bg-zinc-900 border border-zinc-800 text-white hover:border-zinc-500 font-bold text-xs uppercase tracking-widest transition-colors">
+              <Sparkles className="w-4 h-4 text-emerald-400" /> CUSTOM PRINT STUDIO
+            </Link>
+          </div>
+
+          <div className="pt-6 border-t border-zinc-900 grid grid-cols-3 gap-6">
+            <Stat value={240} suffix=" GSM" label="HEAVY COTTON" delay={0} />
+            <Stat value={50} suffix="+" label="WASH PROOF" delay={80} />
+            <Stat value={49} suffix=" ★" label="RATING / 5" delay={160} />
+          </div>
+        </div>
+      </div>
+    </SR>
+  );
+}
 
 /* ── Front & Center Scroll-Triggered Promo Modal (One-Time Display) ───────── */
 function PopupPromoModal({ ads = [] }) {
@@ -600,6 +672,9 @@ export default function Home() {
           }
         </div>
       </SR>
+
+      {/* ══ 5.5 HOMEPAGE HERO BANNER (PLACED AFTER SHOP BY CATEGORY) ═════ */}
+      <HomepageHeroBanner customAds={ads} />
 
       {/* ══ 6. REVERSE TICKER ════════════════════════════════════════════ */}
       <div className="mt-20 border-y border-zinc-200 py-3 overflow-hidden select-none bg-zinc-50">

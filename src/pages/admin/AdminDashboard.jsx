@@ -1562,7 +1562,8 @@ export default function AdminDashboard() {
                     <div className="flex bg-zinc-900 p-1 border border-zinc-800 text-[10px] w-max">
                       {[
                         { id: 'all', label: 'ALL' },
-                        { id: 'homepage_hero', label: 'HERO' },
+                        { id: 'header_slider', label: 'TOP HEADER SLIDER' },
+                        { id: 'homepage_hero', label: 'HERO BANNER' },
                         { id: 'category_banner', label: 'CATEGORY' },
                         { id: 'popup', label: 'POPUP' }
                       ].map(st => (
@@ -1581,10 +1582,10 @@ export default function AdminDashboard() {
                 </div>
 
                 <button
-                  onClick={() => setEditingAd({ badge: 'SPRING 2026', headline: 'NEW ARRIVALS DROP', sub: '240 GSM organic combed cotton, relaxed fit.', cta: 'EXPLORE NOW', link: '/shop', placement: 'homepage_hero', image: 'https://images.unsplash.com/photo-1503342217505-b0a15ec3261c?w=1200&q=80', active: true })}
+                  onClick={() => setEditingAd({ badge: 'NEW DROP', headline: 'GURKHA PANTS', sub: 'Tailored For Comfort', cta: 'SHOP NOW', link: '/shop?category=pants', placement: 'header_slider', image: 'https://images.unsplash.com/photo-1624378439575-d8705ad7ae80?w=1200&q=80', active: true })}
                   className="w-full sm:w-auto px-4 py-2.5 bg-white text-black font-extrabold text-xs uppercase tracking-widest flex items-center justify-center gap-2 hover:bg-zinc-200 transition-colors"
                 >
-                  <Plus className="w-4 h-4" /> CREATE PROMO BANNER
+                  <Plus className="w-4 h-4" /> CREATE AD BANNER
                 </button>
               </div>
 
@@ -1595,12 +1596,13 @@ export default function AdminDashboard() {
                 </span>
                 <div className="flex flex-wrap gap-2 text-xs">
                   {[
-                    { label: '+ FLASH SALE (50% OFF Banner)', badge: 'FLASH SALE', headline: 'MID-SEASON CLEARANCE 50% OFF', sub: 'Limited time drop on selected oversized apparel.', cta: 'SHOP SALE NOW', link: '/shop', placement: 'homepage_hero', image: 'https://images.unsplash.com/photo-1489987707025-afc232f7ea0f?w=1200&q=80', active: true },
-                    { label: '+ DTG CANVAS STUDIO PROMO', badge: 'CUSTOM STUDIO', headline: 'PRINT YOUR OWN IDENTITY', sub: 'Design custom graphics directly on 240 GSM heavy cotton.', cta: 'OPEN DTG STUDIO', link: '/customize/prod_custom_tee_1', placement: 'homepage_hero', image: 'https://images.unsplash.com/photo-1521572267360-ee0c2909d518?w=1200&q=80', active: true },
-                    { label: '+ FREE SHIPPING BANNER', badge: 'FREE SHIPPING', headline: 'EXPRESS ALL-INDIA DISPATCH', sub: 'Free delivery on all orders over ₹999.', cta: 'BROWSE CATALOG', link: '/shop', placement: 'category_banner', image: 'https://images.unsplash.com/photo-1551028719-00167b16eac5?w=1200&q=80', active: true },
+                    { label: '+ TOP SLIDER: GURKHA PANTS', badge: 'NEW DROP', headline: 'Gurkha Pants', sub: 'Tailored For Comfort', cta: 'SHOP NOW', link: '/shop?category=pants', placement: 'header_slider', image: 'https://images.unsplash.com/photo-1624378439575-d8705ad7ae80?w=1200&q=80', active: true },
+                    { label: '+ TOP SLIDER: OVERSIZED SHIRTS', badge: 'HEAVYWEIGHT 240 GSM', headline: 'Oversized Shirts & Tees', sub: 'Combed Organic Cotton', cta: 'SHOP SHIRTS', link: '/shop?category=t-shirts', placement: 'header_slider', image: 'https://images.unsplash.com/photo-1521572267360-ee0c2909d518?w=1200&q=80', active: true },
+                    { label: '+ TOP SLIDER: 380 GSM HOODIES', badge: 'COLD WEATHER FLEECE', headline: '380 GSM Hoodies', sub: 'Drop-Shoulder Street Fits', cta: 'SHOP HOODIES', link: '/shop?category=hoodies', placement: 'header_slider', image: 'https://images.unsplash.com/photo-1556905055-8f358a7a47b2?w=1200&q=80', active: true },
+                    { label: '+ HERO BANNER: FLASH SALE 50% OFF', badge: 'FLASH SALE', headline: 'MID-SEASON CLEARANCE 50% OFF', sub: 'Limited time drop on selected oversized apparel.', cta: 'SHOP SALE NOW', link: '/shop', placement: 'homepage_hero', image: 'https://images.unsplash.com/photo-1489987707025-afc232f7ea0f?w=1200&q=80', active: true },
                   ].map(preset => (
                     <button
-                      key={preset.badge}
+                      key={preset.label}
                       onClick={() => handleAddAdPreset(preset)}
                       className="px-3 py-1.5 bg-zinc-800 hover:bg-zinc-700 text-zinc-200 text-[10px] font-bold uppercase transition-colors"
                     >
@@ -3025,11 +3027,12 @@ export default function AdminDashboard() {
             <div>
               <label className="block text-[10px] text-zinc-400 uppercase mb-1">PLACEMENT</label>
               <select
-                value={editingAd.placement || 'homepage_hero'}
+                value={editingAd.placement || 'header_slider'}
                 onChange={e => setEditingAd({ ...editingAd, placement: e.target.value })}
                 className="w-full bg-zinc-950 border border-zinc-800 p-3 text-white text-xs font-mono uppercase"
               >
-                <option value="homepage_hero">HOMEPAGE HERO BANNER</option>
+                <option value="header_slider">TOP HEADER SLIDER (5-6 PHOTOS BANNER)</option>
+                <option value="homepage_hero">HOMEPAGE HERO BANNER (WEAR YOUR IDENTITY)</option>
                 <option value="category_banner">CATEGORY BANNER</option>
                 <option value="popup">POPUP PROMO</option>
               </select>
