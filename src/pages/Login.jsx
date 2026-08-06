@@ -249,46 +249,7 @@ export default function Login() {
 
       </div>
 
-      {/* ── Genuine Forgot Password Modal ─────────────────────────────── */}
-      {showForgot && (
-        <div className="fixed inset-0 z-50 bg-black/75 flex items-center justify-center p-4" onClick={() => setShowForgot(false)}>
-          <div className="bg-white border border-zinc-200 max-w-sm w-full p-6 space-y-4 text-black font-mono shadow-2xl" onClick={e => e.stopPropagation()}>
-            <div className="flex items-center justify-between border-b border-zinc-100 pb-3">
-              <h3 className="font-display font-black text-base uppercase tracking-tight">RESET PASSWORD</h3>
-              <button onClick={() => setShowForgot(false)} className="p-1 text-zinc-400 hover:text-black">
-                <X className="w-4 h-4" />
-              </button>
-            </div>
 
-            {resetSent ? (
-              <div className="space-y-3 text-center py-4">
-                <CheckCircle2 className="w-10 h-10 text-black mx-auto" />
-                <h4 className="font-bold text-xs uppercase">RESET LINK SENT!</h4>
-                <p className="text-[10px] text-zinc-500 uppercase leading-relaxed">
-                  We've sent a password reset link to <strong>{resetEmail}</strong>. Please check your inbox.
-                </p>
-              </div>
-            ) : (
-              <form onSubmit={handleResetPassword} className="space-y-3">
-                <p className="text-[10px] text-zinc-500 uppercase leading-relaxed">
-                  Enter your registered email address and we'll send you instructions to reset your password.
-                </p>
-                <input
-                  type="email"
-                  required
-                  placeholder="YOUR EMAIL..."
-                  value={resetEmail}
-                  onChange={e => setResetEmail(e.target.value)}
-                  className="w-full bg-zinc-50 border border-zinc-200 text-xs p-3 font-mono uppercase focus:outline-none focus:border-black"
-                />
-                <button type="submit" className="w-full py-3 bg-black text-white font-bold text-xs uppercase tracking-widest hover:bg-zinc-800">
-                  SEND RESET LINK
-                </button>
-              </form>
-            )}
-          </div>
-        </div>
-      )}
 
       {/* ── Interactive Terms & Policy Modal ────────────────────────────── */}
       {policyTab && (
