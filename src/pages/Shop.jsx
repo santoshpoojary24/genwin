@@ -11,6 +11,7 @@ export default function Shop() {
   const [searchParams, setSearchParams] = useSearchParams();
   const [products,  setProducts]  = useState([]);
   const [categories, setCategories] = useState([]);
+  const [ads,        setAds]        = useState([]);
   const [loading,   setLoading]   = useState(true);
   const [quickViewProduct, setQuickViewProduct] = useState(null);
   const [mobileFilterOpen, setMobileFilterOpen] = useState(false);
@@ -25,9 +26,25 @@ export default function Shop() {
   const [searchQuery,       setSearchQuery]       = useState(searchParam);
 
   useEffect(() => {
-    Promise.all([FirebaseService.getProducts(), FirebaseService.getCategories()])
-      .then(([p, c]) => { setProducts(p); setCategories(c); })
+    Promise.all([
+      FirebaseService.getProducts(),
+      FirebaseService.getCategories(),
+      FirebaseService.getAds()
+    ])
+      .then(([p, c, a]) => {
+        setProducts(p || []);
+        setCategories(c || []);
+        setAds(a || []);
+      })
       .finally(() => setLoading(false));
+
+    const unsubCats = FirebaseService.subscribeToCategories((liveCats) => {
+      if (liveCats && liveCats.length > 0) setCategories(liveCats);
+    });
+
+    return () => {
+      if (typeof unsubCats === 'function') unsubCats();
+    };
   }, []);
 
   useEffect(() => {
@@ -58,7 +75,6 @@ export default function Shop() {
   };
 
   const filtered = products.filter(p => {
-    // Robust category comparison matching slug, category ID, or exact string
     if (selectedCategory !== 'all') {
       const targetSlug = selectedCategory.toLowerCase();
       const prodCat = (p.category || '').toLowerCase();
@@ -98,29 +114,40 @@ export default function Shop() {
   );
 
   return (
-    <div className="page-enter">
+    <div className="page-enter font-mono">
 
-      {/* ── Shop Header ───────────────────────────────────────────────── */}
-      <div className="bg-black text-white border-b border-zinc-900">
-        <div className="max-w-7xl mx-auto px-6 lg:px-12 py-14 relative overflow-hidden">
-          <div className="pointer-events-none absolute inset-0 opacity-[0.05]"
-            style={{ backgroundImage:'radial-gradient(circle,#fff 1px,transparent 1px)', backgroundSize:'24px 24px' }} />
-          <div className="relative z-10">
-            <div className="flex items-center gap-3 mb-3">
-              <span className="section-num text-zinc-700">जेनwin.</span>
-              <span className="block h-px w-6 bg-zinc-800" />
-              <span className="section-num text-zinc-700">CATALOG</span>
+      {/* ── Shop Header & Category Banner Image ───────────────────────────────────────────────── */}
+      {(() => {
+        const catCoverImg = activeCatObj?.image || activeCatObj?.banner || activeCatObj?.imageUrl || activeCatObj?.bannerUrl;
+        return (
+          <div className="bg-black text-white border-b border-zinc-900 relative overflow-hidden">
+            {catCoverImg && (
+              <>
+                <img src={catCoverImg} alt={catName} className="absolute inset-0 w-full h-full object-cover opacity-40" />
+                <div className="absolute inset-0 bg-gradient-to-r from-black via-black/80 to-transparent" />
+              </>
+            )}
+            <div className="max-w-7xl mx-auto px-6 lg:px-12 py-14 relative z-10">
+              <div className="pointer-events-none absolute inset-0 opacity-[0.05]"
+                style={{ backgroundImage:'radial-gradient(circle,#fff 1px,transparent 1px)', backgroundSize:'24px 24px' }} />
+              <div className="relative z-10">
+                <div className="flex items-center gap-3 mb-3">
+                  <span className="section-num text-zinc-400 font-bold">जेनwin.</span>
+                  <span className="block h-px w-6 bg-zinc-800" />
+                  <span className="section-num text-zinc-400 font-bold">COLLECTION CATALOG</span>
+                </div>
+                <h1 className="font-display font-black text-white uppercase"
+                  style={{ fontSize:'clamp(2.5rem,6vw,5rem)', letterSpacing:'-0.04em', lineHeight:1 }}>
+                  {catName}
+                </h1>
+                <p className="font-mono text-zinc-300 text-xs uppercase tracking-[0.12em] mt-3 max-w-xl leading-relaxed">
+                  {activeCatObj?.description || '240 GSM HEAVYWEIGHT COTTON · CUSTOM PRINTS · DIRECT-TO-GARMENT'}
+                </p>
+              </div>
             </div>
-            <h1 className="font-display font-black text-white uppercase"
-              style={{ fontSize:'clamp(2.5rem,6vw,5rem)', letterSpacing:'-0.04em', lineHeight:1 }}>
-              {catName}
-            </h1>
-            <p className="font-mono text-zinc-600 text-xs uppercase tracking-[0.12em] mt-3">
-              240 GSM HEAVYWEIGHT COTTON · CUSTOM PRINTS · DIRECT-TO-GARMENT
-            </p>
           </div>
-        </div>
-      </div>
+        );
+      })()}
 
       <div className="max-w-7xl mx-auto px-6 lg:px-12 py-8 space-y-6">
 
@@ -198,6 +225,46 @@ export default function Shop() {
 
           {/* Products Grid */}
           <div className="flex-1 min-w-0">
+            {/* Promo Category Banner (from Admin Ads placement = category_banner) */}
+            {(() => {
+              const categoryAd = ads.find(a => a.active !== false && (a.placement === 'category_banner' || a.placement === 'shop_banner'));
+              if (!categoryAd) return null;
+
+              return (
+                <div className="mb-6 relative bg-zinc-950 border border-zinc-800 text-white p-6 sm:p-8 font-mono overflow-hidden shadow-xl">
+                  {categoryAd.image && (
+                    <>
+                      <img src={categoryAd.image} alt="" className="absolute inset-0 w-full h-full object-cover opacity-40" />
+                      <div className="absolute inset-0 bg-gradient-to-r from-black via-black/85 to-transparent" />
+                    </>
+                  )}
+                  <div className="relative z-10 space-y-2 max-w-lg">
+                    {categoryAd.badge && (
+                      <span className="px-2.5 py-1 text-[9px] font-bold bg-emerald-950 border border-emerald-800 text-emerald-400 uppercase tracking-widest inline-block">
+                        {categoryAd.badge}
+                      </span>
+                    )}
+                    <h3 className="font-display font-black text-xl sm:text-2xl uppercase text-white tracking-tight">
+                      {categoryAd.headline || categoryAd.title}
+                    </h3>
+                    <p className="text-xs text-zinc-300 uppercase leading-relaxed">
+                      {categoryAd.sub || categoryAd.subtitle}
+                    </p>
+                    {categoryAd.cta && (
+                      <div className="pt-2">
+                        <a
+                          href={categoryAd.link || '/shop'}
+                          className="inline-flex items-center gap-2 px-6 py-2.5 bg-white text-black font-extrabold text-xs uppercase tracking-widest hover:bg-zinc-200 transition-colors"
+                        >
+                          {categoryAd.cta} →
+                        </a>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              );
+            })()}
+
             {filtered.length === 0 ? (
               <div className="border border-zinc-200 bg-zinc-50 p-20 text-center font-mono space-y-4">
                 <p className="font-black text-zinc-200 text-6xl">0</p>
