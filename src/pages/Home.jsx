@@ -190,6 +190,37 @@ const DEFAULT_ADS = [
   { id: 4, eyebrow: 'COLLEGE DROPS', h1: 'BULK', h2: 'PRICING.', body: '10+ pieces for clubs, teams, and events. Special rates apply.', cta: 'GET QUOTE', to: '/customizer' },
 ];
 
+function getAdLinkProps(targetUrl) {
+  if (!targetUrl || typeof targetUrl !== 'string') {
+    return { isExternal: false, url: '/shop' };
+  }
+
+  const trimmed = targetUrl.trim();
+  if (!trimmed) return { isExternal: false, url: '/shop' };
+
+  if (/^https?:\/\//i.test(trimmed)) {
+    return { isExternal: true, url: trimmed };
+  }
+
+  if (/^www\./i.test(trimmed)) {
+    return { isExternal: true, url: `https://${trimmed}` };
+  }
+
+  try {
+    if (trimmed.includes(window.location.host) || trimmed.includes('vercel.app')) {
+      const parsed = new URL(trimmed.startsWith('http') ? trimmed : `https://${trimmed}`);
+      return { isExternal: false, url: parsed.pathname + parsed.search + parsed.hash };
+    }
+  } catch (_) {}
+
+  let internalUrl = trimmed;
+  if (!internalUrl.startsWith('/') && !internalUrl.startsWith('#')) {
+    internalUrl = '/' + internalUrl;
+  }
+
+  return { isExternal: false, url: internalUrl };
+}
+
 function PromoSlider({ customAds = [] }) {
   const displayAds = customAds.length > 0 
     ? customAds.map(a => {
@@ -253,10 +284,26 @@ function PromoSlider({ customAds = [] }) {
           {ad.body}
         </p>
 
-        <Link to={ad.to}
-          className="btn-magnetic press inline-flex items-center gap-2 mt-8 px-8 py-3.5 bg-white text-black font-mono font-black text-xs uppercase tracking-widest hover:bg-zinc-100 transition-colors">
-          {ad.cta} <ArrowRight className="w-3.5 h-3.5" />
-        </Link>
+        {(() => {
+          const lp = getAdLinkProps(ad.to);
+          return lp.isExternal ? (
+            <a
+              href={lp.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="btn-magnetic press inline-flex items-center gap-2 mt-8 px-8 py-3.5 bg-white text-black font-mono font-black text-xs uppercase tracking-widest hover:bg-zinc-100 transition-colors"
+            >
+              {ad.cta} <ArrowRight className="w-3.5 h-3.5" />
+            </a>
+          ) : (
+            <Link
+              to={lp.url}
+              className="btn-magnetic press inline-flex items-center gap-2 mt-8 px-8 py-3.5 bg-white text-black font-mono font-black text-xs uppercase tracking-widest hover:bg-zinc-100 transition-colors"
+            >
+              {ad.cta} <ArrowRight className="w-3.5 h-3.5" />
+            </Link>
+          );
+        })()}
       </div>
 
       {/* Controls */}
@@ -367,13 +414,28 @@ function PopupPromoModal({ ads = [] }) {
           </p>
 
           <div className="space-y-2 pt-2">
-            <Link
-              to={link}
-              onClick={handleClose}
-              className="btn-magnetic press w-full py-3.5 bg-white text-black font-black text-xs uppercase tracking-widest flex items-center justify-center gap-2 shadow-lg hover:bg-zinc-200 transition-colors"
-            >
-              {cta} <ArrowRight className="w-4 h-4" />
-            </Link>
+            {(() => {
+              const lp = getAdLinkProps(link);
+              return lp.isExternal ? (
+                <a
+                  href={lp.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  onClick={handleClose}
+                  className="btn-magnetic press w-full py-3.5 bg-white text-black font-black text-xs uppercase tracking-widest flex items-center justify-center gap-2 shadow-lg hover:bg-zinc-200 transition-colors"
+                >
+                  {cta} <ArrowRight className="w-4 h-4" />
+                </a>
+              ) : (
+                <Link
+                  to={lp.url}
+                  onClick={handleClose}
+                  className="btn-magnetic press w-full py-3.5 bg-white text-black font-black text-xs uppercase tracking-widest flex items-center justify-center gap-2 shadow-lg hover:bg-zinc-200 transition-colors"
+                >
+                  {cta} <ArrowRight className="w-4 h-4" />
+                </Link>
+              );
+            })()}
 
             <button
               onClick={handleClose}
