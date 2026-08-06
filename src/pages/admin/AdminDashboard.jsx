@@ -2573,16 +2573,58 @@ export default function AdminDashboard() {
                   </div>
                 )}
               </div>
+            </div>
 
-              <div>
-                <label className="block text-[10px] text-zinc-400 uppercase mb-1">STOCK QTY</label>
-                <input
-                  type="number"
-                  required
-                  value={editingProduct.stockQty || 10}
-                  onChange={e => setEditingProduct({ ...editingProduct, stockQty: parseInt(e.target.value) || 0 })}
-                  className="w-full bg-zinc-950 border border-zinc-800 p-3 text-white text-xs font-mono"
-                />
+            {/* Per-Size Inventory Manager */}
+            <div className="space-y-3 pt-3 border-t border-zinc-800">
+              <div className="flex items-center justify-between">
+                <label className="block text-[10px] font-bold text-zinc-400 uppercase tracking-widest">
+                  STOCK QUANTITY ACCORDING TO SIZE (SIZE INVENTORY)
+                </label>
+                <span className="text-[10px] font-mono font-bold text-emerald-400 uppercase">
+                  TOTAL: {Object.values(editingProduct.sizeQuantities || { S: 5, M: 5, L: 5, XL: 5, XXL: 5 }).reduce((a, b) => a + (parseInt(b) || 0), 0)} UNITS
+                </span>
+              </div>
+
+              <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
+                {['S', 'M', 'L', 'XL', 'XXL'].map(size => {
+                  const defaultSizeQty = Math.max(0, Math.floor((editingProduct.stockQty || 25) / 5));
+                  const qty = editingProduct.sizeQuantities?.[size] !== undefined 
+                    ? editingProduct.sizeQuantities[size] 
+                    : defaultSizeQty;
+
+                  return (
+                    <div key={size} className="bg-zinc-950 border border-zinc-800 p-2.5 space-y-1 rounded">
+                      <span className="text-[10px] font-mono font-bold text-zinc-300 block uppercase">
+                        SIZE {size}
+                      </span>
+                      <input
+                        type="number"
+                        min="0"
+                        value={qty}
+                        onChange={e => {
+                          const val = Math.max(0, parseInt(e.target.value) || 0);
+                          const existingSizes = editingProduct.sizeQuantities || { 
+                            S: defaultSizeQty, M: defaultSizeQty, L: defaultSizeQty, XL: defaultSizeQty, XXL: defaultSizeQty 
+                          };
+                          const updatedSizeQuantities = {
+                            ...existingSizes,
+                            [size]: val
+                          };
+                          const totalStock = Object.values(updatedSizeQuantities).reduce((a, b) => a + (parseInt(b) || 0), 0);
+
+                          setEditingProduct({
+                            ...editingProduct,
+                            sizeQuantities: updatedSizeQuantities,
+                            stockQty: totalStock,
+                            isSoldOut: totalStock <= 0
+                          });
+                        }}
+                        className="w-full bg-zinc-900 border border-zinc-700 p-1.5 text-white text-xs font-mono font-bold text-center focus:border-white focus:outline-none"
+                      />
+                    </div>
+                  );
+                })}
               </div>
             </div>
 

@@ -182,7 +182,7 @@ export const FirebaseService = {
     const all = ls.get(KEYS.orders, []);
     ls.set(KEYS.orders, [order, ...all]);
 
-    // First Come, First Served Stock Reduction & Sold Out Trigger
+    // First Come, First Served Stock Reduction per size & Sold Out Trigger
     if (payload.items && Array.isArray(payload.items)) {
       const currentProducts = ls.get(KEYS.products, []);
       const updatedProducts = currentProducts.map(p => {
@@ -191,10 +191,29 @@ export const FirebaseService = {
           const qtyToDeduct = parseInt(orderedItem.quantity) || 1;
           const currentStock = p.stockQty !== undefined ? p.stockQty : 10;
           const newStock = Math.max(0, currentStock - qtyToDeduct);
+
+          const defaultSizeQuantities = p.sizes ? p.sizes.reduce((acc, sz) => {
+            acc[sz] = Math.max(0, Math.floor(currentStock / p.sizes.length));
+            return acc;
+          }, {}) : { S: 5, M: 5, L: 5, XL: 5, XXL: 5 };
+
+          const currentSizeQuantities = p.sizeQuantities || defaultSizeQuantities;
+          const targetSize = orderedItem.size || 'M';
+          const currentSizeStock = currentSizeQuantities[targetSize] !== undefined ? currentSizeQuantities[targetSize] : 5;
+          const newSizeStock = Math.max(0, currentSizeStock - qtyToDeduct);
+          
+          const updatedSizeQuantities = {
+            ...currentSizeQuantities,
+            [targetSize]: newSizeStock
+          };
+
+          const totalCalculatedStock = Object.values(updatedSizeQuantities).reduce((a, b) => a + (parseInt(b) || 0), 0);
+
           const updatedP = {
             ...p,
-            stockQty: newStock,
-            isSoldOut: newStock <= 0,
+            sizeQuantities: updatedSizeQuantities,
+            stockQty: totalCalculatedStock,
+            isSoldOut: totalCalculatedStock <= 0,
             updatedAt: new Date().toISOString()
           };
           syncCloudDatabases('products', p.id, updatedP);

@@ -205,15 +205,25 @@ export default function ProductDetail() {
             <div className="space-y-2 border-b border-zinc-100 pb-5">
               <div className="flex items-center justify-between">
                 <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">{product.category}</span>
-                {(product.stockQty <= 0 || product.isSoldOut) ? (
-                  <span className="text-[10px] font-bold text-red-600 bg-red-50 px-2 py-0.5 border border-red-200 uppercase">
-                    SOLD OUT
-                  </span>
-                ) : (
-                  <span className="text-[10px] font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 border border-emerald-200 uppercase">
-                    IN STOCK · {product.stockQty ?? 10} UNITS LEFT
-                  </span>
-                )}
+                {(() => {
+                  const sizeQty = product.sizeQuantities?.[selectedSize] !== undefined
+                    ? product.sizeQuantities[selectedSize]
+                    : (product.stockQty ?? 10);
+                  
+                  if (sizeQty <= 0 || product.stockQty <= 0 || product.isSoldOut) {
+                    return (
+                      <span className="text-[10px] font-bold text-red-600 bg-red-50 px-2 py-0.5 border border-red-200 uppercase">
+                        OUT OF STOCK FOR SIZE {selectedSize || 'SELECTED'}
+                      </span>
+                    );
+                  }
+
+                  return (
+                    <span className="text-[10px] font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 border border-emerald-200 uppercase">
+                      IN STOCK · {sizeQty} UNITS LEFT (SIZE {selectedSize})
+                    </span>
+                  );
+                })()}
               </div>
 
               <h1 className="font-display font-black text-black text-2xl sm:text-3xl uppercase tracking-tight leading-tight">
@@ -242,7 +252,7 @@ export default function ProductDetail() {
               {product.description || 'Heavyweight 240 GSM organic combed cotton streetwear blank. Double-stitched seams with pre-shrunk wash treatment.'}
             </p>
 
-            {/* Size Selector */}
+            {/* Size Selector with Quantity according to Size */}
             <div className="space-y-2 pt-2">
               <div className="flex items-center justify-between">
                 <label className="text-[10px] font-bold text-black uppercase tracking-wider">GARMENT SIZE</label>
@@ -255,17 +265,32 @@ export default function ProductDetail() {
               </div>
 
               <div className="grid grid-cols-5 gap-2">
-                {product.sizes?.map(size => (
-                  <button
-                    key={size}
-                    onClick={() => setSelectedSize(size)}
-                    className={`py-3 text-xs font-bold uppercase transition-all border ${
-                      selectedSize === size ? 'bg-black text-white border-black' : 'bg-white text-black border-zinc-200 hover:border-black'
-                    }`}
-                  >
-                    {size}
-                  </button>
-                ))}
+                {product.sizes?.map(size => {
+                  const sizeQty = product.sizeQuantities?.[size] !== undefined
+                    ? product.sizeQuantities[size]
+                    : Math.max(0, Math.floor((product.stockQty ?? 25) / 5));
+                  const isOut = sizeQty <= 0;
+
+                  return (
+                    <button
+                      key={size}
+                      disabled={isOut}
+                      onClick={() => { setSelectedSize(size); setQuantity(1); }}
+                      className={`py-2 px-1 text-center transition-all border relative flex flex-col items-center justify-center ${
+                        isOut
+                          ? 'bg-zinc-100 text-zinc-400 border-zinc-200 cursor-not-allowed opacity-60 line-through'
+                          : selectedSize === size 
+                            ? 'bg-black text-white border-black shadow-md' 
+                            : 'bg-white text-black border-zinc-200 hover:border-black'
+                      }`}
+                    >
+                      <span className="text-xs font-bold uppercase">{size}</span>
+                      <span className={`text-[8px] font-mono font-bold mt-0.5 ${isOut ? 'text-red-500' : selectedSize === size ? 'text-zinc-300' : 'text-zinc-500'}`}>
+                        {isOut ? '0 Left' : `${sizeQty} Qty`}
+                      </span>
+                    </button>
+                  );
+                })}
               </div>
             </div>
 
