@@ -147,7 +147,7 @@ export default function Account() {
   };
 
   return (
-    <div className="min-h-screen bg-zinc-50 font-sans pb-20 pt-28">
+    <div className="min-h-screen bg-zinc-50 font-sans pb-20 pt-16">
       
       {/* ── Clean Header ─────────────────────────────────────────────── */}
       <div className="bg-white border-b border-zinc-200">
