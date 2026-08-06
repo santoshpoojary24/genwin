@@ -91,7 +91,7 @@ export default function Navbar() {
 
           {/* Center Brand Monogram / Logo */}
           <Link to="/" className="flex items-center justify-center">
-            <span className="font-display font-black text-2xl sm:text-3xl tracking-tighter text-black uppercase">
+            <span className="font-display font-black text-2xl sm:text-3xl tracking-tighter text-black">
               {settings.storeName || 'जेनwin.'}
             </span>
           </Link>
@@ -176,7 +176,7 @@ export default function Navbar() {
       >
         {/* Drawer Header */}
         <div className="flex items-center justify-between px-5 py-5 bg-black text-white border-b border-zinc-800">
-          <span className="font-display font-black text-2xl tracking-tighter uppercase">
+          <span className="font-display font-black text-2xl tracking-tighter">
             {settings.storeName || 'जेनwin.'}
           </span>
           <button
