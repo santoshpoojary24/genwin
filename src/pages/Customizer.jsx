@@ -228,9 +228,15 @@ function PrintLayer({ items, activeId, setActiveId, printZone, onMove }) {
     const startPos = getSVGPos(clientX, clientY);
     const item = items.find(i => i.id === id);
     if (!item) return;
-    // Select on mousedown so resize panel appears immediately
     setActiveId(id);
-    dragging.current = { id, startPos, startX: item.x, startY: item.y, hasMoved: false };
+    // Pre-compute half-extents so the drag handler can clamp item edges to zone
+    const hw = item.type === 'text'
+      ? Math.max(44, (item.text?.length || 4) * (item.fontSize || 20) * 0.32)
+      : (item.size || 70) / 2 + 6;
+    const hh = item.type === 'text'
+      ? (item.fontSize || 20) / 2 + 8
+      : (item.size || 70) / 2 + 6;
+    dragging.current = { id, startPos, startX: item.x, startY: item.y, hasMoved: false, hw, hh };
   };
 
   useEffect(() => {
@@ -249,8 +255,11 @@ function PrintLayer({ items, activeId, setActiveId, printZone, onMove }) {
         dragging.current.hasMoved = true;
       }
       const z = printZone;
-      const nx = Math.max(z.x + 10, Math.min(z.x + z.w - 10, dragging.current.startX + dx));
-      const ny = Math.max(z.y + 10, Math.min(z.y + z.h - 10, dragging.current.startY + dy));
+      // Clamp using the item's own half-extents so edges never cross the zone border
+      const hw = dragging.current.hw ?? 10;
+      const hh = dragging.current.hh ?? 10;
+      const nx = Math.max(z.x + hw, Math.min(z.x + z.w - hw, dragging.current.startX + dx));
+      const ny = Math.max(z.y + hh, Math.min(z.y + z.h - hh, dragging.current.startY + dy));
       onMove(dragging.current.id, nx, ny);
     };
 
@@ -454,8 +463,11 @@ export default function Customizer() {
   }, [setCurrentItems]);
 
   const resizeItem = useCallback((id, newSize) => {
-    setCurrentItems(prev => prev.map(it => it.id === id ? { ...it, size: newSize } : it));
-  }, [setCurrentItems]);
+    // Cap size so the image can't overflow the zone boundary
+    const maxSize = Math.min(zone.w, zone.h) - 4;
+    const clamped = Math.max(30, Math.min(maxSize, newSize));
+    setCurrentItems(prev => prev.map(it => it.id === id ? { ...it, size: clamped } : it));
+  }, [setCurrentItems, zone]);
 
   // get the currently active item object
   const activeItem = currentItems.find(it => it.id === activeId) || null;
@@ -584,19 +596,19 @@ export default function Customizer() {
                   </div>
                   <div className="flex items-center gap-2">
                     <button
-                      onClick={() => resizeItem(activeItem.id, Math.max(30, (activeItem.size || 80) - 10))}
+                      onClick={() => resizeItem(activeItem.id, (activeItem.size || 80) - 10)}
                       className="w-8 h-8 bg-zinc-700 hover:bg-zinc-600 border border-zinc-600 rounded-lg text-white font-bold flex items-center justify-center text-lg leading-none"
                     >−</button>
                     <input
                       type="range"
                       min={30}
-                      max={220}
+                      max={Math.min(zone.w, zone.h) - 4}
                       value={activeItem.size || 80}
                       onChange={e => resizeItem(activeItem.id, Number(e.target.value))}
                       className="flex-1 h-1.5 accent-violet-500 cursor-pointer"
                     />
                     <button
-                      onClick={() => resizeItem(activeItem.id, Math.min(220, (activeItem.size || 80) + 10))}
+                      onClick={() => resizeItem(activeItem.id, (activeItem.size || 80) + 10)}
                       className="w-8 h-8 bg-zinc-700 hover:bg-zinc-600 border border-zinc-600 rounded-lg text-white font-bold flex items-center justify-center text-lg leading-none"
                     >+</button>
                   </div>
