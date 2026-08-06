@@ -53,7 +53,8 @@ export default function ProductDetail() {
         setProduct(prod);
         if (prod) {
           setSelectedImage(prod.images[0]);
-          setSelectedSize(prod.sizes[0] || 'M');
+          const isNoSizes = prod.hasSizes === false || !prod.sizes || prod.sizes.length === 0;
+          setSelectedSize(isNoSizes ? 'ONE SIZE' : (prod.sizes[0] || 'M'));
           setSelectedColor(prod.colors[0] || null);
 
           // Non-blocking background fetches
@@ -111,11 +112,11 @@ export default function ProductDetail() {
   const handleAddToCart = () => {
     const sizeStock = getProductSizeStock(product, selectedSize);
     if (sizeStock <= 0) {
-      alert(`Sorry! Size ${selectedSize} is currently out of stock.`);
+      alert(`Sorry! ${product.hasSizes === false ? 'This item' : `Size ${selectedSize}`} is currently out of stock.`);
       return;
     }
     if (quantity > sizeStock) {
-      alert(`Only ${sizeStock} left in stock for size ${selectedSize}.`);
+      alert(`Only ${sizeStock} left in stock.`);
       return;
     }
     if (!user) {
@@ -154,10 +155,10 @@ export default function ProductDetail() {
     : (product.rating || 4.9);
 
   return (
-    <div className="page-enter pb-20 font-mono">
+    <div className="min-h-screen bg-white text-black font-mono page-enter pb-20">
       
-      {/* Breadcrumb Nav */}
-      <div className="border-b border-zinc-100 bg-zinc-50/50">
+      {/* Top Banner / Breadcrumb */}
+      <div className="bg-zinc-50 border-b border-zinc-200">
         <div className="max-w-7xl mx-auto px-6 lg:px-12 py-3">
           <nav className="flex items-center gap-2 text-[10px] uppercase tracking-widest text-zinc-400">
             <Link to="/" className="hover:text-black transition-colors">Home</Link>
@@ -217,19 +218,22 @@ export default function ProductDetail() {
               <div className="flex items-center justify-between">
                 <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">{product.category}</span>
                 {(() => {
-                  const sizeQty = getProductSizeStock(product, selectedSize);
-                  
-                  if (sizeQty <= 0 || product.stockQty <= 0 || product.isSoldOut) {
+                  const isNoSizes = product.hasSizes === false || !product.sizes || product.sizes.length === 0;
+                  const currentStock = isNoSizes
+                    ? (product.stockQty ?? 0)
+                    : getProductSizeStock(product, selectedSize);
+
+                  if (currentStock <= 0 || product.stockQty <= 0 || product.isSoldOut) {
                     return (
                       <span className="text-[10px] font-bold text-red-600 bg-red-50 px-2 py-0.5 border border-red-200 uppercase">
-                        OUT OF STOCK FOR SIZE {selectedSize || 'SELECTED'}
+                        {isNoSizes ? 'OUT OF STOCK' : `OUT OF STOCK FOR SIZE ${selectedSize || 'SELECTED'}`}
                       </span>
                     );
                   }
 
                   return (
                     <span className="text-[10px] font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 border border-emerald-200 uppercase">
-                      IN STOCK · {sizeQty} UNITS LEFT (SIZE {selectedSize})
+                      IN STOCK · {currentStock} UNITS LEFT {isNoSizes ? '' : `(SIZE ${selectedSize})`}
                     </span>
                   );
                 })()}

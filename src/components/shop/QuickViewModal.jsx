@@ -16,8 +16,9 @@ export default function QuickViewModal({ product, onClose }) {
 
   useEffect(() => {
     if (!product) return;
-    setSelectedSize(product.sizes[0] || 'M');
-    setSelectedColor(product.colors[0] || { name: 'Default', hex: '#111111' });
+    const isNoSizes = product.hasSizes === false || !product.sizes || product.sizes.length === 0;
+    setSelectedSize(isNoSizes ? 'ONE SIZE' : (product.sizes[0] || 'M'));
+    setSelectedColor(product.colors?.[0] || { name: 'Default', hex: '#111111' });
     setSelectedImage(product.images[0] || '');
     setAdded(false);
   }, [product]);

@@ -7,6 +7,18 @@ const LOCAL_CART_KEY = 'genwin_cart_items';
 
 export function getProductSizeStock(product, size) {
   if (!product) return 0;
+
+  const isNoSizes = product.hasSizes === false || !product.sizes || product.sizes.length === 0;
+  const rawStock = product.stockQty !== undefined && product.stockQty !== null ? parseInt(product.stockQty) : 25;
+  const totalStock = isNaN(rawStock) ? 25 : Math.max(0, rawStock);
+
+  if (totalStock <= 0 || product.isSoldOut) return 0;
+
+  // Return full total stock for size-less products (bags, caps, accessories)
+  if (isNoSizes) {
+    return totalStock;
+  }
+
   const sizeStr = size || 'M';
 
   if (product.sizeQuantities && product.sizeQuantities[sizeStr] !== undefined && product.sizeQuantities[sizeStr] !== null) {
@@ -14,11 +26,6 @@ export function getProductSizeStock(product, size) {
   }
 
   const sizes = product.sizes && product.sizes.length > 0 ? product.sizes : ['S', 'M', 'L', 'XL', 'XXL'];
-  const rawStock = product.stockQty !== undefined && product.stockQty !== null ? parseInt(product.stockQty) : 25;
-  const totalStock = isNaN(rawStock) ? 25 : Math.max(0, rawStock);
-
-  if (totalStock <= 0 || product.isSoldOut) return 0;
-
   return Math.max(0, Math.floor(totalStock / sizes.length));
 }
 
