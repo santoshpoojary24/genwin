@@ -235,57 +235,54 @@ export default function Account() {
                 </button>
               </div>
             ) : (
-              <div className="space-y-4">
+              <div className="space-y-3">
                 {filteredUserOrders.map(order => {
                   return (
-                    <div key={order.id} className="bg-white rounded-xl border border-zinc-200 shadow-sm p-5 sm:p-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-5 transition-all">
+                    <div key={order.id} className="bg-white rounded-lg border border-zinc-200 shadow-xs p-3.5 sm:p-4 flex flex-row items-center justify-between gap-3 transition-all hover:border-zinc-300">
                       
-                      {/* Left Column: Order No, Status, Date, Items Info, Action Buttons */}
-                      <div className="space-y-3 flex-1 min-w-0">
-                        <div>
-                          <div className="flex flex-wrap items-center gap-2.5">
-                            <h4 className="font-bold text-base text-black">Order #{order.orderNumber}</h4>
-                            <span className={`px-2.5 py-0.5 rounded-full text-xs font-semibold ${STATUS_STYLE[order.status] || 'bg-zinc-100 text-zinc-600'}`}>
-                              {STATUS[order.status] || order.status}
-                            </span>
-                          </div>
-                          <p className="text-xs text-zinc-500 mt-1">
-                            Placed on {new Date(order.createdAt || order.date || Date.now()).toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' })}
-                            {' • '}Total: <strong className="text-black">₹{order.total}</strong>
-                          </p>
+                      {/* Left Side: Order Info & Actions */}
+                      <div className="space-y-1.5 flex-1 min-w-0">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <h4 className="font-bold text-sm text-black">Order #{order.orderNumber}</h4>
+                          <span className={`px-2 py-0.5 rounded-full text-[10px] font-semibold ${STATUS_STYLE[order.status] || 'bg-zinc-100 text-zinc-600'}`}>
+                            {STATUS[order.status] || order.status}
+                          </span>
                         </div>
 
-                        {/* Item Info Summary */}
-                        <div className="space-y-1 text-xs text-zinc-600 border-t border-zinc-100 pt-2">
+                        <p className="text-[11px] text-zinc-500">
+                          Placed {new Date(order.createdAt || order.date || Date.now()).toLocaleDateString('en-US', { day: 'numeric', month: 'short' })}
+                          {' • '}Total: <strong className="text-black">₹{order.total}</strong>
+                        </p>
+
+                        {/* Compact Item Summary */}
+                        <div className="text-[11px] text-zinc-600 truncate">
                           {order.items?.map((item, idx) => (
-                            <p key={idx} className="truncate">
-                              <strong className="text-black">{item.name}</strong> 
-                              {item.size && <span> (Size: {item.size})</span>}
-                              {item.quantity && <span> × {item.quantity}</span>}
-                              <span className="text-zinc-400 font-semibold ml-1.5">₹{item.unitPrice || item.price || item.basePrice}</span>
-                            </p>
+                            <span key={idx} className="mr-2 inline-block">
+                              <strong className="text-black font-semibold">{item.name}</strong> 
+                              {item.size && <span className="text-zinc-500"> ({item.size})</span>}
+                            </span>
                           ))}
                         </div>
 
-                        {/* Action Buttons */}
+                        {/* Compact Action Buttons */}
                         <div className="flex items-center gap-2 pt-1">
                           <button 
                             onClick={() => handleReorder(order)} 
-                            className="flex items-center gap-1.5 px-3.5 py-1.5 bg-zinc-100 hover:bg-zinc-200 text-black text-xs font-bold rounded-lg transition-colors uppercase tracking-wider"
+                            className="flex items-center gap-1 px-2.5 py-1 bg-zinc-100 hover:bg-zinc-200 text-black text-[10px] font-bold rounded transition-colors uppercase tracking-wider"
                           >
-                            <RotateCcw className="w-3.5 h-3.5" /> {reorderedId === order.id ? 'Added!' : 'Buy Again'}
+                            <RotateCcw className="w-3 h-3" /> {reorderedId === order.id ? 'Added!' : 'Buy Again'}
                           </button>
                           <Link 
                             to={`/order-success/${order.id}`} 
-                            className="flex items-center gap-1.5 px-4 py-1.5 bg-black hover:bg-zinc-800 text-white text-xs font-bold rounded-lg transition-colors uppercase tracking-wider"
+                            className="flex items-center gap-1 px-3 py-1 bg-black hover:bg-zinc-800 text-white text-[10px] font-bold rounded transition-colors uppercase tracking-wider"
                           >
-                            Track Order <ArrowRight className="w-3.5 h-3.5" />
+                            Track Order <ArrowRight className="w-3 h-3" />
                           </Link>
                         </div>
                       </div>
 
-                      {/* Right Column: Product Picture(s) right side of the order, clicking redirects to dress on website */}
-                      <div className="flex items-center gap-2 shrink-0 self-start sm:self-center">
+                      {/* Right Side: Product Picture Thumbnail (Strictly on the right side on both mobile & PC) */}
+                      <div className="flex items-center gap-1.5 shrink-0 ml-2">
                         {order.items?.map((item, idx) => {
                           const itemSlug = item.slug || item.productId || item.id;
                           const itemLink = itemSlug ? `/product/${itemSlug}` : '/shop';
@@ -295,15 +292,15 @@ export default function Account() {
                               key={idx} 
                               to={itemLink} 
                               title={`View ${item.name || 'garment'} on website`}
-                              className="group relative overflow-hidden rounded-lg border border-zinc-200 hover:border-black transition-all shadow-sm block bg-zinc-100 shrink-0"
+                              className="group relative overflow-hidden rounded-md border border-zinc-200 hover:border-black transition-all shadow-2xs block bg-zinc-100 shrink-0"
                             >
                               <img 
                                 src={item.image || 'https://images.unsplash.com/photo-1521572267360-ee0c2909d518?w=800&q=80'} 
                                 alt={item.name || 'Order Item'} 
-                                className="w-16 h-20 sm:w-20 sm:h-24 object-cover object-top group-hover:scale-105 transition-transform duration-300" 
+                                className="w-14 h-16 sm:w-16 sm:h-20 object-cover object-top group-hover:scale-105 transition-transform duration-300" 
                               />
-                              <div className="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                                <Eye className="w-4 h-4 text-white drop-shadow-md" />
+                              <div className="absolute inset-0 bg-black/25 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                                <Eye className="w-3.5 h-3.5 text-white drop-shadow-sm" />
                               </div>
                             </Link>
                           );
