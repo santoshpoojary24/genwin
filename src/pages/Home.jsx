@@ -341,10 +341,16 @@ function PromoSlider({ customAds = [] }) {
   );
 }
 
-/* ── Front & Center Scroll-Triggered Promo Modal ───────────────────────── */
+/* ── Front & Center Scroll-Triggered Promo Modal (One-Time Display) ───────── */
 function PopupPromoModal({ ads = [] }) {
   const [isOpen, setIsOpen] = useState(false);
-  const [dismissed, setDismissed] = useState(false);
+  const [dismissed, setDismissed] = useState(() => {
+    try {
+      return localStorage.getItem('genwin_promo_seen') === 'true';
+    } catch (_) {
+      return false;
+    }
+  });
 
   const popupAd = ads.find(a => a.active !== false && a.placement === 'popup') 
                || ads.find(a => a.active !== false && (a.badge || a.headline));
@@ -355,6 +361,9 @@ function PopupPromoModal({ ads = [] }) {
     const handleScroll = () => {
       if (window.scrollY > 350 && !dismissed) {
         setIsOpen(true);
+        try {
+          localStorage.setItem('genwin_promo_seen', 'true');
+        } catch (_) {}
       }
     };
 
@@ -367,6 +376,9 @@ function PopupPromoModal({ ads = [] }) {
   const handleClose = () => {
     setIsOpen(false);
     setDismissed(true);
+    try {
+      localStorage.setItem('genwin_promo_seen', 'true');
+    } catch (_) {}
   };
 
   const rawHeadline = popupAd.headline || popupAd.title || 'SPECIAL STORE DISCOUNT';
