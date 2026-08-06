@@ -11,7 +11,6 @@ export default function Footer() {
 
   const handleOpenPolicy = (key) => {
     setActivePolicyKey(key);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const handleSubscribe = (e) => {
