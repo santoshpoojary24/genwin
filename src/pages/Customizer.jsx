@@ -322,13 +322,13 @@ function PrintLayer({ items, activeId, setActiveId, printZone, onMove, onScale }
 /* ═══════════════════════════════════════════════════════════════
    Sticker Panel Emojis
 ═══════════════════════════════════════════════════════════════ */
-const STICKER_SETS = {
-  '🔥 Vibes': ['🔥','⚡','💎','👑','🌟','💯','🎯','🚀','🏆','💪','🤙','✌️','😈','🦋','🌊'],
-  '❤️ Love':  ['❤️','💜','🖤','🤍','💙','🧡','💛','💚','🩷','💕','💞','💝','😍','🥰','💋'],
-  '😂 Fun':   ['😂','🤣','😎','🥶','🤯','🫡','👻','💀','☠️','🤡','👾','🤖','👽','🦊','🐉'],
-  '🎨 Art':   ['🎨','🎭','🎪','🎬','🎵','🎸','🎹','🥁','🎤','🎧','🎮','🕹️','🎲','🃏','🎴'],
-  '🌿 Nature':['🌿','🍃','🌴','🌸','🌺','🌻','🌹','🦁','🐺','🦅','🌙','⭐','☀️','🌈','❄️'],
-};
+const STICKERS = [
+  '🔥','⚡','💎','👑','🌟','💯','🎯','🚀','🏆','💪',
+  '❤️','💜','🖤','🤍','💙','🧡','💛','💚','😍','💋',
+  '😂','😎','🥶','🤯','👻','💀','☠️','👾','🤖','🦊',
+  '🎨','🎵','🎸','🎮','🎤','🎧','🎭','🎬','🎲','🏆',
+  '🌿','🌴','🌸','🌺','🌙','⭐','☀️','🌈','❄️','🦁',
+];
 
 /* ═══════════════════════════════════════════════════════════════
    Main Customizer
@@ -366,7 +366,7 @@ export default function Customizer() {
   const [activeId, setActiveId] = useState(null);
 
   const [tool, setTool] = useState('sticker'); // 'text' | 'image' | 'sticker'
-  const [stickerSet, setStickerSet] = useState('🔥 Vibes');
+
 
   // Text tool state
   const [textInput, setTextInput] = useState('');
@@ -623,41 +623,23 @@ export default function Customizer() {
 
             {/* ══ STICKER TOOL ══ */}
             {tool === 'sticker' && (
-              <div className="space-y-4">
-                <div>
-                  <p className="text-[10px] text-zinc-500 uppercase tracking-widest mb-2">STICKER CATEGORY</p>
-                  <div className="flex flex-wrap gap-2">
-                    {Object.keys(STICKER_SETS).map(k => (
-                      <button
-                        key={k}
-                        onClick={() => setStickerSet(k)}
-                        className={`px-3 py-1.5 text-[10px] font-bold rounded-xl border transition-all ${stickerSet === k ? 'bg-violet-600 border-violet-500 text-white' : 'border-zinc-700 text-zinc-400 hover:border-zinc-500 hover:text-white'}`}
-                      >
-                        {k}
-                      </button>
-                    ))}
-                  </div>
+              <div className="space-y-3">
+                <p className="text-[10px] text-zinc-500 uppercase tracking-widest">
+                  TAP TO ADD TO {view === 'front' ? 'CHEST' : 'BACK'}
+                </p>
+                <div className="grid grid-cols-5 gap-2">
+                  {STICKERS.map((emoji, i) => (
+                    <button
+                      key={i}
+                      onClick={() => addSticker(emoji)}
+                      className="aspect-square bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 hover:border-violet-500 rounded-xl text-2xl flex items-center justify-center transition-all hover:scale-110 active:scale-95"
+                    >
+                      {emoji}
+                    </button>
+                  ))}
                 </div>
-
-                <div>
-                  <p className="text-[10px] text-zinc-500 uppercase tracking-widest mb-2">
-                    TAP TO ADD TO {view === 'front' ? 'CHEST' : 'BACK'}
-                  </p>
-                  <div className="grid grid-cols-5 gap-2">
-                    {STICKER_SETS[stickerSet].map((emoji, i) => (
-                      <button
-                        key={i}
-                        onClick={() => addSticker(emoji)}
-                        className="aspect-square bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 hover:border-violet-500 rounded-xl text-2xl flex items-center justify-center transition-all hover:scale-110 active:scale-95"
-                      >
-                        {emoji}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
                 <p className="text-[9px] text-zinc-600 text-center">
-                  Stickers print at your chosen size. Tap to add, drag to reposition.
+                  Tap to add · Drag on shirt to reposition
                 </p>
               </div>
             )}
@@ -732,20 +714,21 @@ export default function Customizer() {
             {tool === 'image' && (
               <div className="space-y-4">
                 <div
-                  className="border-2 border-dashed border-zinc-700 hover:border-violet-500 rounded-2xl p-10 flex flex-col items-center gap-3 cursor-pointer transition-colors"
+                  className="border-2 border-dashed border-zinc-700 hover:border-violet-500 rounded-2xl p-6 flex flex-col items-center gap-3 cursor-pointer transition-colors"
                   onClick={() => fileInputRef.current?.click()}
                 >
-                  <div className="w-14 h-14 bg-zinc-800 rounded-2xl flex items-center justify-center">
-                    <Upload className="w-7 h-7 text-zinc-500" />
+                  <div className="w-12 h-12 bg-zinc-800 rounded-2xl flex items-center justify-center">
+                    <Upload className="w-6 h-6 text-zinc-500" />
                   </div>
-                  <p className="text-sm text-zinc-300 font-bold text-center">Tap to upload your image</p>
-                  <p className="text-[10px] text-zinc-600 uppercase tracking-widest text-center">PNG with transparent background recommended</p>
+                  <p className="text-sm text-zinc-300 font-bold text-center">Tap to upload image</p>
+                  <p className="text-[10px] text-zinc-600 uppercase tracking-widest text-center">PNG with transparent background</p>
                 </div>
                 <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleImageUpload} />
+                {/* Fixed size note */}
                 <div className="bg-zinc-800/50 border border-zinc-700 rounded-xl p-3 text-[10px] text-zinc-500 space-y-1">
-                  <p>✅ PNG with clear/transparent background</p>
-                  <p>✅ High resolution (300 DPI) for best print quality</p>
-                  <p>✅ Max file size: 10 MB</p>
+                  <p>📐 Placed at fixed 80×80px on the shirt</p>
+                  <p>✅ PNG with transparent background recommended</p>
+                  <p>✅ Drag to reposition after placing</p>
                 </div>
               </div>
             )}
