@@ -339,6 +339,136 @@ function PromoSlider({ customAds = [] }) {
   );
 }
 
+/* ── Week's Top Picks Horizontal Slider Component ──────────────────────── */
+function TopPicksSlider({ products = [], onQuickView }) {
+  const containerRef = useRef(null);
+
+  const scrollLeft = () => {
+    if (containerRef.current) {
+      containerRef.current.scrollBy({ left: -320, behavior: 'smooth' });
+    }
+  };
+
+  const scrollRight = () => {
+    if (containerRef.current) {
+      containerRef.current.scrollBy({ left: 320, behavior: 'smooth' });
+    }
+  };
+
+  if (!products || products.length === 0) return null;
+
+  return (
+    <div className="relative group/slider">
+      {/* Desktop Navigation Arrows */}
+      <button
+        onClick={scrollLeft}
+        className="hidden md:flex absolute -left-4 top-1/2 -translate-y-1/2 z-20 w-10 h-10 rounded-full bg-white border border-zinc-300 text-black shadow-lg items-center justify-center hover:bg-black hover:text-white transition-all press"
+        aria-label="Previous Products"
+      >
+        <ChevronLeft className="w-5 h-5" />
+      </button>
+
+      <button
+        onClick={scrollRight}
+        className="hidden md:flex absolute -right-4 top-1/2 -translate-y-1/2 z-20 w-10 h-10 rounded-full bg-white border border-zinc-300 text-black shadow-lg items-center justify-center hover:bg-black hover:text-white transition-all press"
+        aria-label="Next Products"
+      >
+        <ChevronRight className="w-5 h-5" />
+      </button>
+
+      {/* Products Row */}
+      <div
+        ref={containerRef}
+        className="flex gap-4 overflow-x-auto no-scrollbar scroll-smooth pb-4 px-1 select-none"
+      >
+        {products.map((p) => (
+          <div key={p.id} className="w-[72vw] sm:w-64 md:w-72 shrink-0">
+            <ProductCard product={p} onQuickView={onQuickView} />
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+/* ── 2x3 Collection Matrix ─────────────────────────────────────────────── */
+function CollectionMatrix() {
+  const collections = [
+    { title: 'BEST SELLERS', slug: 'all', image: 'https://images.unsplash.com/photo-1521572267360-ee0c2909d518?w=600&q=80' },
+    { title: 'NEW LAUNCHES', slug: 'all', image: 'https://images.unsplash.com/photo-1576566588028-4147f3842f27?w=600&q=80' },
+    { title: 'SHIRTS COLLECTION', slug: 't-shirts', image: 'https://images.unsplash.com/photo-1588850561407-ed78c282e89b?w=600&q=80' },
+    { title: 'OVERSIZED COLLECTION', slug: 't-shirts', image: 'https://images.unsplash.com/photo-1503342217505-b0a15ec3261c?w=600&q=80' },
+    { title: 'WARDROBE STAPLES', slug: 'hoodies', image: 'https://images.unsplash.com/photo-1556905055-8f358a7a47b2?w=600&q=80' },
+    { title: 'BOTTOM WEAR', slug: 'jackets', image: 'https://images.unsplash.com/photo-1551028719-00167b16eac5?w=600&q=80' },
+  ];
+
+  return (
+    <div className="grid grid-cols-2 lg:grid-cols-2 gap-4">
+      {collections.map((col, idx) => (
+        <Link
+          key={idx}
+          to={`/shop?category=${col.slug}`}
+          className="group relative rounded-xl overflow-hidden border border-zinc-200 bg-zinc-950 aspect-[4/3] block shadow-sm hover:shadow-xl transition-all"
+        >
+          <img
+            src={col.image}
+            alt={col.title}
+            className="w-full h-full object-cover opacity-80 group-hover:scale-105 transition-transform duration-500"
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent flex items-end p-5">
+            <h3 className="font-display font-black text-white text-sm sm:text-lg uppercase tracking-tight leading-tight">
+              {col.title}
+            </h3>
+          </div>
+        </Link>
+      ))}
+    </div>
+  );
+}
+
+/* ── Talk of the Town Spotlight Card ───────────────────────────────────── */
+function TalkOfTheTownCard({ product }) {
+  if (!product) return null;
+
+  return (
+    <div className="bg-white border border-zinc-200 rounded-2xl p-6 sm:p-10 font-mono space-y-6 shadow-md max-w-xl mx-auto text-left">
+      <div className="rounded-xl overflow-hidden bg-zinc-950 aspect-[3/4] relative border border-zinc-900">
+        <img
+          src={product.images?.[0] || product.image || 'https://images.unsplash.com/photo-1503342217505-b0a15ec3261c?w=900&q=85'}
+          alt={product.name}
+          className="w-full h-full object-cover"
+        />
+        <div className="absolute top-3 left-3 bg-black text-white text-[9px] font-bold px-3 py-1 uppercase tracking-widest rounded-xs">
+          SPOTLIGHT DROP
+        </div>
+      </div>
+
+      <div className="space-y-3">
+        <h2 className="font-display font-black text-black uppercase text-2xl sm:text-3xl tracking-tight">
+          TALK OF THE TOWN
+        </h2>
+
+        <p className="font-bold text-xs uppercase text-zinc-700 tracking-wider">
+          Ancient Tribal Art × Modern Streetwear
+        </p>
+
+        <p className="text-xs text-zinc-500 leading-relaxed uppercase">
+          Meet the {product.name}. Set on a dark heavy canvas, this drop combines raw streetwear attitude with intricate artisan details. Built for those who wear art, not just clothes.
+        </p>
+
+        <div className="pt-2">
+          <Link
+            to={`/product/${product.slug || product.id}`}
+            className="w-full py-4 bg-black text-white font-extrabold text-xs uppercase tracking-widest hover:bg-zinc-800 transition-colors flex items-center justify-center gap-2 rounded-xl shadow-lg"
+          >
+            👉 CHECK IT OUT NOW
+          </Link>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 /* ── Front & Center Scroll-Triggered Promo Modal (One-Time Display) ───────── */
 function PopupPromoModal({ ads = [] }) {
   const [isOpen, setIsOpen] = useState(false);
@@ -723,73 +853,102 @@ export default function Home() {
         </div>
       </div>
 
-      {/* ══ 7. BESTSELLERS & DRESSES ═════════════════════════════════════ */}
-      <SR className="max-w-7xl mx-auto px-6 lg:px-12 mt-20 space-y-8">
-        <div className="flex items-end justify-between border-b border-zinc-200 pb-5">
+      {/* ══ 7. WEEK'S TOP PICKS (CAROUSEL MATCHING REFERENCE) ══════════════ */}
+      <SR className="max-w-7xl mx-auto px-6 lg:px-12 mt-20 space-y-6">
+        <div className="flex items-center justify-between border-b border-zinc-200 pb-4">
           <div>
-            <EyeBrow n="05" label="BESTSELLERS &amp; TRENDING DRESSES" />
-            <h2 className="font-display font-black text-black uppercase mt-2 text-2xl sm:text-4xl tracking-tight">
-              TOP APPAREL DROPS
+            <EyeBrow n="05" label="HANDPICKED TRENDING DROPS" />
+            <h2 className="font-display font-black text-black uppercase mt-1 text-2xl sm:text-3xl tracking-tight">
+              WEEK'S TOP PICKS
             </h2>
           </div>
-          <Link to="/shop"
-            className="underline-wipe font-mono text-[10px] uppercase tracking-widest text-zinc-500 hover:text-black flex items-center gap-1 transition-colors shrink-0">
-            Explore All <ArrowUpRight className="w-3 h-3" />
+          <Link to="/shop" className="underline-wipe font-mono text-[10px] uppercase tracking-widest text-zinc-500 hover:text-black flex items-center gap-1 transition-colors shrink-0">
+            View All <ArrowUpRight className="w-3 h-3" />
           </Link>
         </div>
 
         {loading ? (
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-            {[1, 2, 3, 4].map(n => <div key={n} className="skeleton border border-zinc-200" style={{ aspectRatio: '3/4' }} />)}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            {[1, 2, 3, 4].map(n => <div key={n} className="skeleton border border-zinc-200 rounded-xl" style={{ aspectRatio: '3/4' }} />)}
+          </div>
+        ) : (
+          <TopPicksSlider products={products.slice(0, 8)} onQuickView={setQv} />
+        )}
+      </SR>
+
+      {/* ══ 8. NEW ARRIVALS GRID (MATCHING REFERENCE) ════════════════════ */}
+      <SR className="max-w-7xl mx-auto px-6 lg:px-12 mt-20 space-y-6">
+        <div className="flex items-center justify-between border-b border-zinc-200 pb-4">
+          <div>
+            <EyeBrow n="06" label="JUST DROPPED IN STORE" />
+            <h2 className="font-display font-black text-black uppercase mt-1 text-2xl sm:text-3xl tracking-tight">
+              NEW ARRIVALS
+            </h2>
+          </div>
+          <Link to="/shop" className="underline-wipe font-mono text-[10px] uppercase tracking-widest text-zinc-500 hover:text-black flex items-center gap-1 transition-colors shrink-0">
+            Explore Drops <ArrowUpRight className="w-3 h-3" />
+          </Link>
+        </div>
+
+        {loading ? (
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            {[1, 2, 3, 4].map(n => <div key={n} className="skeleton border border-zinc-200 rounded-xl" style={{ aspectRatio: '3/4' }} />)}
           </div>
         ) : (
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-            {bestsellers.map((p) => (
-              <div key={p.id} className="w-full">
-                <ProductCard product={p} onQuickView={setQv} />
-              </div>
+            {products.slice(0, 4).map(p => (
+              <ProductCard key={p.id} product={p} onQuickView={setQv} />
             ))}
           </div>
         )}
       </SR>
 
-      {/* ══ 8. EDITORIAL BANNER ══════════════════════════════════════════ */}
+      {/* ══ 9. CULTURAL HERITAGE EDITORIAL BANNER (MATCHING REFERENCE) ═══ */}
       <SR className="max-w-7xl mx-auto px-6 lg:px-12 mt-20">
-        <div className="grid lg:grid-cols-2 border border-zinc-200 shadow-sm">
-          {/* Left: image */}
-          <div className="img-zoom border-b lg:border-b-0 lg:border-r border-zinc-200 relative overflow-hidden bg-black" style={{ aspectRatio: '4/3', minHeight: 280 }}>
-            <img
-              src="https://images.unsplash.com/photo-1620799140408-edc6dcb6d633?w=900&q=85"
-              alt="Fleece hoodie collection"
-              className="w-full h-full object-cover opacity-90"
-              loading="lazy"
-            />
-          </div>
-          {/* Right: copy */}
-          <div className="bg-zinc-50 p-8 sm:p-14 flex flex-col justify-between space-y-6">
-            <div>
-              <span className="section-num text-zinc-500 font-bold">MATERIAL SPOTLIGHT</span>
-              <h2 className="font-display font-black text-black uppercase mt-4 text-3xl sm:text-4xl tracking-tight leading-none">
-                380 GSM<br />FLEECE<br />HOODIE.
-              </h2>
-              <p className="font-mono text-zinc-500 text-xs uppercase tracking-wide mt-5 leading-relaxed max-w-xs">
-                Ultra-soft fleece lining. Kangaroo pocket. Ribbed cuffs. Built for cold-weather comfort — and turning heads.
-              </p>
-            </div>
-            <div className="space-y-4">
-              {['Available in S–XXL', '4 colourways', 'DTG & embroidery ready'].map(f => (
-                <div key={f} className="flex items-center gap-3 font-mono text-[11px] uppercase tracking-widest">
-                  <span className="w-1.5 h-1.5 bg-black shrink-0" />
-                  <span className="text-zinc-700">{f}</span>
-                </div>
-              ))}
-              <Link to="/shop?category=hoodies"
-                className="btn-magnetic press inline-flex items-center gap-2 mt-4 px-8 py-3.5 bg-black text-white font-mono font-black text-xs uppercase tracking-widest shadow-md">
-                SHOP HOODIES <ArrowRight className="w-3.5 h-3.5" />
+        <div className="relative rounded-2xl overflow-hidden bg-black text-white border border-zinc-800 shadow-2xl p-8 sm:p-16 flex flex-col justify-end min-h-[360px] sm:min-h-[460px]">
+          <img
+            src="https://images.unsplash.com/photo-1521572267360-ee0c2909d518?w=1200&q=80"
+            alt="Cultural Heritage Drop"
+            className="absolute inset-0 w-full h-full object-cover opacity-50"
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent" />
+
+          <div className="relative z-10 space-y-4 max-w-xl text-left font-mono">
+            <span className="px-3 py-1 bg-white text-black text-[9px] font-bold uppercase tracking-widest inline-block rounded-xs">
+              HERITAGE ICONS
+            </span>
+            <h2 className="font-display font-black text-3xl sm:text-5xl uppercase tracking-tight leading-tight">
+              CULTURAL ARTISAN DROPS
+            </h2>
+            <p className="text-xs text-zinc-300 uppercase leading-relaxed max-w-md">
+              Intricate Indian motifs, ancient symbols, and heavyweight combed cotton streetwear blends.
+            </p>
+            <div className="pt-2">
+              <Link
+                to="/shop"
+                className="px-8 py-3.5 bg-white text-black font-extrabold text-xs uppercase tracking-widest hover:bg-zinc-200 transition-colors inline-flex items-center gap-2 rounded-lg shadow-lg"
+              >
+                EXPLORE COLLECTION →
               </Link>
             </div>
           </div>
         </div>
+      </SR>
+
+      {/* ══ 10. 2x3 COLLECTION MATRIX GRID (MATCHING REFERENCE) ═════════ */}
+      <SR className="max-w-7xl mx-auto px-6 lg:px-12 mt-20 space-y-6">
+        <div className="flex items-center justify-between border-b border-zinc-200 pb-4">
+          <EyeBrow n="07" label="FEATURED STORE COLLECTIONS" />
+          <Link to="/shop" className="underline-wipe font-mono text-[10px] uppercase tracking-widest text-zinc-500 hover:text-black flex items-center gap-1 transition-colors">
+            Browse All <ArrowUpRight className="w-3 h-3" />
+          </Link>
+        </div>
+        <CollectionMatrix />
+      </SR>
+
+      {/* ══ 11. TALK OF THE TOWN SPOTLIGHT CARD (MATCHING REFERENCE) ═════ */}
+      <SR className="max-w-7xl mx-auto px-6 lg:px-12 mt-20 text-center">
+        <TalkOfTheTownCard product={products[0]} />
       </SR>
 
       {/* ══ 9. SOCIAL PROOF / REVIEWS ════════════════════════════════════ */}
