@@ -80,6 +80,10 @@ export default function Shop() {
   };
 
   const filtered = products.filter(p => {
+    // Filter out sold-out items
+    const isSoldOut = (p.stockQty !== undefined && p.stockQty <= 0) || p.isSoldOut;
+    if (isSoldOut) return false;
+
     if (selectedCategory !== 'all') {
       const targetSlug = selectedCategory.toLowerCase();
       const prodCat = (p.category || '').toLowerCase();

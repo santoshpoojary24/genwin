@@ -610,9 +610,11 @@ export default function Home() {
     };
   }, []);
 
+  const availableProducts = products.filter(p => !((p.stockQty !== undefined && p.stockQty <= 0) || p.isSoldOut));
+
   const topPicksList = (() => {
-    const list = [...products.filter(p => p.isBestseller || p.rating >= 4.5)];
-    products.forEach(p => {
+    const list = [...availableProducts.filter(p => p.isBestseller || p.rating >= 4.5)];
+    availableProducts.forEach(p => {
       if (list.length < 10 && !list.some(item => item.id === p.id)) {
         list.push(p);
       }
@@ -621,8 +623,8 @@ export default function Home() {
   })();
 
   const newArrivalsList = (() => {
-    const list = [...products.filter(p => p.isNew)];
-    [...products].reverse().forEach(p => {
+    const list = [...availableProducts.filter(p => p.isNew)];
+    [...availableProducts].reverse().forEach(p => {
       if (list.length < 10 && !list.some(item => item.id === p.id)) {
         list.push(p);
       }
