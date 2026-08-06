@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import {
   ArrowRight, ArrowUpRight, ChevronLeft, ChevronRight, Tag, Sparkles, Zap, ShieldCheck,
-  Eye, Heart, Flame, Clock, Truck, Star, RefreshCw, Mail, Phone, Instagram, MessageCircle
+  Eye, Heart, Flame, Clock, Truck, Star, RefreshCw, Mail, Phone, Instagram, MessageCircle, X
 } from 'lucide-react';
 import { FirebaseService } from '../services/firebaseService';
 import { INITIAL_PRODUCTS, INITIAL_CATEGORIES } from '../data/seedData';
@@ -184,10 +184,10 @@ function ModelStrip({ onSelectGarment }) {
 
 /* ── Promo carousel ────────────────────────────────────────────────────── */
 const DEFAULT_ADS = [
-  { id: 1, eyebrow: 'LIMITED TIME', h1: '20% OFF', h2: 'SITE-WIDE.', body: 'Code GENWIN20 at checkout. Orders above ₹999.', cta: 'CLAIM OFFER', to: '/shop' },
-  { id: 2, eyebrow: 'NEW ARRIVAL', h1: 'HEAVYWEIGHT', h2: 'CANVAS TEE.', body: '240 GSM premium combed cotton. 12 washed colourways.', cta: 'SHOP NOW', to: '/shop?category=t-shirts' },
-  { id: 3, eyebrow: 'FREE SHIPPING', h1: 'ORDERS', h2: 'ABOVE ₹999.', body: 'All-India express delivery. Same-day dispatch before 2 PM.', cta: 'START SHOPPING', to: '/shop' },
-  { id: 4, eyebrow: 'COLLEGE DROPS', h1: 'BULK', h2: 'PRICING.', body: '10+ pieces for clubs, teams, and events. Special rates apply.', cta: 'GET QUOTE', to: '/customizer' },
+  { id: 1, eyebrow: 'LIMITED TIME', h1: '20% OFF', h2: 'SITE-WIDE.', body: 'Code GENWIN20 at checkout. Orders above ₹999.', cta: 'CLAIM OFFER', to: '/shop', image: 'https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=1600&q=80' },
+  { id: 2, eyebrow: 'NEW ARRIVAL', h1: 'HEAVYWEIGHT', h2: 'CANVAS TEE.', body: '240 GSM premium combed cotton. 12 washed colourways.', cta: 'SHOP NOW', to: '/shop?category=t-shirts', image: 'https://images.unsplash.com/photo-1503342217505-b0a15ec3261c?w=1600&q=80' },
+  { id: 3, eyebrow: 'FREE SHIPPING', h1: 'ORDERS', h2: 'ABOVE ₹999.', body: 'All-India express delivery. Same-day dispatch before 2 PM.', cta: 'START SHOPPING', to: '/shop', image: 'https://images.unsplash.com/photo-1489987707025-afc232f7ea0f?w=1600&q=80' },
+  { id: 4, eyebrow: 'COLLEGE DROPS', h1: 'BULK', h2: 'PRICING.', body: '10+ pieces for clubs, teams, and events. Special rates apply.', cta: 'GET QUOTE', to: '/customizer', image: 'https://images.unsplash.com/photo-1551028719-00167b16eac5?w=1600&q=80' },
 ];
 
 function PromoSlider({ customAds = [] }) {
@@ -286,6 +286,51 @@ function PromoSlider({ customAds = [] }) {
   );
 }
 
+/* ── Popup Promo ───────────────────────────────────────────────────────── */
+function PopupPromo({ ad }) {
+  const [open, setOpen] = useState(false);
+  useEffect(() => {
+    // Only show popup once per session
+    const shown = sessionStorage.getItem('promo_popup_shown');
+    if (!shown && ad) {
+      const t = setTimeout(() => setOpen(true), 1500); // delay 1.5s
+      return () => clearTimeout(t);
+    }
+  }, [ad]);
+
+  if (!open || !ad) return null;
+
+  const close = () => {
+    setOpen(false);
+    sessionStorage.setItem('promo_popup_shown', 'true');
+  };
+
+  return (
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+      <div className="absolute inset-0 bg-black/80 backdrop-blur-sm" onClick={close} />
+      <div className="relative w-full max-w-lg bg-zinc-950 border border-zinc-800 shadow-2xl overflow-hidden flex flex-col sm:flex-row animate-fade-up">
+        <button onClick={close} className="absolute top-3 right-3 z-20 w-8 h-8 flex items-center justify-center bg-black/50 text-white hover:bg-black transition-colors">
+          <X className="w-4 h-4" />
+        </button>
+        {ad.image && (
+          <div className="w-full sm:w-2/5 h-48 sm:h-auto relative shrink-0">
+            <img src={ad.image} alt="" className="w-full h-full object-cover" />
+            <div className="absolute inset-0 bg-gradient-to-t from-zinc-950 via-transparent to-transparent sm:bg-gradient-to-r" />
+          </div>
+        )}
+        <div className="p-8 sm:p-10 flex-1 flex flex-col justify-center text-white relative z-10">
+          <span className="text-[10px] font-bold text-emerald-400 uppercase tracking-widest mb-2">{ad.badge || 'SPECIAL OFFER'}</span>
+          <h3 className="font-display font-black text-2xl uppercase leading-none mb-3">{ad.headline || ad.title}</h3>
+          <p className="text-zinc-400 text-xs leading-relaxed mb-6">{ad.sub || ad.subtitle}</p>
+          <Link to={ad.link || ad.linkUrl || '/shop'} onClick={close} className="btn-magnetic px-6 py-3 bg-white text-black font-black text-xs uppercase tracking-widest text-center hover:bg-zinc-200 transition-colors">
+            {ad.cta || ad.linkText || 'EXPLORE NOW'}
+          </Link>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 /* ══════════════════════════════════════════════════════
    HOME PAGE
    ══════════════════════════════════════════════════════ */
@@ -327,8 +372,11 @@ export default function Home() {
     }
   };
 
+  const popupAd = ads.find(a => a.active !== false && a.placement === 'popup');
+
   return (
     <div className="page-enter font-mono">
+      <PopupPromo ad={popupAd} />
 
       {/* ══ 1. HERO SECTION WITH ANIMATED DRESS SHOWCASE ══════════════════ */}
       <section className="relative bg-black min-h-[92vh] flex flex-col justify-between overflow-hidden">
