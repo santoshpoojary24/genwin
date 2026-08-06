@@ -481,30 +481,92 @@ export const FirebaseService = {
 
   /** 4. Categories Collection */
   async getCategories() {
-    try {
-      const snap = await getDocs(collection(db, 'categories'));
-      const remote = snap.docs.map(d => ({
-        id: d.id,
-        ...d.data(),
-        isFeatured: d.data().isFeatured ?? true,
-        description: d.data().description || 'Premium heavyweight streetwear collection.',
-      }));
-      ls.set(KEYS.categories, remote);
-      return remote;
-    } catch (_) {}
+    let cloudCats = [];
+    const catMap = new Map();
 
-    return ls.get(KEYS.categories, []).map(c => ({
-      ...c,
-      isFeatured: c.isFeatured ?? true,
-      description: c.description || 'Premium heavyweight streetwear collection.',
-    }));
+    try {
+      const snap = await withTimeout(getDocs(collection(db, 'categories')), 5000);
+      if (!snap.empty) {
+        snap.docs.forEach(d => {
+          const item = { id: d.id, ...d.data() };
+          const img = item.image || item.banner || item.imageUrl || item.bannerUrl || '';
+          const normalized = {
+            ...item,
+            image: img,
+            banner: img,
+            imageUrl: img,
+            isFeatured: item.isFeatured ?? true,
+            description: item.description || 'Premium heavyweight streetwear collection.',
+          };
+          const key = normalized.slug || normalized.id;
+          if (key) catMap.set(key.toString(), normalized);
+        });
+      }
+    } catch (err) {
+      console.error("Firebase Firestore getCategories error:", err);
+    }
+
+    if (rtdb) {
+      try {
+        const rtdbSnap = await withTimeout(get(child(ref(rtdb), 'categories')), 5000);
+        if (rtdbSnap.exists()) {
+          const val = rtdbSnap.val();
+          const list = Array.isArray(val) ? val : Object.values(val);
+          list.forEach(item => {
+            if (item) {
+              const img = item.image || item.banner || item.imageUrl || item.bannerUrl || '';
+              const normalized = {
+                ...item,
+                image: img,
+                banner: img,
+                imageUrl: img,
+                isFeatured: item.isFeatured ?? true,
+                description: item.description || 'Premium heavyweight streetwear collection.',
+              };
+              const key = normalized.slug || normalized.id;
+              if (key) {
+                const existing = catMap.get(key.toString());
+                catMap.set(key.toString(), { ...existing, ...normalized });
+              }
+            }
+          });
+        }
+      } catch (err) {
+        console.error("Firebase RTDB getCategories error:", err);
+      }
+    }
+
+    if (catMap.size > 0) {
+      cloudCats = Array.from(catMap.values());
+      ls.set(KEYS.categories, cloudCats);
+      try { localStorage.setItem('genwin_categories', JSON.stringify(cloudCats)); } catch (_) {}
+      return cloudCats;
+    }
+
+    const localFallback = ls.get(KEYS.categories, ls.get('genwin_categories', []));
+    return (localFallback || []).map(c => {
+      const img = c.image || c.banner || c.imageUrl || c.bannerUrl || '';
+      return {
+        ...c,
+        image: img,
+        banner: img,
+        imageUrl: img,
+        isFeatured: c.isFeatured ?? true,
+        description: c.description || 'Premium heavyweight streetwear collection.',
+      };
+    });
   },
 
   async saveCategory(cat) {
     const id = cat.id || 'cat_' + Date.now();
+    const catImage = cat.image || cat.banner || cat.imageUrl || cat.bannerUrl || '';
     const payload = {
       ...cat,
       id,
+      image: catImage,
+      banner: catImage,
+      imageUrl: catImage,
+      bannerUrl: catImage,
       slug: cat.slug || cat.name.toLowerCase().replace(/[^a-z0-9]+/g, '-'),
       isFeatured: cat.isFeatured ?? true,
       description: cat.description || 'Premium heavyweight streetwear collection.',
@@ -518,7 +580,65 @@ export const FirebaseService = {
       ? current.map(c => (c.id === id || c.slug === payload.slug) ? payload : c)
       : [...current, payload];
     ls.set(KEYS.categories, updated);
+    try { localStorage.setItem('genwin_categories', JSON.stringify(updated)); } catch (_) {}
     return payload;
+  },
+
+  subscribeToCategories(callback) {
+    if (!callback) return () => {};
+
+    this.getCategories().then(cats => {
+      if (cats && cats.length > 0) callback(cats);
+    }).catch(() => {});
+
+    const unsubFS = onSnapshot(collection(db, 'categories'), (snap) => {
+      if (!snap.empty) {
+        const fsCats = snap.docs.map(d => {
+          const item = { id: d.id, ...d.data() };
+          const img = item.image || item.banner || item.imageUrl || item.bannerUrl || '';
+          return {
+            ...item,
+            image: img,
+            banner: img,
+            imageUrl: img,
+            isFeatured: item.isFeatured ?? true,
+            description: item.description || 'Premium heavyweight streetwear collection.',
+          };
+        });
+        ls.set(KEYS.categories, fsCats);
+        try { localStorage.setItem('genwin_categories', JSON.stringify(fsCats)); } catch (_) {}
+        callback(fsCats);
+      }
+    }, () => {});
+
+    let unsubRTDB = () => {};
+    if (rtdb) {
+      unsubRTDB = onValue(ref(rtdb, 'categories'), (snapshot) => {
+        if (snapshot.exists()) {
+          const val = snapshot.val();
+          const list = Array.isArray(val) ? val : Object.values(val);
+          const valid = list.filter(Boolean).map(item => {
+            const img = item.image || item.banner || item.imageUrl || item.bannerUrl || '';
+            return {
+              ...item,
+              image: img,
+              banner: img,
+              imageUrl: img,
+              isFeatured: item.isFeatured ?? true,
+              description: item.description || 'Premium heavyweight streetwear collection.',
+            };
+          });
+          ls.set(KEYS.categories, valid);
+          try { localStorage.setItem('genwin_categories', JSON.stringify(valid)); } catch (_) {}
+          callback(valid);
+        }
+      }, () => {});
+    }
+
+    return () => {
+      try { unsubFS(); } catch (_) {}
+      try { if (typeof unsubRTDB === 'function') unsubRTDB(); } catch (_) {}
+    };
   },
 
   async deleteCategory(id) {
@@ -527,6 +647,7 @@ export const FirebaseService = {
     const current = ls.get(KEYS.categories, []);
     const updated = current.filter(c => c.id !== id && c.slug !== id);
     ls.set(KEYS.categories, updated);
+    try { localStorage.setItem('genwin_categories', JSON.stringify(updated)); } catch (_) {}
   },
 
   /** 5. Coupons */

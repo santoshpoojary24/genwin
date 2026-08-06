@@ -482,6 +482,14 @@ export default function Home() {
         setAds(a || []);
       })
       .finally(() => setLoading(false));
+
+    const unsubCats = FirebaseService.subscribeToCategories((liveCats) => {
+      if (liveCats && liveCats.length > 0) setCategories(liveCats);
+    });
+
+    return () => {
+      if (typeof unsubCats === 'function') unsubCats();
+    };
   }, []);
 
   const filteredBestsellers = products.filter(p => p.isBestseller || p.rating >= 4.5);
@@ -674,30 +682,33 @@ export default function Home() {
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 stagger">
           {categories.length === 0
             ? [1, 2, 3, 4].map(n => <div key={n} className="skeleton sr" style={{ aspectRatio: '3/4' }} />)
-            : categories.map((cat, i) => (
-              <Link key={cat.id} to={`/shop?category=${cat.slug}`}
-                className="garment-card-gpu group relative border border-zinc-200 overflow-hidden block bg-black shadow-sm hover:shadow-xl"
-                style={{ aspectRatio: '3/4' }}>
-                <img src={cat.image} alt={cat.name} loading="lazy"
-                  className="garment-img-zoom w-full h-full object-cover opacity-90" />
-                {/* Hover overlay */}
-                <div className="absolute inset-0 bg-black/30 group-hover:bg-black/60 transition-colors duration-300 flex flex-col justify-end p-5">
-                  <div className="translate-y-3 group-hover:translate-y-0 transition-transform duration-300 space-y-1">
-                    <h3 className="font-display font-black text-white text-sm sm:text-base uppercase leading-tight">{cat.name}</h3>
-                    <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pt-1">
-                      <span className="font-mono text-[9px] font-bold text-white uppercase tracking-widest">EXPLORE CATEGORY</span>
-                      <ArrowRight className="w-3.5 h-3.5 text-white" />
+            : categories.map((cat, i) => {
+                const catImg = cat.image || cat.banner || cat.imageUrl || cat.bannerUrl || cat.heroImage || 'https://images.unsplash.com/photo-1521572267360-ee0c2909d518?w=800&q=80';
+                return (
+                  <Link key={cat.id || cat.slug || i} to={`/shop?category=${cat.slug}`}
+                    className="garment-card-gpu group relative border border-zinc-200 overflow-hidden block bg-black shadow-sm hover:shadow-xl"
+                    style={{ aspectRatio: '3/4' }}>
+                    <img src={catImg} alt={cat.name || 'Category'} loading="lazy"
+                      className="garment-img-zoom w-full h-full object-cover opacity-90" />
+                    {/* Hover overlay */}
+                    <div className="absolute inset-0 bg-black/30 group-hover:bg-black/60 transition-colors duration-300 flex flex-col justify-end p-5">
+                      <div className="translate-y-3 group-hover:translate-y-0 transition-transform duration-300 space-y-1">
+                        <h3 className="font-display font-black text-white text-sm sm:text-base uppercase leading-tight">{cat.name}</h3>
+                        <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pt-1">
+                          <span className="font-mono text-[9px] font-bold text-white uppercase tracking-widest">EXPLORE CATEGORY</span>
+                          <ArrowRight className="w-3.5 h-3.5 text-white" />
+                        </div>
+                      </div>
                     </div>
-                  </div>
-                </div>
-                {/* Always-visible label */}
-                <div className="absolute top-3 left-3">
-                  <span className="tag text-white border-white/40 bg-black/60 backdrop-blur-sm font-mono text-[9px]">
-                    {cat.name.split('&')[0].trim().toUpperCase()}
-                  </span>
-                </div>
-              </Link>
-            ))
+                    {/* Always-visible label */}
+                    <div className="absolute top-3 left-3">
+                      <span className="tag text-white border-white/40 bg-black/60 backdrop-blur-sm font-mono text-[9px]">
+                        {(cat.name || 'CATEGORY').split('&')[0].trim().toUpperCase()}
+                      </span>
+                    </div>
+                  </Link>
+                );
+              })
           }
         </div>
       </SR>
