@@ -37,7 +37,7 @@ export default function Footer() {
     },
     refund: {
       title: '7-DAY REPLACEMENT & REFUND POLICY',
-      body: `We offer a 7-day hassle-free replacement for size changes or transit damages. To initiate a return or exchange, navigate to your Account page or contact ${settings.supportEmail} with your GW- order number.`
+      body: `Standard items are eligible for a 7-day hassle-free replacement for size changes or damage. NOTE: Custom print-on-demand items designed in our customizer studio are manufactured uniquely for you and are NOT eligible for returns, refunds, or exchanges unless they arrive physically damaged or have a manufacturing defect.`
     },
     contact: {
       title: 'CONTACT SUPPORT',
@@ -53,7 +53,7 @@ export default function Footer() {
         <div className="max-w-7xl mx-auto px-6 lg:px-12 py-8 grid grid-cols-1 sm:grid-cols-3 gap-6">
           {[
             { icon: Truck,      title: 'FREE SHIPPING',    body: `All-India express on orders above ₹${settings.freeShippingThreshold || 999}` },
-            { icon: RefreshCw,  title: '7-DAY RETURNS',    body: 'Hassle-free size exchange & replacement' },
+            { icon: RefreshCw,  title: '7-DAY RETURNS',    body: 'Size exchange & replacements (non-custom orders)' },
             { icon: Shield,     title: 'SECURE PAYMENTS',  body: 'UPI, Cards, & Cash on Delivery accepted' },
           ].map(({ icon: Icon, title, body }) => (
             <div key={title} className="flex items-center gap-4">

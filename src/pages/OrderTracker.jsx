@@ -64,7 +64,8 @@ export default function OrderTracker() {
   const isCancelled = order.status === 'cancelled';
   const isReturnFlow = ['return_requested', 'return_picked', 'refund_processed'].includes(order.status);
   const canCancel = ['placed', 'confirmed', 'packed'].includes(order.status);
-  const canReturn = ['shipped', 'out_for_delivery', 'delivered'].includes(order.status);
+  const hasCustomized = order.items?.some(item => item.customization);
+  const canReturn = ['shipped', 'out_for_delivery', 'delivered'].includes(order.status) && !hasCustomized;
 
   const currentSteps = isReturnFlow ? RETURN_STEPS : STATUS_STEPS;
   const currentIdx = currentSteps.findIndex(s => s.id === order.status);
@@ -376,6 +377,12 @@ export default function OrderTracker() {
               >
                 <RotateCcw className="w-4 h-4" /> REQUEST RETURN / EXCHANGE
               </button>
+            )}
+
+            {hasCustomized && (
+              <div className="bg-zinc-50 border border-zinc-200 text-zinc-600 p-4 rounded-xl text-[10px] font-semibold uppercase leading-relaxed text-center font-mono">
+                🚫 Returns / exchanges are disabled because this order contains custom-designed print items manufactured to order. Refer to our Returns Policy.
+              </div>
             )}
 
             <a

@@ -234,15 +234,20 @@ export default function Login() {
 
             {/* Tab 3: Refund & Returns Policy */}
             {policyTab === 'refund' && (
-              <div className="space-y-4 text-xs leading-relaxed text-zinc-700 animate-fade-in">
+              <div className="space-y-4 text-xs leading-relaxed text-zinc-700 animate-fade-in font-mono">
                 <h4 className="font-bold text-black text-sm uppercase">1. 7-DAY REPLACEMENT GUARANTEE</h4>
                 <p>
-                  If you receive a defective item or wrong garment size, you may request a hassle-free replacement within 7 days of delivery through our Customer Support portal.
+                  If you receive a defective item or wrong garment size on standard catalog orders, you may request a replacement within 7 days of delivery.
                 </p>
 
-                <h4 className="font-bold text-black text-sm uppercase">2. REFUND PROCESSING</h4>
+                <h4 className="font-bold text-red-600 text-sm uppercase">2. CUSTOM PRINT POLICY (EXCLUSION)</h4>
+                <p className="font-semibold text-zinc-900 bg-zinc-50 border border-zinc-200 p-3 rounded-lg">
+                  ⚠️ Please Note: Custom-designed print-on-demand items created in the customizer studio are manufactured uniquely for you. Therefore, they are NOT eligible for returns, size exchanges, or refunds unless there is a physical manufacturing defect or transit damage.
+                </p>
+
+                <h4 className="font-bold text-black text-sm uppercase">3. REFUND PROCESSING</h4>
                 <p>
-                  Approved refunds are credited back to your original payment method (UPI account or Debit/Credit card) within 3-5 business days following garment inspection at our warehouse.
+                  Approved refunds are credited back to your original payment method (UPI account or Debit/Credit card) within 3-5 business days following garment inspection.
                 </p>
               </div>
             )}

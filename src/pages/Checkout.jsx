@@ -53,20 +53,21 @@ export default function Checkout() {
   });
 
   const { settings } = useSettings();
+  const hasCustomizedItem = cartItems.some(item => item.customization);
   const availableMethods = [
     ...(settings?.upiEnabled !== false ? [{ value: 'upi', label: 'UPI (GPay / PhonePe / Paytm)', sub: 'Fastest — scan or enter VPA', badge: 'RECOMMENDED' }] : []),
-    ...(settings?.codEnabled !== false ? [{ value: 'cod', label: 'Cash on Delivery', sub: 'Pay cash or UPI at doorstep', badge: null }] : []),
+    ...((settings?.codEnabled !== false && !hasCustomizedItem) ? [{ value: 'cod', label: 'Cash on Delivery', sub: 'Pay cash or UPI at doorstep', badge: null }] : []),
     ...(settings?.cardEnabled !== false ? [{ value: 'card', label: 'Credit / Debit Card', sub: 'Visa, MasterCard, RuPay', badge: null }] : []),
   ];
 
-  const [paymentMethod, setPaymentMethod] = useState(availableMethods.length > 0 ? availableMethods[0].value : 'cod');
+  const [paymentMethod, setPaymentMethod] = useState(availableMethods.length > 0 ? availableMethods[0].value : 'upi');
   
   // Ensure selected method is always valid
   React.useEffect(() => {
     if (availableMethods.length > 0 && !availableMethods.find(m => m.value === paymentMethod)) {
       setPaymentMethod(availableMethods[0].value);
     }
-  }, [settings]);
+  }, [settings, hasCustomizedItem]);
 
   const [submitting, setSubmitting] = useState(false);
 
@@ -375,6 +376,12 @@ export default function Checkout() {
                 )}
               </label>
             ))}
+
+            {hasCustomizedItem && (
+              <div className="bg-amber-50 border border-amber-200 text-amber-850 p-4 rounded-xl text-[10px] font-semibold uppercase leading-relaxed font-mono">
+                ⚠️ Cash on Delivery (COD) is disabled because your order contains a custom-designed print item (manufactured exclusively for you). Please select UPI or Card to pre-pay.
+              </div>
+            )}
 
             {step === 2 && (
               <button type="button" onClick={() => setStep(1)}
