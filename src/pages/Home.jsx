@@ -509,11 +509,7 @@ function HomepageHeroBanner({ customAds = [] }) {
             </div>
           )}
 
-          <div className="pt-6 border-t border-zinc-900 grid grid-cols-3 gap-6">
-            <Stat value={240} suffix=" GSM" label="HEAVY COTTON" delay={0} />
-            <Stat value={50} suffix="+" label="WASH PROOF" delay={80} />
-            <Stat value={49} suffix=" ★" label="RATING / 5" delay={160} />
-          </div>
+
         </div>
       </div>
     </SR>
