@@ -391,7 +391,8 @@ export default function Customizer() {
   const [croppingFile, setCroppingFile] = useState(null);
   const [croppingImageSrc, setCroppingImageSrc] = useState(null);
   const [cropShape, setCropShape] = useState('original');
-  const [cropZoom, setCropZoom] = useState(1.0);
+  const [cropParams, setCropParams] = useState({ x: 15, y: 15, w: 70, h: 70 });
+  const [cropRotation, setCropRotation] = useState(0);
 
   const selectedSizeStock = product ? getProductSizeStock(product, selectedSize) : 0;
   const isSelectedSizeOut = selectedSizeStock <= 0;
@@ -480,40 +481,112 @@ export default function Customizer() {
       setCroppingFile(file);
       setCroppingImageSrc(ev.target.result);
       setCropShape('original');
-      setCropZoom(1.0);
+      setCropParams({ x: 15, y: 15, w: 70, h: 70 });
+      setCropRotation(0);
     };
     reader.readAsDataURL(file);
     e.target.value = '';
+  };
+
+  const containerRef = useRef(null);
+  const dragInfo = useRef({ active: false, handle: null, startX: 0, startY: 0, startParams: null });
+
+  const handlePointerDown = (e, handle) => {
+    e.stopPropagation();
+    e.preventDefault();
+    const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+    const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+    dragInfo.current = {
+      active: true,
+      handle,
+      startX: clientX,
+      startY: clientY,
+      startParams: { ...cropParams }
+    };
+  };
+
+  const handlePointerMove = (e) => {
+    if (!dragInfo.current.active) return;
+    const container = containerRef.current;
+    if (!container) return;
+
+    const rect = container.getBoundingClientRect();
+    const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+    const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+
+    const deltaX = ((clientX - dragInfo.current.startX) / rect.width) * 100;
+    const deltaY = ((clientY - dragInfo.current.startY) / rect.height) * 100;
+    
+    const { handle, startParams } = dragInfo.current;
+
+    let newX = startParams.x;
+    let newY = startParams.y;
+    let newW = startParams.w;
+    let newH = startParams.h;
+
+    if (handle === 'move') {
+      newX = Math.max(0, Math.min(100 - startParams.w, startParams.x + deltaX));
+      newY = Math.max(0, Math.min(100 - startParams.h, startParams.y + deltaY));
+    } else {
+      if (handle.includes('e')) {
+        newW = Math.max(10, Math.min(100 - startParams.x, startParams.w + deltaX));
+      }
+      if (handle.includes('w')) {
+        const potentialX = Math.max(0, Math.min(startParams.x + startParams.w - 10, startParams.x + deltaX));
+        newW = startParams.x + startParams.w - potentialX;
+        newX = potentialX;
+      }
+      if (handle.includes('s')) {
+        newH = Math.max(10, Math.min(100 - startParams.y, startParams.h + deltaY));
+      }
+      if (handle.includes('n')) {
+        const potentialY = Math.max(0, Math.min(startParams.y + startParams.h - 10, startParams.y + deltaY));
+        newH = startParams.y + startParams.h - potentialY;
+        newY = potentialY;
+      }
+    }
+
+    setCropParams({ x: newX, y: newY, w: newW, h: newH });
+  };
+
+  const handlePointerUp = () => {
+    dragInfo.current.active = false;
   };
 
   const applyCrop = () => {
     if (!croppingImageSrc) return;
     const img = new Image();
     img.onload = () => {
+      const rotateCanvas = document.createElement('canvas');
+      const rotateCtx = rotateCanvas.getContext('2d');
+      
+      const rad = (cropRotation * Math.PI) / 180;
+      const absCos = Math.abs(Math.cos(rad));
+      const absSin = Math.abs(Math.sin(rad));
+      const rotW = img.width * absCos + img.height * absSin;
+      const rotH = img.width * absSin + img.height * absCos;
+      
+      rotateCanvas.width = rotW;
+      rotateCanvas.height = rotH;
+      
+      rotateCtx.translate(rotW / 2, rotH / 2);
+      rotateCtx.rotate(rad);
+      rotateCtx.drawImage(img, -img.width / 2, -img.height / 2);
+      
       const canvas = document.createElement('canvas');
       const ctx = canvas.getContext('2d');
       
-      let cropW, cropH, cropX, cropY;
-
-      if (cropShape === 'original') {
-        cropW = img.width / cropZoom;
-        cropH = img.height / cropZoom;
-        cropX = (img.width - cropW) / 2;
-        cropY = (img.height - cropH) / 2;
-      } else {
-        const minDim = Math.min(img.width, img.height);
-        cropW = minDim / cropZoom;
-        cropH = minDim / cropZoom;
-        cropX = (img.width - cropW) / 2;
-        cropY = (img.height - cropH) / 2;
-      }
+      const absX = (cropParams.x / 100) * rotW;
+      const absY = (cropParams.y / 100) * rotH;
+      const absW = (cropParams.w / 100) * rotW;
+      const absH = (cropParams.h / 100) * rotH;
 
       const targetSize = 650;
       let targetW = targetSize;
       let targetH = targetSize;
 
       if (cropShape === 'original') {
-        const aspect = img.width / img.height;
+        const aspect = absW / absH;
         if (aspect > 1) {
           targetW = targetSize;
           targetH = Math.round(targetSize / aspect);
@@ -533,7 +606,7 @@ export default function Customizer() {
         ctx.clip();
       }
 
-      ctx.drawImage(img, cropX, cropY, cropW, cropH, 0, 0, targetW, targetH);
+      ctx.drawImage(rotateCanvas, absX, absY, absW, absH, 0, 0, targetW, targetH);
 
       const fileType = (cropShape === 'circle' || croppingFile?.type === 'image/png')
         ? 'image/png'
@@ -1003,10 +1076,16 @@ export default function Customizer() {
 
       {/* ── Cropping Modal ── */}
       {croppingImageSrc && (
-        <div className="fixed inset-0 z-[99999] bg-black/90 flex items-center justify-center p-4 backdrop-blur-sm">
-          <div className="bg-zinc-900 border border-zinc-800 rounded-3xl p-5 max-w-md w-full space-y-4 font-mono text-white">
+        <div 
+          className="fixed inset-0 z-[99999] bg-black/90 flex items-center justify-center p-4 backdrop-blur-sm select-none"
+          onMouseMove={handlePointerMove}
+          onMouseUp={handlePointerUp}
+          onTouchMove={handlePointerMove}
+          onTouchEnd={handlePointerUp}
+        >
+          <div className="bg-zinc-900 border border-zinc-800 rounded-3xl p-5 max-w-md w-full space-y-4 font-mono text-white pointer-events-auto">
             <div className="flex items-center justify-between border-b border-zinc-800 pb-2">
-              <span className="text-xs font-bold uppercase tracking-widest text-violet-400">Crop Graphic Sticker</span>
+              <span className="text-xs font-bold uppercase tracking-widest text-violet-400">Crop & Rotate Sticker</span>
               <button 
                 onClick={() => { setCroppingImageSrc(null); setCroppingFile(null); }}
                 className="text-zinc-500 hover:text-white text-base font-bold"
@@ -1015,76 +1094,130 @@ export default function Customizer() {
               </button>
             </div>
 
-            {/* Image Preview Container with Crop Box */}
-            <div className="relative w-full aspect-square bg-zinc-950 border border-zinc-850 rounded-xl overflow-hidden flex items-center justify-center">
+            {/* Image Preview Container with Interactive Crop Box */}
+            <div 
+              ref={containerRef}
+              className="relative w-full aspect-square bg-zinc-950 border border-zinc-850 rounded-xl overflow-hidden flex items-center justify-center pointer-events-auto cursor-crosshair"
+            >
               <img 
                 src={croppingImageSrc} 
                 alt="Source to crop" 
-                className="max-w-full max-h-full object-contain pointer-events-none opacity-30"
+                className="max-w-full max-h-full object-contain pointer-events-none select-none transition-transform duration-100"
+                style={{ transform: `rotate(${cropRotation}deg)` }}
               />
-              {/* Highlight Crop Area */}
-              {(() => {
-                const boxSize = 100 / cropZoom;
-                const offset = (100 - boxSize) / 2;
-                return (
-                  <div 
-                    className="absolute border border-dashed border-violet-400 bg-white/5 shadow-[0_0_0_9999px_rgba(0,0,0,0.65)] pointer-events-none transition-all duration-150"
-                    style={{
-                      left: `${offset}%`,
-                      top: `${offset}%`,
-                      width: `${boxSize}%`,
-                      height: `${boxSize}%`,
-                      borderRadius: cropShape === 'circle' ? '50%' : '0px'
-                    }}
-                  />
-                );
-              })()}
+
+              {/* Draggable & Resizable Highlight Crop Area */}
+              <div 
+                className="absolute border-2 border-dashed border-violet-400 bg-white/5 shadow-[0_0_0_9999px_rgba(0,0,0,0.65)] pointer-events-auto flex items-center justify-center"
+                style={{
+                  left: `${cropParams.x}%`,
+                  top: `${cropParams.y}%`,
+                  width: `${cropParams.w}%`,
+                  height: `${cropParams.h}%`,
+                  borderRadius: cropShape === 'circle' ? '50%' : '0px'
+                }}
+                onMouseDown={(e) => handlePointerDown(e, 'move')}
+                onTouchStart={(e) => handlePointerDown(e, 'move')}
+              >
+                {/* Drag handles at corners */}
+                {/* nw */}
+                <div 
+                  className="absolute top-0 left-0 w-6 h-6 -translate-x-3 -translate-y-3 flex items-center justify-center cursor-nwse-resize active:scale-125 transition-transform pointer-events-auto" 
+                  onMouseDown={(e) => handlePointerDown(e, 'nw')}
+                  onTouchStart={(e) => handlePointerDown(e, 'nw')}
+                >
+                  <div className="w-3.5 h-3.5 bg-violet-500 border-2 border-white rounded-full shadow" />
+                </div>
+                {/* ne */}
+                <div 
+                  className="absolute top-0 right-0 w-6 h-6 translate-x-3 -translate-y-3 flex items-center justify-center cursor-nesw-resize active:scale-125 transition-transform pointer-events-auto" 
+                  onMouseDown={(e) => handlePointerDown(e, 'ne')}
+                  onTouchStart={(e) => handlePointerDown(e, 'ne')}
+                >
+                  <div className="w-3.5 h-3.5 bg-violet-500 border-2 border-white rounded-full shadow" />
+                </div>
+                {/* sw */}
+                <div 
+                  className="absolute bottom-0 left-0 w-6 h-6 -translate-x-3 translate-y-3 flex items-center justify-center cursor-nesw-resize active:scale-125 transition-transform pointer-events-auto" 
+                  onMouseDown={(e) => handlePointerDown(e, 'sw')}
+                  onTouchStart={(e) => handlePointerDown(e, 'sw')}
+                >
+                  <div className="w-3.5 h-3.5 bg-violet-500 border-2 border-white rounded-full shadow" />
+                </div>
+                {/* se */}
+                <div 
+                  className="absolute bottom-0 right-0 w-6 h-6 translate-x-3 translate-y-3 flex items-center justify-center cursor-nwse-resize active:scale-125 transition-transform pointer-events-auto" 
+                  onMouseDown={(e) => handlePointerDown(e, 'se')}
+                  onTouchStart={(e) => handlePointerDown(e, 'se')}
+                >
+                  <div className="w-3.5 h-3.5 bg-violet-500 border-2 border-white rounded-full shadow" />
+                </div>
+              </div>
             </div>
 
             {/* Shape Selectors */}
-            <div className="space-y-2">
-              <span className="text-[10px] text-zinc-500 uppercase tracking-wider font-bold">1. Select Sticker Shape:</span>
+            <div className="space-y-1">
+              <span className="text-[9px] text-zinc-500 uppercase tracking-wider font-bold">1. Crop Shape:</span>
               <div className="grid grid-cols-3 gap-2">
                 {[
-                  { id: 'original', label: '🖼️ Original', desc: 'Full image' },
-                  { id: 'square', label: '⬜ Square', desc: '1:1 square' },
-                  { id: 'circle', label: '🟡 Circle', desc: 'Round logo' }
+                  { id: 'original', label: '🖼️ Original', desc: 'No Mask' },
+                  { id: 'square', label: '⬜ Square', desc: '1:1 ratio' },
+                  { id: 'circle', label: '🟡 Circle', desc: 'Logo Mask' }
                 ].map(shape => (
                   <button
                     key={shape.id}
                     onClick={() => setCropShape(shape.id)}
-                    className={`py-2 px-1 text-center rounded-xl border transition-all flex flex-col items-center justify-center gap-0.5 ${
+                    className={`py-1.5 px-0.5 text-center rounded-xl border transition-all flex flex-col items-center justify-center gap-0.5 ${
                       cropShape === shape.id 
                         ? 'bg-white text-black border-white font-extrabold shadow-lg' 
                         : 'border-zinc-800 text-zinc-400 bg-zinc-950/40 hover:border-zinc-700 hover:text-white'
                     }`}
                   >
-                    <span className="text-xs">{shape.label}</span>
-                    <span className="text-[8px] opacity-60 uppercase">{shape.desc}</span>
+                    <span className="text-[11px]">{shape.label}</span>
+                    <span className="text-[7px] opacity-60 uppercase">{shape.desc}</span>
                   </button>
                 ))}
               </div>
             </div>
 
-            {/* Zoom Slider */}
-            <div className="space-y-2">
-              <div className="flex justify-between text-[10px] text-zinc-500 uppercase font-bold">
-                <span>2. Zoom / Crop Area:</span>
-                <span className="text-violet-400">{cropZoom.toFixed(1)}x</span>
+            {/* Rotation Control */}
+            <div className="space-y-1.5">
+              <div className="flex justify-between items-center text-[9px] text-zinc-500 uppercase font-bold">
+                <span>2. Rotate Sticker (Freestyle):</span>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => setCropRotation(r => (r - 90 + 360) % 360)}
+                    className="px-2 py-0.5 bg-zinc-800 hover:bg-zinc-700 hover:text-white rounded text-[8px] font-bold"
+                  >
+                    ↺ -90°
+                  </button>
+                  <button
+                    onClick={() => setCropRotation(r => (r + 90) % 360)}
+                    className="px-2 py-0.5 bg-zinc-800 hover:bg-zinc-700 hover:text-white rounded text-[8px] font-bold"
+                  >
+                    🔄 +90°
+                  </button>
+                </div>
               </div>
-              <input 
-                type="range"
-                min="1.0"
-                max="2.5"
-                step="0.1"
-                value={cropZoom}
-                onChange={e => setCropZoom(Number(e.target.value))}
-                className="w-full accent-violet-500 cursor-pointer h-1.5 bg-zinc-800 rounded-lg appearance-none"
-              />
-              <p className="text-[8px] text-zinc-500 text-center uppercase tracking-wider">
-                Slide to zoom into the center of the sticker
-              </p>
+              <div className="flex items-center gap-3">
+                <input 
+                  type="range"
+                  min="-180"
+                  max="180"
+                  step="1"
+                  value={cropRotation > 180 ? cropRotation - 360 : cropRotation}
+                  onChange={e => setCropRotation(Number(e.target.value))}
+                  className="flex-1 accent-violet-500 cursor-pointer h-1.5 bg-zinc-800 rounded-lg appearance-none"
+                />
+                <span className="text-[10px] font-bold text-violet-400 w-10 text-right">
+                  {cropRotation}°
+                </span>
+              </div>
             </div>
+
+            <p className="text-[8px] text-zinc-500 text-center uppercase tracking-wider">
+              Drag corners of box to crop · drag center to move · slide to rotate
+            </p>
 
             {/* Actions */}
             <div className="flex gap-3 pt-2">
