@@ -387,6 +387,18 @@ export default function Customizer() {
   const [qty, setQty] = useState(1);
   const [justAdded, setJustAdded] = useState(false);
 
+  const selectedSizeStock = product ? getProductSizeStock(product, selectedSize) : 0;
+  const isSelectedSizeOut = selectedSizeStock <= 0;
+
+  // Clamp quantity to remaining stock whenever size/product changes
+  useEffect(() => {
+    if (selectedSizeStock > 0) {
+      setQty(q => Math.max(1, Math.min(q, selectedSizeStock)));
+    } else {
+      setQty(1);
+    }
+  }, [selectedSize, selectedSizeStock]);
+
   const [frontItems, setFrontItems] = useState([]);
   const [backItems, setBackItems] = useState([]);
   const [activeId, setActiveId] = useState(null);
@@ -499,7 +511,6 @@ export default function Customizer() {
   const basePrice = product ? (product.discountPrice || product.basePrice || 999) : 999;
   const printFee  = product ? (product.customizationFee || 150) : 150;
   const total     = (basePrice + printFee) * qty;
-  const isSelectedSizeOut = product ? getProductSizeStock(product, selectedSize) <= 0 : false;
 
   if (loading) return (
     <div className="min-h-screen bg-zinc-950 flex flex-col items-center justify-center gap-4 font-mono">
@@ -537,10 +548,15 @@ export default function Customizer() {
         </div>
         {/* Qty + Cart */}
         <div className="flex items-center gap-2">
+          {selectedSizeStock > 0 && selectedSizeStock <= 5 && (
+            <span className="text-[9px] text-amber-400 font-extrabold uppercase animate-pulse hidden md:inline">
+              ⚠️ ONLY {selectedSizeStock} LEFT
+            </span>
+          )}
           <div className="flex items-center gap-1 bg-zinc-800 rounded-lg px-2 py-1 border border-zinc-700">
             <button onClick={() => setQty(q => Math.max(1, q - 1))} className="text-zinc-400 hover:text-white w-5 h-5 flex items-center justify-center text-sm leading-none">−</button>
             <span className="text-xs font-bold w-4 text-center">{qty}</span>
-            <button onClick={() => setQty(q => q + 1)} className="text-zinc-400 hover:text-white w-5 h-5 flex items-center justify-center text-sm leading-none">+</button>
+            <button onClick={() => setQty(q => Math.min(selectedSizeStock, q + 1))} className="text-zinc-400 hover:text-white w-5 h-5 flex items-center justify-center text-sm leading-none">+</button>
           </div>
           <button
             onClick={handleAddToCart}
@@ -651,7 +667,11 @@ export default function Customizer() {
                   <button
                     key={s}
                     disabled={isOut}
-                    onClick={() => setSelectedSize(s)}
+                    onClick={() => {
+                      setSelectedSize(s);
+                      const sStock = getProductSizeStock(product, s);
+                      setQty(q => Math.max(1, Math.min(q, sStock)));
+                    }}
                     className={`px-2.5 py-1.5 text-[10px] font-bold rounded-lg border transition-all ${
                       isOut
                         ? 'border-zinc-800 text-zinc-600 line-through cursor-not-allowed opacity-40'
@@ -660,7 +680,7 @@ export default function Customizer() {
                         : 'border-zinc-700 text-zinc-400 hover:border-zinc-500 hover:text-white'
                     }`}
                   >
-                    {s} {isOut && '(OUT)'}
+                    {s} {isOut ? '(OUT)' : (stock <= 5 ? `(${stock} LEFT)` : '')}
                   </button>
                 );
               })}
