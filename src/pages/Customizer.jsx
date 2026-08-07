@@ -781,8 +781,7 @@ export default function Customizer() {
   }, [setCurrentItems]);
 
   const resizeItem = useCallback((id, newSize) => {
-    // Cap size so the image can't overflow the zone boundary
-    const maxSize = Math.min(zone.w, zone.h) - 4;
+    const maxSize = Math.max(zone.w, zone.h);
     const clamped = Math.max(30, Math.min(maxSize, newSize));
     setCurrentItems(prev => prev.map(it => it.id === id ? { ...it, size: clamped } : it));
   }, [setCurrentItems, zone]);
@@ -1187,7 +1186,7 @@ export default function Customizer() {
                     <input
                       type="range"
                       min={activeItem.type === 'text' ? 10 : 30}
-                      max={activeItem.type === 'text' ? 80 : Math.min(zone.w, zone.h) - 4}
+                      max={activeItem.type === 'text' ? 80 : Math.max(zone.w, zone.h)}
                       value={activeItem.type === 'text' ? activeItem.fontSize || 20 : activeItem.size || 80}
                       onChange={e => {
                         const val = Number(e.target.value);
