@@ -329,7 +329,7 @@ function HeroBannerCarousel({ customAds = [] }) {
 
   return (
     <div 
-      className="relative w-full overflow-hidden bg-black select-none border-b border-zinc-900 shadow-2xl min-h-[55vh] sm:min-h-[75vh] lg:min-h-[85vh] flex flex-col justify-end"
+      className="relative w-full overflow-hidden bg-black select-none border-b border-zinc-900 shadow-2xl min-h-[55vh] sm:min-h-[75vh] lg:min-h-[85vh] flex flex-col justify-end group/hero"
       onMouseEnter={() => setPaused(true)}
       onMouseLeave={() => setPaused(false)}
       onTouchStart={handleTouchStart}
@@ -349,6 +349,26 @@ function HeroBannerCarousel({ customAds = [] }) {
         />
         <div className="absolute inset-0 bg-gradient-to-t from-black via-black/30 to-transparent" />
       </div>
+
+      {/* Left / Right Navigation Overlay Arrows for PC */}
+      {displaySlides.length > 1 && (
+        <>
+          <button
+            onClick={(e) => { e.stopPropagation(); prev(); }}
+            className="absolute left-4 top-1/2 -translate-y-1/2 z-30 w-12 h-12 bg-black/50 hover:bg-black text-white rounded-full hidden md:flex items-center justify-center border border-white/10 transition-all active:scale-95 shadow-lg opacity-0 group-hover/hero:opacity-100 duration-300"
+            aria-label="Previous Slide"
+          >
+            <ChevronLeft className="w-6 h-6" />
+          </button>
+          <button
+            onClick={(e) => { e.stopPropagation(); next(); }}
+            className="absolute right-4 top-1/2 -translate-y-1/2 z-30 w-12 h-12 bg-black/50 hover:bg-black text-white rounded-full hidden md:flex items-center justify-center border border-white/10 transition-all active:scale-95 shadow-lg opacity-0 group-hover/hero:opacity-100 duration-300"
+            aria-label="Next Slide"
+          >
+            <ChevronRight className="w-6 h-6" />
+          </button>
+        </>
+      )}
 
       {/* Content Overlay - Pure Info, No Buttons */}
       <div className="relative z-10 max-w-7xl mx-auto w-full px-6 lg:px-12 pb-12 pt-20 text-white font-mono space-y-3 pointer-events-none">
@@ -625,6 +645,21 @@ export default function Home() {
   const [categories, setCategories] = useState([]);
   const [ads, setAds] = useState([]);
   const [loading, setLoading] = useState(false);
+  
+  const topPicksRef = useRef(null);
+  const newArrivalsRef = useRef(null);
+
+  const scrollLeft = (ref) => {
+    if (ref.current) {
+      ref.current.scrollBy({ left: -320, behavior: 'smooth' });
+    }
+  };
+
+  const scrollRight = (ref) => {
+    if (ref.current) {
+      ref.current.scrollBy({ left: 320, behavior: 'smooth' });
+    }
+  };
   const [qv, setQv] = useState(null);
   const { settings } = useSettings();
   const navigate = useNavigate();
@@ -688,16 +723,39 @@ export default function Home() {
           </h2>
         </div>
 
-        {/* Swipeable Product Cards Row (At Least 10 Products) */}
-        <div className="flex overflow-x-auto gap-4 pb-4 snap-x snap-mandatory scrollbar-none">
-          {loading
-            ? [1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map(n => <div key={n} className="w-[220px] sm:w-[260px] shrink-0 aspect-[3/4] skeleton rounded-2xl" />)
-            : topPicksList.map((p, idx) => (
-                <div key={p.id || idx} className="w-[220px] sm:w-[260px] shrink-0 snap-start">
-                  <ProductCard product={p} onQuickView={setQv} />
-                </div>
-              ))
-          }
+        {/* WEEK'S TOP PICKS: Swipeable Product Cards Row with Navigation Arrows */}
+        <div className="relative group/picks">
+          {/* Scroll Left Button */}
+          <button
+            onClick={() => scrollLeft(topPicksRef)}
+            className="absolute left-[-20px] top-[40%] -translate-y-1/2 z-20 w-10 h-10 bg-black hover:bg-zinc-800 text-white rounded-full hidden md:flex items-center justify-center shadow-lg transition-all opacity-0 group-hover/picks:opacity-100 hover:scale-105 active:scale-95 border border-zinc-850"
+            aria-label="Previous Products"
+          >
+            <ChevronLeft className="w-5 h-5" />
+          </button>
+
+          <div 
+            ref={topPicksRef}
+            className="flex overflow-x-auto gap-4 pb-4 snap-x snap-mandatory scrollbar-none scroll-smooth"
+          >
+            {loading
+              ? [1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map(n => <div key={n} className="w-[220px] sm:w-[260px] shrink-0 aspect-[3/4] skeleton rounded-2xl" />)
+              : topPicksList.map((p, idx) => (
+                  <div key={p.id || idx} className="w-[220px] sm:w-[260px] shrink-0 snap-start">
+                    <ProductCard product={p} onQuickView={setQv} />
+                  </div>
+                ))
+            }
+          </div>
+
+          {/* Scroll Right Button */}
+          <button
+            onClick={() => scrollRight(topPicksRef)}
+            className="absolute right-[-20px] top-[40%] -translate-y-1/2 z-20 w-10 h-10 bg-black hover:bg-zinc-800 text-white rounded-full hidden md:flex items-center justify-center shadow-lg transition-all opacity-0 group-hover/picks:opacity-100 hover:scale-105 active:scale-95 border border-zinc-850"
+            aria-label="Next Products"
+          >
+            <ChevronRight className="w-5 h-5" />
+          </button>
         </div>
 
         {/* NEW ARRIVALS Section (AT LEAST 10 PRODUCTS) */}
@@ -707,16 +765,39 @@ export default function Home() {
           </h2>
         </div>
 
-        {/* Swipeable Product Cards Row for New Arrivals (At Least 10 Products) */}
-        <div className="flex overflow-x-auto gap-4 pb-4 snap-x snap-mandatory scrollbar-none">
-          {loading
-            ? [1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map(n => <div key={n} className="w-[220px] sm:w-[260px] shrink-0 aspect-[3/4] skeleton rounded-2xl" />)
-            : newArrivalsList.map((p, idx) => (
-                <div key={p.id || idx} className="w-[220px] sm:w-[260px] shrink-0 snap-start">
-                  <ProductCard product={p} onQuickView={setQv} />
-                </div>
-              ))
-          }
+        {/* NEW ARRIVALS: Swipeable Product Cards Row with Navigation Arrows */}
+        <div className="relative group/arrivals">
+          {/* Scroll Left Button */}
+          <button
+            onClick={() => scrollLeft(newArrivalsRef)}
+            className="absolute left-[-20px] top-[40%] -translate-y-1/2 z-20 w-10 h-10 bg-black hover:bg-zinc-800 text-white rounded-full hidden md:flex items-center justify-center shadow-lg transition-all opacity-0 group-hover/arrivals:opacity-100 hover:scale-105 active:scale-95 border border-zinc-850"
+            aria-label="Previous Products"
+          >
+            <ChevronLeft className="w-5 h-5" />
+          </button>
+
+          <div 
+            ref={newArrivalsRef}
+            className="flex overflow-x-auto gap-4 pb-4 snap-x snap-mandatory scrollbar-none scroll-smooth"
+          >
+            {loading
+              ? [1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map(n => <div key={n} className="w-[220px] sm:w-[260px] shrink-0 aspect-[3/4] skeleton rounded-2xl" />)
+              : newArrivalsList.map((p, idx) => (
+                  <div key={p.id || idx} className="w-[220px] sm:w-[260px] shrink-0 snap-start">
+                    <ProductCard product={p} onQuickView={setQv} />
+                  </div>
+                ))
+            }
+          </div>
+
+          {/* Scroll Right Button */}
+          <button
+            onClick={() => scrollRight(newArrivalsRef)}
+            className="absolute right-[-20px] top-[40%] -translate-y-1/2 z-20 w-10 h-10 bg-black hover:bg-zinc-800 text-white rounded-full hidden md:flex items-center justify-center shadow-lg transition-all opacity-0 group-hover/arrivals:opacity-100 hover:scale-105 active:scale-95 border border-zinc-850"
+            aria-label="Next Products"
+          >
+            <ChevronRight className="w-5 h-5" />
+          </button>
         </div>
       </SR>
 
