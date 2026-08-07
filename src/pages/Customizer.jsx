@@ -416,7 +416,11 @@ export default function Customizer() {
         const sizes = p.sizes || ['XS','S','M','L','XL','2XL'];
         const firstAvailable = sizes.find(sz => getProductSizeStock(p, sz) > 0) || sizes[0];
         setSelectedSize(firstAvailable);
-        setGarmentColor(p.colors?.[0]?.hex || '#FFFFFF');
+        
+        const colorsList = p.colors && p.colors.length > 0
+          ? p.colors.map(c => typeof c === 'string' ? { name: c, hex: c } : c)
+          : GARMENT_COLORS;
+        setGarmentColor(colorsList[0]?.hex || '#FFFFFF');
       }
       setLoading(false);
     }
@@ -430,6 +434,10 @@ export default function Customizer() {
   const zone = printZones[view];
   const cx = zone.x + zone.w / 2;
   const cy = zone.y + zone.h / 2;
+
+  const availableColors = product && product.colors && product.colors.length > 0 
+    ? product.colors.map(c => typeof c === 'string' ? { name: c, hex: c } : c)
+    : GARMENT_COLORS;
 
   const currentItems = view === 'front' ? frontItems : backItems;
   const setCurrentItems = view === 'front' ? setFrontItems : setBackItems;
@@ -663,7 +671,7 @@ export default function Customizer() {
           <div className="mt-4 w-full max-w-[320px] mb-6">
             <p className="text-[9px] text-zinc-500 uppercase tracking-widest mb-2">GARMENT COLOR</p>
             <div className="flex flex-wrap gap-2">
-              {GARMENT_COLORS.map(c => (
+              {availableColors.map(c => (
                 <button
                   key={c.hex}
                   onClick={() => setGarmentColor(c.hex)}
