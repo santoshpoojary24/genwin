@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { Sparkles, ArrowLeft, Check, Type, Upload, ShoppingCart } from 'lucide-react';
 import { FirebaseService } from '../services/firebaseService';
-import { useCart } from '../context/CartContext';
+import { useCart, getProductSizeStock } from '../context/CartContext';
 
 /* ═══════════════════════════════════════════════════════════════
    3D Realistic T-Shirt SVG — Front
@@ -413,7 +413,9 @@ export default function Customizer() {
       if (!p) p = all.find(x => x.isCustomizable) || all[0];
       setProduct(p);
       if (p) {
-        setSelectedSize(p.sizes?.[0] || 'M');
+        const sizes = p.sizes || ['XS','S','M','L','XL','2XL'];
+        const firstAvailable = sizes.find(sz => getProductSizeStock(p, sz) > 0) || sizes[0];
+        setSelectedSize(firstAvailable);
         setGarmentColor(p.colors?.[0]?.hex || '#FFFFFF');
       }
       setLoading(false);
@@ -489,6 +491,7 @@ export default function Customizer() {
   const basePrice = product ? (product.discountPrice || product.basePrice || 999) : 999;
   const printFee  = product ? (product.customizationFee || 150) : 150;
   const total     = (basePrice + printFee) * qty;
+  const isSelectedSizeOut = product ? getProductSizeStock(product, selectedSize) <= 0 : false;
 
   if (loading) return (
     <div className="min-h-screen bg-zinc-950 flex flex-col items-center justify-center gap-4 font-mono">
@@ -533,11 +536,16 @@ export default function Customizer() {
           </div>
           <button
             onClick={handleAddToCart}
-            className="flex items-center gap-1.5 px-3 py-2 bg-violet-600 hover:bg-violet-500 text-white text-[11px] font-bold uppercase rounded-xl transition-all shadow-lg"
+            disabled={isSelectedSizeOut}
+            className={`flex items-center gap-1.5 px-3 py-2 text-white text-[11px] font-bold uppercase rounded-xl transition-all shadow-lg ${
+              isSelectedSizeOut 
+                ? 'bg-zinc-800 border border-zinc-700 text-zinc-500 cursor-not-allowed' 
+                : 'bg-violet-600 hover:bg-violet-500 active:scale-95'
+            }`}
           >
             <ShoppingCart className="w-3.5 h-3.5" />
-            <span className="hidden sm:inline">ADD TO CART</span>
-            <span className="sm:hidden">ADD</span>
+            <span className="hidden sm:inline">{isSelectedSizeOut ? 'SOLD OUT' : 'ADD TO CART'}</span>
+            <span className="sm:hidden">{isSelectedSizeOut ? 'SOLD' : 'ADD'}</span>
           </button>
         </div>
       </div>
@@ -628,15 +636,26 @@ export default function Customizer() {
           <div className="mt-5 w-full max-w-[320px]">
             <p className="text-[9px] text-zinc-500 uppercase tracking-widest mb-2">SIZE</p>
             <div className="flex flex-wrap gap-2">
-              {(product.sizes || ['XS','S','M','L','XL','2XL']).map(s => (
-                <button
-                  key={s}
-                  onClick={() => setSelectedSize(s)}
-                  className={`px-3 py-1.5 text-[11px] font-bold rounded-lg border transition-all ${selectedSize === s ? 'bg-white text-black border-white' : 'border-zinc-700 text-zinc-400 hover:border-zinc-500 hover:text-white'}`}
-                >
-                  {s}
-                </button>
-              ))}
+              {(product.sizes || ['XS','S','M','L','XL','2XL']).map(s => {
+                const stock = product ? getProductSizeStock(product, s) : 0;
+                const isOut = stock <= 0;
+                return (
+                  <button
+                    key={s}
+                    disabled={isOut}
+                    onClick={() => setSelectedSize(s)}
+                    className={`px-2.5 py-1.5 text-[10px] font-bold rounded-lg border transition-all ${
+                      isOut
+                        ? 'border-zinc-800 text-zinc-600 line-through cursor-not-allowed opacity-40'
+                        : selectedSize === s
+                        ? 'bg-white text-black border-white'
+                        : 'border-zinc-700 text-zinc-400 hover:border-zinc-500 hover:text-white'
+                    }`}
+                  >
+                    {s} {isOut && '(OUT)'}
+                  </button>
+                );
+              })}
             </div>
           </div>
 

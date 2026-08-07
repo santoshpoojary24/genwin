@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { X, ShoppingBag, Trash2, Plus, Minus, Tag, ArrowRight, Sparkles, CheckCircle2 } from 'lucide-react';
 import { useCart } from '../../context/CartContext';
+import { CustomTshirtPreview } from '../shop/CustomTshirtPreview';
 
 export default function CartDrawer() {
   const navigate = useNavigate();
@@ -118,10 +119,14 @@ export default function CartDrawer() {
               cartItems.map((item) => (
                 <div key={item.cartItemId} className="pt-4 first:pt-0 flex gap-4 items-center font-mono">
                   {/* Thumbnail */}
-                  <div className="w-16 h-20 bg-zinc-100 overflow-hidden shrink-0 relative border border-zinc-300">
-                    <img src={item.image} alt={item.name} className="w-full h-full object-cover" />
+                  <div className="w-16 h-20 bg-zinc-100 overflow-hidden shrink-0 relative border border-zinc-300 flex items-center justify-center">
+                    {item.customization ? (
+                      <CustomTshirtPreview customization={item.customization} className="w-full h-full" />
+                    ) : (
+                      <img src={item.image} alt={item.name} className="w-full h-full object-cover" />
+                    )}
                     {item.customization && (
-                      <span className="absolute bottom-0 right-0 bg-black text-white text-[8px] font-bold p-0.5">
+                      <span className="absolute bottom-0 right-0 bg-black text-white text-[8px] font-bold p-0.5 z-10">
                         <Sparkles className="w-2.5 h-2.5" />
                       </span>
                     )}

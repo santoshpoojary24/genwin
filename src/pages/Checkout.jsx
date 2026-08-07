@@ -3,6 +3,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import { CreditCard, MapPin, ArrowRight, Lock, ChevronRight } from 'lucide-react';
 import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
+import { CustomTshirtPreview } from '../components/shop/CustomTshirtPreview';
 import { FirebaseService } from '../services/firebaseService';
 import { useSettings } from '../context/SettingsContext';
 
@@ -395,7 +396,13 @@ export default function Checkout() {
             <div className="space-y-3 max-h-48 overflow-y-auto pr-1">
               {cartItems.map((item, idx) => (
                 <div key={item.cartItemId || idx} className="flex gap-3 items-center text-[11px]">
-                  <img src={item.image || ''} alt="" className="w-10 h-12 object-cover border border-zinc-200 shrink-0" />
+                  {item.customization ? (
+                    <div className="w-10 h-12 border border-zinc-200 overflow-hidden shrink-0 flex items-center justify-center bg-zinc-50">
+                      <CustomTshirtPreview customization={item.customization} className="w-full h-full" />
+                    </div>
+                  ) : (
+                    <img src={item.image || ''} alt="" className="w-10 h-12 object-cover border border-zinc-200 shrink-0" />
+                  )}
                   <div className="flex-1">
                     <p className="font-bold text-black uppercase text-[10px] line-clamp-1">{item.name || 'Garment Item'}</p>
                     <p className="text-zinc-400 text-[9px] uppercase">

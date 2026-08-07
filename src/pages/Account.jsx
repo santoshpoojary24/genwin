@@ -7,6 +7,7 @@ import {
 import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
 import { FirebaseService } from '../services/firebaseService';
+import { CustomTshirtPreview } from '../components/shop/CustomTshirtPreview';
 
 const STATUS = {
   placed: 'Placed', confirmed: 'Confirmed', packed: 'Packed', shipped: 'Shipped',
@@ -292,14 +293,18 @@ export default function Account() {
                               key={idx} 
                               to={itemLink} 
                               title={`View ${item.name || 'garment'} on website`}
-                              className="group relative overflow-hidden rounded-md border border-zinc-200 hover:border-black transition-all shadow-2xs block bg-zinc-100 shrink-0"
+                              className="group relative overflow-hidden rounded-md border border-zinc-200 hover:border-black transition-all shadow-2xs block bg-zinc-100 shrink-0 w-14 h-16 sm:w-16 sm:h-20"
                             >
-                              <img 
-                                src={item.image || 'https://images.unsplash.com/photo-1521572267360-ee0c2909d518?w=800&q=80'} 
-                                alt={item.name || 'Order Item'} 
-                                className="w-14 h-16 sm:w-16 sm:h-20 object-cover object-top group-hover:scale-105 transition-transform duration-300" 
-                              />
-                              <div className="absolute inset-0 bg-black/25 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                              {item.customization ? (
+                                <CustomTshirtPreview customization={item.customization} className="w-full h-full" />
+                              ) : (
+                                <img 
+                                  src={item.image || 'https://images.unsplash.com/photo-1521572267360-ee0c2909d518?w=800&q=80'} 
+                                  alt={item.name || 'Order Item'} 
+                                  className="w-full h-full object-cover object-top group-hover:scale-105 transition-transform duration-300" 
+                                />
+                              )}
+                              <div className="absolute inset-0 bg-black/25 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center z-10">
                                 <Eye className="w-3.5 h-3.5 text-white drop-shadow-sm" />
                               </div>
                             </Link>

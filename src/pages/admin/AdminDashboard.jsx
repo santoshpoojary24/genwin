@@ -11,6 +11,7 @@ import {
 } from 'lucide-react';
 import { FirebaseService } from '../../services/firebaseService';
 import { useSettings } from '../../context/SettingsContext';
+import { CustomTshirtPreview } from '../../components/shop/CustomTshirtPreview';
 
 // ── File Upload Picker Component ──────────────────────────────────────────
 function FileUploadPicker({ value, onChange, label = "UPLOAD IMAGE / FILE (JPG, PNG, WEBP, PDF)" }) {
@@ -3132,16 +3133,57 @@ export default function AdminDashboard() {
             {/* Items */}
             <div className="space-y-2">
               <h4 className="font-bold text-white uppercase text-[10px]">ITEMS IN ORDER:</h4>
-              {viewingOrder.items?.map((item, idx) => (
-                <div key={idx} className="flex items-center gap-3 p-2 bg-zinc-950 border border-zinc-800">
-                  <img src={item.image} alt="" className="w-8 h-10 object-cover border border-zinc-800 shrink-0" />
-                  <div className="flex-1 truncate">
-                    <span className="block text-white font-bold uppercase truncate">{item.name}</span>
-                    <span className="text-[10px] text-zinc-500 uppercase">SIZE: {item.size} · QTY: {item.quantity}</span>
+              {viewingOrder.items?.map((item, idx) => {
+                const isCustom = item.customization;
+                const imagesUploaded = [];
+                if (isCustom) {
+                  const frontImages = (item.customization.frontLayers || []).filter(l => l.type === 'image');
+                  const backImages = (item.customization.backLayers || []).filter(l => l.type === 'image');
+                  imagesUploaded.push(...frontImages.map((img, index) => ({ src: img.src, side: 'Front', index })));
+                  imagesUploaded.push(...backImages.map((img, index) => ({ src: img.src, side: 'Back', index })));
+                }
+
+                return (
+                  <div key={idx} className="space-y-3 p-3 bg-zinc-950 border border-zinc-800">
+                    <div className="flex items-center gap-3">
+                      {isCustom ? (
+                        <div className="w-10 h-11 shrink-0 bg-white/5 border border-zinc-800 rounded overflow-hidden flex items-center justify-center">
+                          <CustomTshirtPreview customization={item.customization} className="w-full h-full" />
+                        </div>
+                      ) : (
+                        <img src={item.image} alt="" className="w-8 h-10 object-cover border border-zinc-800 shrink-0" />
+                      )}
+                      <div className="flex-1 truncate">
+                        <span className="block text-white font-bold uppercase truncate">{item.name}</span>
+                        <span className="text-[10px] text-zinc-500 uppercase">
+                          SIZE: {item.size} · QTY: {item.quantity}
+                          {isCustom && <span className="ml-2 text-violet-400 font-bold">[CUSTOM]</span>}
+                        </span>
+                      </div>
+                      <span className="font-bold text-white shrink-0">₹{item.unitPrice * item.quantity}</span>
+                    </div>
+
+                    {imagesUploaded.length > 0 && (
+                      <div className="border-t border-zinc-900 pt-2 space-y-1.5 font-mono">
+                        <div className="text-[9px] text-zinc-500 uppercase tracking-widest font-bold">Customer Uploaded Graphics:</div>
+                        <div className="flex flex-wrap gap-2">
+                          {imagesUploaded.map((img, imgIdx) => (
+                            <a
+                              key={imgIdx}
+                              href={img.src}
+                              download={`order_${viewingOrder.orderNumber}_item_${idx + 1}_${img.side}_graphic_${imgIdx + 1}.png`}
+                              className="px-2.5 py-1 bg-zinc-800 hover:bg-violet-600 text-white rounded text-[9px] font-bold uppercase tracking-wider flex items-center gap-1 transition-colors"
+                              title="Download uploaded graphic"
+                            >
+                              ⬇️ Download {img.side} Graphic
+                            </a>
+                          ))}
+                        </div>
+                      </div>
+                    )}
                   </div>
-                  <span className="font-bold text-white shrink-0">₹{item.unitPrice * item.quantity}</span>
-                </div>
-              ))}
+                );
+              })}
             </div>
 
             {/* Status Override */}

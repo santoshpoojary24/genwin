@@ -7,6 +7,7 @@ import {
 } from 'lucide-react';
 import { FirebaseService } from '../services/firebaseService';
 import LoadingScreen from '../components/common/LoadingScreen';
+import { CustomTshirtPreview } from '../components/shop/CustomTshirtPreview';
 
 const STATUS_STEPS = [
   { id: 'placed',           label: 'ORDER PLACED',       desc: 'Payment confirmed & order logged', icon: CheckCircle2 },
@@ -287,11 +288,17 @@ export default function OrderTracker() {
           <div className="divide-y divide-zinc-100 space-y-4">
             {order.items?.map((item, idx) => (
               <div key={idx} className="pt-4 first:pt-0 flex gap-4 items-center text-[11px]">
-                <img
-                  src={item.image || 'https://images.unsplash.com/photo-1521572267360-ee0c2909d518?w=800&q=80'}
-                  alt={item.name}
-                  className="w-16 h-20 object-cover border border-zinc-200 shrink-0"
-                />
+                {item.customization ? (
+                  <div className="w-16 h-20 border border-zinc-200 overflow-hidden shrink-0 flex items-center justify-center bg-zinc-50">
+                    <CustomTshirtPreview customization={item.customization} className="w-full h-full" />
+                  </div>
+                ) : (
+                  <img
+                    src={item.image || 'https://images.unsplash.com/photo-1521572267360-ee0c2909d518?w=800&q=80'}
+                    alt={item.name}
+                    className="w-16 h-20 object-cover border border-zinc-200 shrink-0"
+                  />
+                )}
                 <div className="flex-1 space-y-1">
                   <h4 className="font-bold text-black uppercase text-xs">{item.name}</h4>
                   <div className="flex items-center gap-2 text-zinc-500 text-[10px] uppercase font-bold">
