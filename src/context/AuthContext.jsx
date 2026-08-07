@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { auth } from '../config/firebase';
+import { auth, db } from '../config/firebase';
 import { GoogleAuthProvider, signInWithPopup, signInWithEmailAndPassword, createUserWithEmailAndPassword } from 'firebase/auth';
+import { doc, getDoc, setDoc } from 'firebase/firestore';
 
 const AuthContext = createContext();
 const LOCAL_USER_KEY     = 'genwin_user';
@@ -29,6 +30,64 @@ export const AuthProvider = ({ children }) => {
     localStorage.setItem(LOCAL_WISHLIST_KEY, JSON.stringify(wishlist));
   }, [wishlist]);
 
+  // Silent sync on mount to fetch latest user profile & addresses from Firestore
+  useEffect(() => {
+    const local = localStorage.getItem(LOCAL_USER_KEY);
+    if (!local) return;
+    try {
+      const parsed = JSON.parse(local);
+      if (parsed && parsed.uid) {
+        const userRef = doc(db, 'users', parsed.uid);
+        getDoc(userRef).then(snap => {
+          if (snap.exists()) {
+            const cloudData = snap.data();
+            const merged = { ...parsed, ...cloudData };
+            setUser(merged);
+            localStorage.setItem(LOCAL_USER_KEY, JSON.stringify(merged));
+          }
+        }).catch(err => console.error('Silent user profile sync failed:', err));
+      }
+    } catch (_) {}
+  }, []);
+
+  const syncUserToCloud = async (updatedUser) => {
+    if (!updatedUser || !updatedUser.uid) return;
+    try {
+      await setDoc(doc(db, 'users', updatedUser.uid), updatedUser, { merge: true });
+    } catch (err) {
+      console.error('Failed to sync user to Firestore:', err);
+    }
+  };
+
+  const fetchOrCreateUserProfile = async (firebaseUser, defaultData) => {
+    try {
+      const userRef = doc(db, 'users', firebaseUser.uid);
+      const userSnap = await getDoc(userRef);
+      if (userSnap.exists()) {
+        const cloudData = userSnap.data();
+        const mergedUser = {
+          ...defaultData,
+          ...cloudData,
+          uid: firebaseUser.uid,
+          email: firebaseUser.email || defaultData.email,
+        };
+        setUser(mergedUser);
+        localStorage.setItem(LOCAL_USER_KEY, JSON.stringify(mergedUser));
+        return mergedUser;
+      } else {
+        await setDoc(userRef, defaultData);
+        setUser(defaultData);
+        localStorage.setItem(LOCAL_USER_KEY, JSON.stringify(defaultData));
+        return defaultData;
+      }
+    } catch (err) {
+      console.error('Error fetching/creating user profile:', err);
+      setUser(defaultData);
+      localStorage.setItem(LOCAL_USER_KEY, JSON.stringify(defaultData));
+      return defaultData;
+    }
+  };
+
   // ── Email/Password Login via Firebase Auth ────────────────────────────────
   const login = async (email, password) => {
     setLoading(true);
@@ -46,8 +105,8 @@ export const AuthProvider = ({ children }) => {
           role: 'customer',
           addresses: [],
         };
-        setUser(loggedUser);
-        return { success: true, user: loggedUser };
+        const finalUser = await fetchOrCreateUserProfile(firebaseUser, loggedUser);
+        return { success: true, user: finalUser };
     } catch (err) {
       return { success: false, error: err.message };
     } finally {
@@ -70,14 +129,15 @@ export const AuthProvider = ({ children }) => {
         role: 'customer',
         addresses: [],
       };
-      setUser(phoneUser);
-      return { success: true, user: phoneUser };
+      const finalUser = await fetchOrCreateUserProfile({ uid: phoneUser.uid, email: phoneUser.email }, phoneUser);
+      return { success: true, user: finalUser };
     } catch (err) {
       return { success: false, error: err.message };
     } finally {
       setLoading(false);
     }
   };
+
   const loginWithGoogle = async () => {
     setLoading(true);
     try {
@@ -92,8 +152,8 @@ export const AuthProvider = ({ children }) => {
         role: 'customer',
         addresses: [],
       };
-      setUser(googleUser);
-      return { success: true, user: googleUser };
+      const finalUser = await fetchOrCreateUserProfile(fbUser, googleUser);
+      return { success: true, user: finalUser };
     } catch (err) {
       console.error('Google sign-in error:', err);
       return { success: false, error: 'GOOGLE LOGIN FAILED: ' + err.message };
@@ -119,8 +179,8 @@ export const AuthProvider = ({ children }) => {
           role: 'customer',
           addresses: [],
         };
-        setUser(newUser);
-        return { success: true, user: newUser };
+        const finalUser = await fetchOrCreateUserProfile(fbUser, newUser);
+        return { success: true, user: finalUser };
     } catch (err) {
       return { success: false, error: err.message };
     } finally {
@@ -153,6 +213,7 @@ export const AuthProvider = ({ children }) => {
     const updatedUser = { ...user, addresses: [...(user.addresses || []), addrObj] };
     setUser(updatedUser);
     localStorage.setItem(LOCAL_USER_KEY, JSON.stringify(updatedUser));
+    syncUserToCloud(updatedUser);
   };
 
   const updateAddress = (id, updatedFields) => {
@@ -161,6 +222,7 @@ export const AuthProvider = ({ children }) => {
     const updatedUser = { ...user, addresses: updatedList };
     setUser(updatedUser);
     localStorage.setItem(LOCAL_USER_KEY, JSON.stringify(updatedUser));
+    syncUserToCloud(updatedUser);
   };
 
   const deleteAddress = (id) => {
@@ -169,6 +231,7 @@ export const AuthProvider = ({ children }) => {
     const updatedUser = { ...user, addresses: filteredList };
     setUser(updatedUser);
     localStorage.setItem(LOCAL_USER_KEY, JSON.stringify(updatedUser));
+    syncUserToCloud(updatedUser);
   };
 
   const setDefaultAddress = (id) => {
@@ -177,6 +240,7 @@ export const AuthProvider = ({ children }) => {
     const updatedUser = { ...user, addresses: updatedList };
     setUser(updatedUser);
     localStorage.setItem(LOCAL_USER_KEY, JSON.stringify(updatedUser));
+    syncUserToCloud(updatedUser);
   };
 
   return (
