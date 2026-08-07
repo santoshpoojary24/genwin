@@ -390,7 +390,8 @@ export default function Customizer() {
   // Image cropping state
   const [croppingFile, setCroppingFile] = useState(null);
   const [croppingImageSrc, setCroppingImageSrc] = useState(null);
-  const [cropParams, setCropParams] = useState({ x: 10, y: 10, w: 80, h: 80 });
+  const [cropShape, setCropShape] = useState('original');
+  const [cropZoom, setCropZoom] = useState(1.0);
 
   const selectedSizeStock = product ? getProductSizeStock(product, selectedSize) : 0;
   const isSelectedSizeOut = selectedSizeStock <= 0;
@@ -478,7 +479,8 @@ export default function Customizer() {
     reader.onload = (ev) => {
       setCroppingFile(file);
       setCroppingImageSrc(ev.target.result);
-      setCropParams({ x: 10, y: 10, w: 80, h: 80 });
+      setCropShape('original');
+      setCropZoom(1.0);
     };
     reader.readAsDataURL(file);
     e.target.value = '';
@@ -489,23 +491,57 @@ export default function Customizer() {
     const img = new Image();
     img.onload = () => {
       const canvas = document.createElement('canvas');
-      
-      const absX = (cropParams.x / 100) * img.width;
-      const absY = (cropParams.y / 100) * img.height;
-      const absW = (cropParams.w / 100) * img.width;
-      const absH = (cropParams.h / 100) * img.height;
-
-      const targetWidth = Math.min(absW, 850);
-      const targetHeight = Math.min(absH, 850);
-      canvas.width = targetWidth;
-      canvas.height = targetHeight;
-
       const ctx = canvas.getContext('2d');
-      ctx.drawImage(img, absX, absY, absW, absH, 0, 0, targetWidth, targetHeight);
+      
+      let cropW, cropH, cropX, cropY;
 
-      const compressedDataUrl = croppingFile?.type === 'image/png'
+      if (cropShape === 'original') {
+        cropW = img.width / cropZoom;
+        cropH = img.height / cropZoom;
+        cropX = (img.width - cropW) / 2;
+        cropY = (img.height - cropH) / 2;
+      } else {
+        const minDim = Math.min(img.width, img.height);
+        cropW = minDim / cropZoom;
+        cropH = minDim / cropZoom;
+        cropX = (img.width - cropW) / 2;
+        cropY = (img.height - cropH) / 2;
+      }
+
+      const targetSize = 650;
+      let targetW = targetSize;
+      let targetH = targetSize;
+
+      if (cropShape === 'original') {
+        const aspect = img.width / img.height;
+        if (aspect > 1) {
+          targetW = targetSize;
+          targetH = Math.round(targetSize / aspect);
+        } else {
+          targetH = targetSize;
+          targetW = Math.round(targetSize * aspect);
+        }
+      }
+
+      canvas.width = targetW;
+      canvas.height = targetH;
+
+      if (cropShape === 'circle') {
+        ctx.beginPath();
+        ctx.arc(targetW / 2, targetH / 2, targetW / 2, 0, Math.PI * 2);
+        ctx.closePath();
+        ctx.clip();
+      }
+
+      ctx.drawImage(img, cropX, cropY, cropW, cropH, 0, 0, targetW, targetH);
+
+      const fileType = (cropShape === 'circle' || croppingFile?.type === 'image/png')
+        ? 'image/png'
+        : 'image/jpeg';
+      
+      const compressedDataUrl = fileType === 'image/png'
         ? canvas.toDataURL('image/png')
-        : canvas.toDataURL('image/jpeg', 0.8);
+        : canvas.toDataURL('image/jpeg', 0.85);
 
       const initialSize = Math.round(zone.w * 0.85);
 
@@ -987,82 +1023,67 @@ export default function Customizer() {
                 className="max-w-full max-h-full object-contain pointer-events-none opacity-30"
               />
               {/* Highlight Crop Area */}
-              <div 
-                className="absolute border border-dashed border-violet-400 bg-white/5 shadow-[0_0_0_9999px_rgba(0,0,0,0.65)] pointer-events-none"
-                style={{
-                  left: `${cropParams.x}%`,
-                  top: `${cropParams.y}%`,
-                  width: `${cropParams.w}%`,
-                  height: `${cropParams.h}%`,
-                }}
-              />
+              {(() => {
+                const boxSize = 100 / cropZoom;
+                const offset = (100 - boxSize) / 2;
+                return (
+                  <div 
+                    className="absolute border border-dashed border-violet-400 bg-white/5 shadow-[0_0_0_9999px_rgba(0,0,0,0.65)] pointer-events-none transition-all duration-150"
+                    style={{
+                      left: `${offset}%`,
+                      top: `${offset}%`,
+                      width: `${boxSize}%`,
+                      height: `${boxSize}%`,
+                      borderRadius: cropShape === 'circle' ? '50%' : '0px'
+                    }}
+                  />
+                );
+              })()}
             </div>
 
-            {/* Sliders for Crop Settings */}
-            <div className="space-y-3 text-[10px]">
-              {/* Crop X */}
-              <div>
-                <div className="flex justify-between text-zinc-400 uppercase mb-1">
-                  <span>Left Offset (X)</span>
-                  <span>{cropParams.x}%</span>
-                </div>
-                <input 
-                  type="range"
-                  min="0"
-                  max={Math.max(0, 100 - cropParams.w)}
-                  value={cropParams.x}
-                  onChange={e => setCropParams(prev => ({ ...prev, x: Number(e.target.value) }))}
-                  className="w-full accent-violet-500"
-                />
+            {/* Shape Selectors */}
+            <div className="space-y-2">
+              <span className="text-[10px] text-zinc-500 uppercase tracking-wider font-bold">1. Select Sticker Shape:</span>
+              <div className="grid grid-cols-3 gap-2">
+                {[
+                  { id: 'original', label: '🖼️ Original', desc: 'Full image' },
+                  { id: 'square', label: '⬜ Square', desc: '1:1 square' },
+                  { id: 'circle', label: '🟡 Circle', desc: 'Round logo' }
+                ].map(shape => (
+                  <button
+                    key={shape.id}
+                    onClick={() => setCropShape(shape.id)}
+                    className={`py-2 px-1 text-center rounded-xl border transition-all flex flex-col items-center justify-center gap-0.5 ${
+                      cropShape === shape.id 
+                        ? 'bg-white text-black border-white font-extrabold shadow-lg' 
+                        : 'border-zinc-800 text-zinc-400 bg-zinc-950/40 hover:border-zinc-700 hover:text-white'
+                    }`}
+                  >
+                    <span className="text-xs">{shape.label}</span>
+                    <span className="text-[8px] opacity-60 uppercase">{shape.desc}</span>
+                  </button>
+                ))}
               </div>
+            </div>
 
-              {/* Crop Y */}
-              <div>
-                <div className="flex justify-between text-zinc-400 uppercase mb-1">
-                  <span>Top Offset (Y)</span>
-                  <span>{cropParams.y}%</span>
-                </div>
-                <input 
-                  type="range"
-                  min="0"
-                  max={Math.max(0, 100 - cropParams.h)}
-                  value={cropParams.y}
-                  onChange={e => setCropParams(prev => ({ ...prev, y: Number(e.target.value) }))}
-                  className="w-full accent-violet-500"
-                />
+            {/* Zoom Slider */}
+            <div className="space-y-2">
+              <div className="flex justify-between text-[10px] text-zinc-500 uppercase font-bold">
+                <span>2. Zoom / Crop Area:</span>
+                <span className="text-violet-400">{cropZoom.toFixed(1)}x</span>
               </div>
-
-              {/* Crop Width */}
-              <div>
-                <div className="flex justify-between text-zinc-400 uppercase mb-1">
-                  <span>Crop Width</span>
-                  <span>{cropParams.w}%</span>
-                </div>
-                <input 
-                  type="range"
-                  min="10"
-                  max={100 - cropParams.x}
-                  value={cropParams.w}
-                  onChange={e => setCropParams(prev => ({ ...prev, w: Number(e.target.value) }))}
-                  className="w-full accent-violet-500"
-                />
-              </div>
-
-              {/* Crop Height */}
-              <div>
-                <div className="flex justify-between text-zinc-400 uppercase mb-1">
-                  <span>Crop Height</span>
-                  <span>{cropParams.h}%</span>
-                </div>
-                <input 
-                  type="range"
-                  min="10"
-                  max={100 - cropParams.y}
-                  value={cropParams.h}
-                  onChange={e => setCropParams(prev => ({ ...prev, h: Number(e.target.value) }))}
-                  className="w-full accent-violet-500"
-                />
-              </div>
+              <input 
+                type="range"
+                min="1.0"
+                max="2.5"
+                step="0.1"
+                value={cropZoom}
+                onChange={e => setCropZoom(Number(e.target.value))}
+                className="w-full accent-violet-500 cursor-pointer h-1.5 bg-zinc-800 rounded-lg appearance-none"
+              />
+              <p className="text-[8px] text-zinc-500 text-center uppercase tracking-wider">
+                Slide to zoom into the center of the sticker
+              </p>
             </div>
 
             {/* Actions */}
