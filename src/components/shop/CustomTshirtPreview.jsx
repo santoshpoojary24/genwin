@@ -140,13 +140,13 @@ function TshirtBack({ color }) {
   );
 }
 
-export function CustomTshirtPreview({ customization, className = "w-full h-full" }) {
+export function CustomTshirtPreview({ customization, className = "w-full h-full", forceSide }) {
   if (!customization) return null;
   const { frontLayers = [], backLayers = [], garmentColor = '#FFFFFF' } = customization;
 
   const hasFront = frontLayers.length > 0;
   const hasBack = backLayers.length > 0;
-  const side = hasFront ? 'front' : (hasBack ? 'back' : 'front');
+  const side = forceSide || (hasFront ? 'front' : (hasBack ? 'back' : 'front'));
   const items = side === 'front' ? frontLayers : backLayers;
 
   return (

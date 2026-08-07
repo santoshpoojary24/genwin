@@ -3163,6 +3163,22 @@ export default function AdminDashboard() {
                           <span className="text-[8px] bg-violet-950 text-violet-300 border border-violet-800 px-1 rounded font-bold uppercase">DTG Print</span>
                         </div>
 
+                        {/* Previews of Front and Back Side-by-Side */}
+                        <div className="flex gap-4 items-center justify-center p-2 bg-zinc-950 border border-zinc-800 rounded-lg">
+                          <div className="text-center space-y-1 flex-1">
+                            <span className="text-[8px] text-zinc-500 font-bold uppercase tracking-wider">👕 FRONT CUSTOMIZATION:</span>
+                            <div className="w-full aspect-[400/440] max-w-[135px] mx-auto bg-zinc-900 border border-zinc-850 rounded overflow-hidden flex items-center justify-center relative p-1 shadow-inner">
+                              <CustomTshirtPreview customization={item.customization} forceSide="front" className="w-full h-full" />
+                            </div>
+                          </div>
+                          <div className="text-center space-y-1 flex-1">
+                            <span className="text-[8px] text-zinc-500 font-bold uppercase tracking-wider">🔄 BACK CUSTOMIZATION:</span>
+                            <div className="w-full aspect-[400/440] max-w-[135px] mx-auto bg-zinc-900 border border-zinc-850 rounded overflow-hidden flex items-center justify-center relative p-1 shadow-inner">
+                              <CustomTshirtPreview customization={item.customization} forceSide="back" className="w-full h-full" />
+                            </div>
+                          </div>
+                        </div>
+
                         {/* Front Print Layer Details */}
                         {((item.customization.frontLayers || []).length > 0) && (
                           <div className="space-y-1.5">
