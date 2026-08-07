@@ -3135,13 +3135,6 @@ export default function AdminDashboard() {
               <h4 className="font-bold text-white uppercase text-[10px]">ITEMS IN ORDER:</h4>
               {viewingOrder.items?.map((item, idx) => {
                 const isCustom = item.customization;
-                const imagesUploaded = [];
-                if (isCustom) {
-                  const frontImages = (item.customization.frontLayers || []).filter(l => l.type === 'image');
-                  const backImages = (item.customization.backLayers || []).filter(l => l.type === 'image');
-                  imagesUploaded.push(...frontImages.map((img, index) => ({ src: img.src, side: 'Front', index })));
-                  imagesUploaded.push(...backImages.map((img, index) => ({ src: img.src, side: 'Back', index })));
-                }
 
                 return (
                   <div key={idx} className="space-y-3 p-3 bg-zinc-950 border border-zinc-800">
@@ -3163,22 +3156,86 @@ export default function AdminDashboard() {
                       <span className="font-bold text-white shrink-0">₹{item.unitPrice * item.quantity}</span>
                     </div>
 
-                    {imagesUploaded.length > 0 && (
-                      <div className="border-t border-zinc-900 pt-2 space-y-1.5 font-mono">
-                        <div className="text-[9px] text-zinc-500 uppercase tracking-widest font-bold">Customer Uploaded Graphics:</div>
-                        <div className="flex flex-wrap gap-2">
-                          {imagesUploaded.map((img, imgIdx) => (
-                            <a
-                              key={imgIdx}
-                              href={img.src}
-                              download={`order_${viewingOrder.orderNumber}_item_${idx + 1}_${img.side}_graphic_${imgIdx + 1}.png`}
-                              className="px-2.5 py-1 bg-zinc-800 hover:bg-violet-600 text-white rounded text-[9px] font-bold uppercase tracking-wider flex items-center gap-1 transition-colors"
-                              title="Download uploaded graphic"
-                            >
-                              ⬇️ Download {img.side} Graphic
-                            </a>
-                          ))}
+                    {isCustom && (
+                      <div className="mt-3 p-3 bg-zinc-900 border border-violet-850/80 rounded-lg space-y-3 font-mono text-[11px]">
+                        <div className="flex items-center justify-between border-b border-zinc-800 pb-1.5">
+                          <span className="text-violet-400 font-extrabold uppercase tracking-wider text-[9px] flex items-center gap-1">✨ Custom Print Spec Sheet</span>
+                          <span className="text-[8px] bg-violet-950 text-violet-300 border border-violet-800 px-1 rounded font-bold uppercase">DTG Print</span>
                         </div>
+
+                        {/* Front Print Layer Details */}
+                        {((item.customization.frontLayers || []).length > 0) && (
+                          <div className="space-y-1.5">
+                            <div className="text-[9px] text-zinc-400 font-bold uppercase tracking-wider">👕 FRONT GRAPHICS & TEXT:</div>
+                            <div className="pl-2 border-l border-violet-800/80 space-y-2">
+                              {item.customization.frontLayers.map((layer, lIdx) => (
+                                <div key={lIdx} className="bg-zinc-950 p-2 border border-zinc-800 rounded flex items-center justify-between gap-3">
+                                  <div className="flex-1 space-y-1">
+                                    <div className="font-bold text-violet-300 uppercase text-[8px]">
+                                      Layer #{lIdx + 1}: {layer.type.toUpperCase()}
+                                    </div>
+                                    {layer.type === 'text' ? (
+                                      <div className="text-[10px] space-y-1">
+                                        <p className="text-zinc-300 font-bold">Text: <span className="text-white bg-zinc-900 px-1 border border-zinc-800 select-all font-sans">"{layer.text}"</span></p>
+                                        <p className="text-zinc-500 text-[8px] uppercase tracking-wider">Font: <strong className="text-zinc-300">{layer.fontFamily}</strong> | Size: <strong className="text-zinc-300">{layer.fontSize}px</strong> | Color: <strong className="text-zinc-300">{layer.color}</strong> {layer.bold && '| BOLD'}</p>
+                                      </div>
+                                    ) : (
+                                      <div className="text-[9px] text-zinc-400">
+                                        Custom uploaded image ({layer.size}px width)
+                                      </div>
+                                    )}
+                                  </div>
+                                  {layer.type === 'image' && (
+                                    <a
+                                      href={layer.src}
+                                      download={`order_${viewingOrder.orderNumber}_item_${idx + 1}_Front_sticker_${lIdx + 1}.png`}
+                                      className="px-2 py-0.5 bg-violet-600 hover:bg-violet-500 text-white rounded text-[8px] font-bold uppercase tracking-wider shrink-0 transition-colors"
+                                    >
+                                      Download
+                                    </a>
+                                  )}
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Back Print Layer Details */}
+                        {((item.customization.backLayers || []).length > 0) && (
+                          <div className="space-y-1.5 pt-1.5 border-t border-zinc-800/50">
+                            <div className="text-[9px] text-zinc-400 font-bold uppercase tracking-wider">🔄 BACK GRAPHICS & TEXT:</div>
+                            <div className="pl-2 border-l border-violet-800/80 space-y-2">
+                              {item.customization.backLayers.map((layer, lIdx) => (
+                                <div key={lIdx} className="bg-zinc-950 p-2 border border-zinc-800 rounded flex items-center justify-between gap-3">
+                                  <div className="flex-1 space-y-1">
+                                    <div className="font-bold text-violet-300 uppercase text-[8px]">
+                                      Layer #{lIdx + 1}: {layer.type.toUpperCase()}
+                                    </div>
+                                    {layer.type === 'text' ? (
+                                      <div className="text-[10px] space-y-1">
+                                        <p className="text-zinc-300 font-bold">Text: <span className="text-white bg-zinc-900 px-1 border border-zinc-800 select-all font-sans">"{layer.text}"</span></p>
+                                        <p className="text-zinc-500 text-[8px] uppercase tracking-wider">Font: <strong className="text-zinc-300">{layer.fontFamily}</strong> | Size: <strong className="text-zinc-300">{layer.fontSize}px</strong> | Color: <strong className="text-zinc-300">{layer.color}</strong> {layer.bold && '| BOLD'}</p>
+                                      </div>
+                                    ) : (
+                                      <div className="text-[9px] text-zinc-400">
+                                        Custom uploaded image ({layer.size}px width)
+                                      </div>
+                                    )}
+                                  </div>
+                                  {layer.type === 'image' && (
+                                    <a
+                                      href={layer.src}
+                                      download={`order_${viewingOrder.orderNumber}_item_${idx + 1}_Back_sticker_${lIdx + 1}.png`}
+                                      className="px-2 py-0.5 bg-violet-600 hover:bg-violet-500 text-white rounded text-[8px] font-bold uppercase tracking-wider shrink-0 transition-colors"
+                                    >
+                                      Download
+                                    </a>
+                                  )}
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
                       </div>
                     )}
                   </div>
