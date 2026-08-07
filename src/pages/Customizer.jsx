@@ -387,6 +387,11 @@ export default function Customizer() {
   const [qty, setQty] = useState(1);
   const [justAdded, setJustAdded] = useState(false);
 
+  // Image cropping state
+  const [croppingFile, setCroppingFile] = useState(null);
+  const [croppingImageSrc, setCroppingImageSrc] = useState(null);
+  const [cropParams, setCropParams] = useState({ x: 10, y: 10, w: 80, h: 80 });
+
   const selectedSizeStock = product ? getProductSizeStock(product, selectedSize) : 0;
   const isSelectedSizeOut = selectedSizeStock <= 0;
 
@@ -471,45 +476,52 @@ export default function Customizer() {
     if (!file) return;
     const reader = new FileReader();
     reader.onload = (ev) => {
-      const img = new Image();
-      img.onload = () => {
-        const canvas = document.createElement('canvas');
-        const MAX_WIDTH = 850;
-        const MAX_HEIGHT = 850;
-        let width = img.width;
-        let height = img.height;
-
-        if (width > height) {
-          if (width > MAX_WIDTH) {
-            height = Math.round((height * MAX_WIDTH) / width);
-            width = MAX_WIDTH;
-          }
-        } else {
-          if (height > MAX_HEIGHT) {
-            width = Math.round((width * MAX_HEIGHT) / height);
-            height = MAX_HEIGHT;
-          }
-        }
-
-        canvas.width = width;
-        canvas.height = height;
-        const ctx = canvas.getContext('2d');
-        ctx.drawImage(img, 0, 0, width, height);
-
-        // Keep transparency for PNG files, compress others as JPEG
-        const compressedDataUrl = file.type === 'image/png' 
-          ? canvas.toDataURL('image/png') 
-          : canvas.toDataURL('image/jpeg', 0.8);
-
-        setCurrentItems(prev => [...prev, {
-          id: Date.now(), type: 'image', src: compressedDataUrl,
-          x: cx, y: cy, size: 80,
-        }]);
-      };
-      img.src = ev.target.result;
+      setCroppingFile(file);
+      setCroppingImageSrc(ev.target.result);
+      setCropParams({ x: 10, y: 10, w: 80, h: 80 });
     };
     reader.readAsDataURL(file);
     e.target.value = '';
+  };
+
+  const applyCrop = () => {
+    if (!croppingImageSrc) return;
+    const img = new Image();
+    img.onload = () => {
+      const canvas = document.createElement('canvas');
+      
+      const absX = (cropParams.x / 100) * img.width;
+      const absY = (cropParams.y / 100) * img.height;
+      const absW = (cropParams.w / 100) * img.width;
+      const absH = (cropParams.h / 100) * img.height;
+
+      const targetWidth = Math.min(absW, 850);
+      const targetHeight = Math.min(absH, 850);
+      canvas.width = targetWidth;
+      canvas.height = targetHeight;
+
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(img, absX, absY, absW, absH, 0, 0, targetWidth, targetHeight);
+
+      const compressedDataUrl = croppingFile?.type === 'image/png'
+        ? canvas.toDataURL('image/png')
+        : canvas.toDataURL('image/jpeg', 0.8);
+
+      const initialSize = Math.round(zone.w * 0.85);
+
+      setCurrentItems(prev => [...prev, {
+        id: Date.now(),
+        type: 'image',
+        src: compressedDataUrl,
+        x: cx,
+        y: cy,
+        size: initialSize,
+      }]);
+
+      setCroppingImageSrc(null);
+      setCroppingFile(null);
+    };
+    img.src = croppingImageSrc;
   };
 
   const moveItem = useCallback((id, x, y) => {
@@ -529,6 +541,31 @@ export default function Customizer() {
   const deleteActive = () => {
     setCurrentItems(prev => prev.filter(it => it.id !== activeId));
     setActiveId(null);
+  };
+
+  const fitActiveToZone = () => {
+    if (!activeItem) return;
+    const maxW = zone.w - 4;
+    const maxH = zone.h - 4;
+    const maxDimension = Math.min(maxW, maxH);
+    
+    setCurrentItems(prev => prev.map(it => {
+      if (it.id !== activeId) return it;
+      if (it.type === 'text') {
+        return {
+          ...it,
+          x: cx,
+          y: cy,
+          fontSize: 28
+        };
+      }
+      return {
+        ...it,
+        size: maxDimension,
+        x: cx,
+        y: cy
+      };
+    }));
   };
 
   const handleAddToCart = () => {
@@ -678,6 +715,14 @@ export default function Customizer() {
                   </div>
                 </div>
               )}
+              {/* Fit to Print Area */}
+              <button
+                onClick={fitActiveToZone}
+                className="w-full py-2 bg-violet-900/40 hover:bg-violet-900/70 border border-violet-800 text-violet-300 text-[11px] font-bold uppercase rounded-xl transition-all font-mono"
+              >
+                📐 Fit to Print Area
+              </button>
+
               {/* Delete */}
               <button
                 onClick={deleteActive}
@@ -916,6 +961,125 @@ export default function Customizer() {
           <div>
             <p className="text-sm font-bold">Added to Cart! 🎨</p>
             <p className="text-[11px] text-violet-200">Redirecting home...</p>
+          </div>
+        </div>
+      )}
+
+      {/* ── Cropping Modal ── */}
+      {croppingImageSrc && (
+        <div className="fixed inset-0 z-[99999] bg-black/90 flex items-center justify-center p-4 backdrop-blur-sm">
+          <div className="bg-zinc-900 border border-zinc-800 rounded-3xl p-5 max-w-md w-full space-y-4 font-mono text-white">
+            <div className="flex items-center justify-between border-b border-zinc-800 pb-2">
+              <span className="text-xs font-bold uppercase tracking-widest text-violet-400">Crop Graphic Sticker</span>
+              <button 
+                onClick={() => { setCroppingImageSrc(null); setCroppingFile(null); }}
+                className="text-zinc-500 hover:text-white text-base font-bold"
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* Image Preview Container with Crop Box */}
+            <div className="relative w-full aspect-square bg-zinc-950 border border-zinc-850 rounded-xl overflow-hidden flex items-center justify-center">
+              <img 
+                src={croppingImageSrc} 
+                alt="Source to crop" 
+                className="max-w-full max-h-full object-contain pointer-events-none opacity-30"
+              />
+              {/* Highlight Crop Area */}
+              <div 
+                className="absolute border border-dashed border-violet-400 bg-white/5 shadow-[0_0_0_9999px_rgba(0,0,0,0.65)] pointer-events-none"
+                style={{
+                  left: `${cropParams.x}%`,
+                  top: `${cropParams.y}%`,
+                  width: `${cropParams.w}%`,
+                  height: `${cropParams.h}%`,
+                }}
+              />
+            </div>
+
+            {/* Sliders for Crop Settings */}
+            <div className="space-y-3 text-[10px]">
+              {/* Crop X */}
+              <div>
+                <div className="flex justify-between text-zinc-400 uppercase mb-1">
+                  <span>Left Offset (X)</span>
+                  <span>{cropParams.x}%</span>
+                </div>
+                <input 
+                  type="range"
+                  min="0"
+                  max={Math.max(0, 100 - cropParams.w)}
+                  value={cropParams.x}
+                  onChange={e => setCropParams(prev => ({ ...prev, x: Number(e.target.value) }))}
+                  className="w-full accent-violet-500"
+                />
+              </div>
+
+              {/* Crop Y */}
+              <div>
+                <div className="flex justify-between text-zinc-400 uppercase mb-1">
+                  <span>Top Offset (Y)</span>
+                  <span>{cropParams.y}%</span>
+                </div>
+                <input 
+                  type="range"
+                  min="0"
+                  max={Math.max(0, 100 - cropParams.h)}
+                  value={cropParams.y}
+                  onChange={e => setCropParams(prev => ({ ...prev, y: Number(e.target.value) }))}
+                  className="w-full accent-violet-500"
+                />
+              </div>
+
+              {/* Crop Width */}
+              <div>
+                <div className="flex justify-between text-zinc-400 uppercase mb-1">
+                  <span>Crop Width</span>
+                  <span>{cropParams.w}%</span>
+                </div>
+                <input 
+                  type="range"
+                  min="10"
+                  max={100 - cropParams.x}
+                  value={cropParams.w}
+                  onChange={e => setCropParams(prev => ({ ...prev, w: Number(e.target.value) }))}
+                  className="w-full accent-violet-500"
+                />
+              </div>
+
+              {/* Crop Height */}
+              <div>
+                <div className="flex justify-between text-zinc-400 uppercase mb-1">
+                  <span>Crop Height</span>
+                  <span>{cropParams.h}%</span>
+                </div>
+                <input 
+                  type="range"
+                  min="10"
+                  max={100 - cropParams.y}
+                  value={cropParams.h}
+                  onChange={e => setCropParams(prev => ({ ...prev, h: Number(e.target.value) }))}
+                  className="w-full accent-violet-500"
+                />
+              </div>
+            </div>
+
+            {/* Actions */}
+            <div className="flex gap-3 pt-2">
+              <button
+                onClick={() => { setCroppingImageSrc(null); setCroppingFile(null); }}
+                className="flex-1 py-2.5 bg-zinc-800 hover:bg-zinc-700 font-bold uppercase text-[10px] rounded-xl transition-all"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={applyCrop}
+                className="flex-1 py-2.5 bg-violet-600 hover:bg-violet-500 font-bold uppercase text-[10px] rounded-xl transition-all shadow-lg"
+              >
+                Crop & Add
+              </button>
+            </div>
           </div>
         </div>
       )}
