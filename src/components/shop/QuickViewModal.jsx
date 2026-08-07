@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { X, Star, ShoppingBag, ArrowRight, Heart } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import { X, Star, ShoppingBag, ArrowRight, Heart, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useCart, getProductSizeStock } from '../../context/CartContext';
 import { useAuth } from '../../context/AuthContext';
@@ -13,6 +13,41 @@ export default function QuickViewModal({ product, onClose }) {
   const [selectedColor, setSelectedColor] = useState(null);
   const [selectedImage, setSelectedImage] = useState('');
   const [added, setAdded] = useState(false);
+
+  const touchStartX = useRef(null);
+
+  const handleTouchStart = (e) => {
+    touchStartX.current = e.touches[0].clientX;
+  };
+
+  const handleTouchEnd = (e) => {
+    if (touchStartX.current === null) return;
+    const touchEndX = e.changedTouches[0].clientX;
+    const diffX = touchStartX.current - touchEndX;
+
+    if (diffX > 50) {
+      handleNextImage();
+    } else if (diffX < -50) {
+      handlePrevImage();
+    }
+    touchStartX.current = null;
+  };
+
+  const handleNextImage = () => {
+    if (!product || !product.images || product.images.length <= 1) return;
+    const currentList = product.images;
+    const currentIndex = currentList.indexOf(selectedImage || currentList[0]);
+    const nextIndex = (currentIndex + 1) % currentList.length;
+    setSelectedImage(currentList[nextIndex]);
+  };
+
+  const handlePrevImage = () => {
+    if (!product || !product.images || product.images.length <= 1) return;
+    const currentList = product.images;
+    const currentIndex = currentList.indexOf(selectedImage || currentList[0]);
+    const prevIndex = (currentIndex - 1 + currentList.length) % currentList.length;
+    setSelectedImage(currentList[prevIndex]);
+  };
 
   useEffect(() => {
     if (!product) return;
@@ -60,13 +95,38 @@ export default function QuickViewModal({ product, onClose }) {
       >
         {/* ── Gallery ── */}
         <div className="md:w-[45%] bg-zinc-50 flex flex-col">
-          <div className="flex-1 relative overflow-hidden">
+          <div 
+            className="flex-1 relative overflow-hidden group/gallery"
+            onTouchStart={handleTouchStart}
+            onTouchEnd={handleTouchEnd}
+          >
             <img
               src={selectedImage}
               alt={product.name}
-              className="w-full h-full object-cover"
+              className="w-full h-full object-cover select-none"
               style={{ minHeight: 280 }}
             />
+
+            {/* Prev / Next Navigation Overlays */}
+            {product.images?.length > 1 && (
+              <>
+                <button
+                  onClick={(e) => { e.preventDefault(); e.stopPropagation(); handlePrevImage(); }}
+                  className="absolute left-2.5 top-1/2 -translate-y-1/2 z-20 w-8 h-8 bg-black/60 hover:bg-black text-white rounded-full flex items-center justify-center transition-all opacity-100 md:opacity-0 md:group-hover/gallery:opacity-100 shadow-md active:scale-95"
+                  aria-label="Previous Image"
+                >
+                  <ChevronLeft className="w-4 h-4" />
+                </button>
+                <button
+                  onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleNextImage(); }}
+                  className="absolute right-2.5 top-1/2 -translate-y-1/2 z-20 w-8 h-8 bg-black/60 hover:bg-black text-white rounded-full flex items-center justify-center transition-all opacity-100 md:opacity-0 md:group-hover/gallery:opacity-100 shadow-md active:scale-95"
+                  aria-label="Next Image"
+                >
+                  <ChevronRight className="w-4 h-4" />
+                </button>
+              </>
+            )}
+
             {discountPct > 0 && (
               <span className="absolute top-3 left-3 bg-black text-white text-[9px] font-mono font-bold px-2 py-0.5 uppercase">
                 -{discountPct}% OFF

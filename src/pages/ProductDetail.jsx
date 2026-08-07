@@ -1,8 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import {
-  Sparkles, Star, ShoppingBag, Truck, RefreshCw, Heart, ChevronRight, Plus, Minus, ArrowRight, X, Ruler,
+  Sparkles, Star, ShoppingBag, Truck, RefreshCw, Heart, ChevronRight, ChevronLeft, Plus, Minus, ArrowRight, X, Ruler,
   CheckCircle2, Lock, MessageSquare, ShieldCheck, ThumbsUp
 } from 'lucide-react';
 import { FirebaseService } from '../services/firebaseService';
@@ -33,6 +33,41 @@ export default function ProductDetail() {
   const [selectedSize, setSelectedSize] = useState('');
   const [selectedColor, setSelectedColor] = useState(null);
   const [quantity, setQuantity] = useState(1);
+
+  const touchStartX = useRef(null);
+
+  const handleTouchStart = (e) => {
+    touchStartX.current = e.touches[0].clientX;
+  };
+
+  const handleTouchEnd = (e) => {
+    if (touchStartX.current === null) return;
+    const touchEndX = e.changedTouches[0].clientX;
+    const diffX = touchStartX.current - touchEndX;
+
+    if (diffX > 50) {
+      handleNextImage();
+    } else if (diffX < -50) {
+      handlePrevImage();
+    }
+    touchStartX.current = null;
+  };
+
+  const handleNextImage = () => {
+    if (!product || !product.images || product.images.length <= 1) return;
+    const currentList = product.images;
+    const currentIndex = currentList.indexOf(selectedImage || currentList[0]);
+    const nextIndex = (currentIndex + 1) % currentList.length;
+    setSelectedImage(currentList[nextIndex]);
+  };
+
+  const handlePrevImage = () => {
+    if (!product || !product.images || product.images.length <= 1) return;
+    const currentList = product.images;
+    const currentIndex = currentList.indexOf(selectedImage || currentList[0]);
+    const prevIndex = (currentIndex - 1 + currentList.length) % currentList.length;
+    setSelectedImage(currentList[prevIndex]);
+  };
   const [addedToCart, setAddedToCart] = useState(false);
   const [qvProduct, setQvProduct] = useState(null);
   const [showSizeGuide, setShowSizeGuide] = useState(false);
@@ -180,12 +215,36 @@ export default function ProductDetail() {
 
           {/* Left: Gallery */}
           <div className="lg:col-span-7 space-y-4">
-            <div className="relative overflow-hidden bg-zinc-100 border border-zinc-200 aspect-[4/5] img-zoom">
+            <div 
+              className="relative overflow-hidden bg-zinc-100 border border-zinc-200 aspect-[4/5] img-zoom group/gallery"
+              onTouchStart={handleTouchStart}
+              onTouchEnd={handleTouchEnd}
+            >
               <img
                 src={selectedImage || product.images[0]}
                 alt={product.name}
-                className="w-full h-full object-cover object-top"
+                className="w-full h-full object-cover object-top select-none"
               />
+
+              {/* Prev / Next Navigation Overlays */}
+              {product.images?.length > 1 && (
+                <>
+                  <button
+                    onClick={(e) => { e.preventDefault(); e.stopPropagation(); handlePrevImage(); }}
+                    className="absolute left-4 top-1/2 -translate-y-1/2 z-20 w-10 h-10 bg-black/60 hover:bg-black text-white rounded-full flex items-center justify-center transition-all opacity-100 md:opacity-0 md:group-hover/gallery:opacity-100 shadow-lg active:scale-95"
+                    aria-label="Previous Image"
+                  >
+                    <ChevronLeft className="w-5 h-5" />
+                  </button>
+                  <button
+                    onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleNextImage(); }}
+                    className="absolute right-4 top-1/2 -translate-y-1/2 z-20 w-10 h-10 bg-black/60 hover:bg-black text-white rounded-full flex items-center justify-center transition-all opacity-100 md:opacity-0 md:group-hover/gallery:opacity-100 shadow-lg active:scale-95"
+                    aria-label="Next Image"
+                  >
+                    <ChevronRight className="w-5 h-5" />
+                  </button>
+                </>
+              )}
 
               {discountPercent > 0 && (
                 <div className="absolute top-4 left-4 bg-black text-white px-3 py-1 text-[10px] font-bold uppercase tracking-widest">
