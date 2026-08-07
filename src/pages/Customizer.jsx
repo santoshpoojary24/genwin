@@ -230,12 +230,25 @@ function PrintLayer({ items, activeId, setActiveId, printZone, onMove }) {
     if (!item) return;
     setActiveId(id);
     // Pre-compute half-extents so the drag handler can clamp item edges to zone
+    let imgW = item.size || 70;
+    let imgH = item.size || 70;
+    if (item.type === 'image' && item.aspectRatio) {
+      const aspect = item.aspectRatio;
+      if (aspect > 1) {
+        imgW = item.size || 70;
+        imgH = (item.size || 70) / aspect;
+      } else {
+        imgH = item.size || 70;
+        imgW = (item.size || 70) * aspect;
+      }
+    }
+
     const hw = item.type === 'text'
       ? Math.max(44, (item.text?.length || 4) * (item.fontSize || 20) * 0.32)
-      : (item.size || 70) / 2 + 6;
+      : imgW / 2 + 6;
     const hh = item.type === 'text'
       ? (item.fontSize || 20) / 2 + 8
-      : (item.size || 70) / 2 + 6;
+      : imgH / 2 + 6;
     dragging.current = { id, startPos, startX: item.x, startY: item.y, hasMoved: false, hw, hh };
   };
 
@@ -291,6 +304,44 @@ function PrintLayer({ items, activeId, setActiveId, printZone, onMove }) {
       onMouseDown={handleBgDown}
       onTouchStart={handleBgDown}
     >
+      {items.length === 0 && (
+        <g style={{ pointerEvents: 'none' }}>
+          <rect 
+            x={printZone.x} 
+            y={printZone.y} 
+            width={printZone.w} 
+            height={printZone.h} 
+            fill="rgba(99, 102, 241, 0.02)" 
+            stroke="rgba(99, 102, 241, 0.3)" 
+            strokeWidth="1.5" 
+            strokeDasharray="4,4" 
+            rx="8" 
+          />
+          <text
+            x={printZone.x + printZone.w / 2}
+            y={printZone.y + printZone.h / 2 - 10}
+            textAnchor="middle"
+            fill="rgba(255, 255, 255, 0.3)"
+            fontSize="10"
+            fontFamily="monospace"
+            className="uppercase tracking-widest"
+          >
+            ✨ Custom Print Safe Area
+          </text>
+          <text
+            x={printZone.x + printZone.w / 2}
+            y={printZone.y + printZone.h / 2 + 10}
+            textAnchor="middle"
+            fill="rgba(167, 139, 250, 0.4)"
+            fontSize="8"
+            fontFamily="monospace"
+            className="uppercase tracking-wide"
+          >
+            Add Text or Sticker Graphic to begin
+          </text>
+        </g>
+      )}
+
       {items.map(item => {
         const isActive = activeId === item.id;
         let imgW = item.size || 70;
@@ -319,6 +370,15 @@ function PrintLayer({ items, activeId, setActiveId, printZone, onMove }) {
             transform={`translate(${item.x},${item.y})`}
             onMouseDown={e => handlePointerDown(e, item.id)}
             onTouchStart={e => handlePointerDown(e, item.id)}
+            onDoubleClick={() => {
+              if (item.type === 'text') {
+                setActiveTab('design');
+                setTextInput(item.text || '');
+                setTimeout(() => {
+                  document.getElementById('custom-text-input')?.focus();
+                }, 100);
+              }
+            }}
             style={{ cursor: 'move', userSelect: 'none' }}
           >
             {/* Transparent hit-area — makes entire bounding box clickable */}
@@ -400,6 +460,9 @@ export default function Customizer() {
   const [qty, setQty] = useState(1);
   const [justAdded, setJustAdded] = useState(false);
 
+  // Sidebar tab control
+  const [activeTab, setActiveTab] = useState('garment'); // 'garment' | 'design' | 'layers'
+
   // Image cropping state
   const [croppingFile, setCroppingFile] = useState(null);
   const [croppingImageSrc, setCroppingImageSrc] = useState(null);
@@ -422,6 +485,55 @@ export default function Customizer() {
   const [frontItems, setFrontItems] = useState([]);
   const [backItems, setBackItems] = useState([]);
   const [activeId, setActiveId] = useState(null);
+
+  // Auto-switch tab to layers when an item is selected
+  useEffect(() => {
+    if (activeId) {
+      setActiveTab('layers');
+    }
+  }, [activeId]);
+
+  // Keyboard navigation & deletion shortcuts
+  useEffect(() => {
+    if (!activeId) return;
+    const handleKeyDown = (e) => {
+      if (document.activeElement.tagName === 'INPUT' || document.activeElement.tagName === 'TEXTAREA') {
+        return;
+      }
+      
+      const step = e.shiftKey ? 10 : 2;
+      
+      switch (e.key) {
+        case 'ArrowUp':
+          e.preventDefault();
+          setCurrentItems(prev => prev.map(it => it.id === activeId ? { ...it, y: it.y - step } : it));
+          break;
+        case 'ArrowDown':
+          e.preventDefault();
+          setCurrentItems(prev => prev.map(it => it.id === activeId ? { ...it, y: it.y + step } : it));
+          break;
+        case 'ArrowLeft':
+          e.preventDefault();
+          setCurrentItems(prev => prev.map(it => it.id === activeId ? { ...it, x: it.x - step } : it));
+          break;
+        case 'ArrowRight':
+          e.preventDefault();
+          setCurrentItems(prev => prev.map(it => it.id === activeId ? { ...it, x: it.x + step } : it));
+          break;
+        case 'Delete':
+        case 'Backspace':
+          e.preventDefault();
+          setCurrentItems(prev => prev.filter(it => it.id !== activeId));
+          setActiveId(null);
+          break;
+        default:
+          break;
+      }
+    };
+    
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [activeId]);
 
   const [tool, setTool] = useState('text'); // 'text' | 'image'
 
@@ -730,64 +842,39 @@ export default function Customizer() {
       <div className="flex items-center justify-between px-4 py-3 bg-zinc-900/95 border-b border-white/10 shrink-0 backdrop-blur">
         <Link to={`/product/${product.slug || product.id}`} className="flex items-center gap-1.5 text-zinc-400 hover:text-white transition-colors">
           <ArrowLeft className="w-4 h-4" />
-          <span className="text-[11px] font-bold uppercase hidden sm:inline">Back</span>
+          <span className="text-[11px] font-bold uppercase">Back to Product</span>
         </Link>
         <div className="flex items-center gap-2">
           <div className="w-5 h-5 bg-violet-600 rounded flex items-center justify-center">
             <Sparkles className="w-3 h-3 text-white" />
           </div>
-          <span className="text-[11px] font-bold uppercase text-white tracking-widest">CUSTOM PRINT STUDIO</span>
+          <span className="text-[11px] font-bold uppercase text-white tracking-widest">{product.name} — CUSTOM STUDIO</span>
         </div>
-        {/* Qty + Cart */}
-        <div className="flex items-center gap-2">
-          {selectedSizeStock > 0 && selectedSizeStock <= 5 && (
-            <span className="text-[9px] text-amber-400 font-extrabold uppercase animate-pulse hidden md:inline">
-              ⚠️ ONLY {selectedSizeStock} LEFT
-            </span>
-          )}
-          <div className="flex items-center gap-1 bg-zinc-800 rounded-lg px-2 py-1 border border-zinc-700">
-            <button onClick={() => setQty(q => Math.max(1, q - 1))} className="text-zinc-400 hover:text-white w-5 h-5 flex items-center justify-center text-sm leading-none">−</button>
-            <span className="text-xs font-bold w-4 text-center">{qty}</span>
-            <button onClick={() => setQty(q => Math.min(selectedSizeStock, q + 1))} className="text-zinc-400 hover:text-white w-5 h-5 flex items-center justify-center text-sm leading-none">+</button>
-          </div>
-          <button
-            onClick={handleAddToCart}
-            disabled={isSelectedSizeOut}
-            className={`flex items-center gap-1.5 px-3 py-2 text-white text-[11px] font-bold uppercase rounded-xl transition-all shadow-lg ${
-              isSelectedSizeOut 
-                ? 'bg-zinc-800 border border-zinc-700 text-zinc-500 cursor-not-allowed' 
-                : 'bg-violet-600 hover:bg-violet-500 active:scale-95'
-            }`}
-          >
-            <ShoppingCart className="w-3.5 h-3.5" />
-            <span className="hidden sm:inline">{isSelectedSizeOut ? 'SOLD OUT' : 'ADD TO CART'}</span>
-            <span className="sm:hidden">{isSelectedSizeOut ? 'SOLD' : 'ADD'}</span>
-          </button>
-        </div>
+        <div className="w-16" />
       </div>
 
-      {/* ── Main Layout: stacked on mobile, side-by-side on desktop ── */}
+      {/* ── Main Layout ── */}
       <div className="flex-1 flex flex-col lg:flex-row overflow-y-auto">
 
-        {/* ══ LEFT: T-Shirt Preview Canvas ══ */}
-        <div className="flex flex-col items-center pt-5 px-4 lg:w-[52%] lg:min-h-0">
+        {/* ══ LEFT: Canvas Workspace ══ */}
+        <div className="flex flex-col items-center pt-6 px-4 lg:w-[50%] lg:min-h-0 bg-zinc-900/10">
 
           {/* Front / Back Toggle */}
-          <div className="flex bg-zinc-800 rounded-2xl p-1 mb-5 w-full max-w-[320px] shadow-inner">
-            {[{ id: 'front', label: '👕 Front' }, { id: 'back', label: '🔄 Back' }].map(v => (
+          <div className="flex bg-zinc-900/80 border border-zinc-800 rounded-2xl p-1 mb-6 w-full max-w-[320px] shadow-inner">
+            {[{ id: 'front', label: '👕 Front Side' }, { id: 'back', label: '🔄 Back Side' }].map(v => (
               <button
                 key={v.id}
                 onClick={() => { setView(v.id); setActiveId(null); }}
-                className={`flex-1 py-2.5 text-[11px] font-bold uppercase rounded-xl transition-all ${view === v.id ? 'bg-white text-black shadow' : 'text-zinc-400 hover:text-white'}`}
+                className={`flex-1 py-2 text-[10px] font-bold uppercase rounded-xl transition-all ${view === v.id ? 'bg-white text-black shadow' : 'text-zinc-400 hover:text-white'}`}
               >
                 {v.label}
               </button>
             ))}
           </div>
 
-          {/* T-Shirt 3D Canvas */}
-          <div className="relative w-full max-w-[320px]"
-            style={{ aspectRatio: '400/440', background: 'radial-gradient(ellipse at center, #2a2a4a 0%, #0f0f1f 100%)', borderRadius: '20px', padding: '10px' }}>
+          {/* T-Shirt Canvas Frame */}
+          <div className="relative w-full max-w-[320px] shadow-2xl transition-all duration-350 hover:shadow-violet-950/20"
+            style={{ aspectRatio: '400/440', background: 'radial-gradient(ellipse at center, #1b1b36 0%, #0c0c16 100%)', borderRadius: '24px', padding: '10px', border: '1px solid rgba(255,255,255,0.05)' }}>
             <div className="relative w-full h-full">
               {view === 'front'
                 ? <TshirtFront color={garmentColor} showZone={currentItems.length === 0} />
@@ -803,257 +890,428 @@ export default function Customizer() {
             </div>
           </div>
 
-          {/* Zone hint */}
-          <p className="text-[9px] text-violet-400/70 uppercase tracking-widest mt-3 text-center">
-            {view === 'front' ? '📌 Chest print area' : '📌 Full back print area'} · Drag to reposition
+          {/* Guidelines info */}
+          <p className="text-[9px] text-zinc-500 uppercase tracking-widest mt-4 text-center">
+            {view === 'front' ? '📌 Chest print safe zone' : '📌 Back print safe zone'}
           </p>
-
-          {/* ── Active item controls ── */}
-          {activeItem && (
-            <div className="mt-3 w-full max-w-[320px] bg-zinc-800/80 border border-zinc-700 rounded-2xl p-3 space-y-3">
-              {/* Resize slider — only for images */}
-              {activeItem.type === 'image' && (
-                <div>
-                  <div className="flex items-center justify-between mb-1.5">
-                    <span className="text-[10px] text-zinc-400 uppercase tracking-widest">Resize Image</span>
-                    <span className="text-[10px] font-bold text-violet-400">{activeItem.size || 80}px</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <button
-                      onClick={() => resizeItem(activeItem.id, (activeItem.size || 80) - 10)}
-                      className="w-8 h-8 bg-zinc-700 hover:bg-zinc-600 border border-zinc-600 rounded-lg text-white font-bold flex items-center justify-center text-lg leading-none"
-                    >−</button>
-                    <input
-                      type="range"
-                      min={30}
-                      max={Math.min(zone.w, zone.h) - 4}
-                      value={activeItem.size || 80}
-                      onChange={e => resizeItem(activeItem.id, Number(e.target.value))}
-                      className="flex-1 h-1.5 accent-violet-500 cursor-pointer"
-                    />
-                    <button
-                      onClick={() => resizeItem(activeItem.id, (activeItem.size || 80) + 10)}
-                      className="w-8 h-8 bg-zinc-700 hover:bg-zinc-600 border border-zinc-600 rounded-lg text-white font-bold flex items-center justify-center text-lg leading-none"
-                    >+</button>
-                  </div>
-                </div>
-              )}
-              {/* Fit to Print Area */}
-              <button
-                onClick={fitActiveToZone}
-                className="w-full py-2 bg-violet-900/40 hover:bg-violet-900/70 border border-violet-800 text-violet-300 text-[11px] font-bold uppercase rounded-xl transition-all font-mono"
-              >
-                📐 Fit to Print Area
-              </button>
-
-              {/* Delete */}
-              <button
-                onClick={deleteActive}
-                className="w-full py-2 bg-red-900/40 hover:bg-red-900/70 border border-red-800 text-red-400 text-[11px] font-bold uppercase rounded-xl transition-all"
-              >
-                🗑 Remove selected
-              </button>
-            </div>
-          )}
-
-          {/* Size Selector */}
-          <div className="mt-5 w-full max-w-[320px]">
-            <p className="text-[9px] text-zinc-500 uppercase tracking-widest mb-2">SIZE</p>
-            <div className="flex flex-wrap gap-2">
-              {(product.sizes || ['XS','S','M','L','XL','2XL']).map(s => {
-                const stock = product ? getProductSizeStock(product, s) : 0;
-                const isOut = stock <= 0;
-                return (
-                  <button
-                    key={s}
-                    disabled={isOut}
-                    onClick={() => {
-                      setSelectedSize(s);
-                      const sStock = getProductSizeStock(product, s);
-                      setQty(q => Math.max(1, Math.min(q, sStock)));
-                    }}
-                    className={`px-2.5 py-1.5 text-[10px] font-bold rounded-lg border transition-all ${
-                      isOut
-                        ? 'border-zinc-800 text-zinc-600 line-through cursor-not-allowed opacity-40'
-                        : selectedSize === s
-                        ? 'bg-white text-black border-white'
-                        : 'border-zinc-700 text-zinc-400 hover:border-zinc-500 hover:text-white'
-                    }`}
-                  >
-                    {s} {isOut ? '(OUT)' : (stock <= 5 ? `(${stock} LEFT)` : '')}
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-
-          {/* Garment Color Swatches */}
-          <div className="mt-4 w-full max-w-[320px] mb-6">
-            <p className="text-[9px] text-zinc-500 uppercase tracking-widest mb-2">GARMENT COLOR</p>
-            <div className="flex flex-wrap gap-2">
-              {availableColors.map(c => (
-                <button
-                  key={c.hex}
-                  onClick={() => setGarmentColor(c.hex)}
-                  title={c.name}
-                  className={`w-8 h-8 rounded-full border-2 transition-all ${garmentColor === c.hex ? 'border-violet-400 scale-110 shadow-lg shadow-violet-500/30' : 'border-zinc-700 hover:border-zinc-400 hover:scale-105'}`}
-                  style={{ backgroundColor: c.hex, boxShadow: garmentColor === c.hex ? undefined : (c.hex === '#FFFFFF' ? 'inset 0 0 0 1px #bbb' : undefined) }}
-                />
-              ))}
-            </div>
-          </div>
+          <p className="text-[8px] text-zinc-600 text-center mt-1 uppercase">
+            Click layers to select · drag to position · double-click text to edit
+          </p>
         </div>
 
-        {/* ══ RIGHT: Tool Panel ══ */}
-        <div className="lg:w-[48%] flex flex-col border-t lg:border-t-0 lg:border-l border-white/10 bg-zinc-900/40">
+        {/* ══ RIGHT: Tabbed Control Panel ══ */}
+        <div className="lg:w-[50%] flex flex-col border-t lg:border-t-0 lg:border-l border-white/10 bg-zinc-900/60">
 
-          {/* Tool Tabs */}
-          <div className="flex border-b border-white/10 shrink-0">
+          {/* Tab Selector */}
+          <div className="flex border-b border-white/10 shrink-0 bg-zinc-950/40">
             {[
-              { id: 'text',  label: '✏️ Add Text',    icon: <Type className="w-3.5 h-3.5" /> },
-              { id: 'image', label: '🖼 Upload Image', icon: <Upload className="w-3.5 h-3.5" /> },
-            ].map(t => (
+              { id: 'garment', label: '👕 Garment', desc: 'Colors & Size' },
+              { id: 'design',  label: '🎨 Design',  desc: 'Text & Sticker' },
+              { id: 'layers',  label: '🛠️ Edit Layer', desc: 'Resize & Align', disabled: !activeId },
+            ].map(tab => (
               <button
-                key={t.id}
-                onClick={() => setTool(t.id)}
-                className={`flex-1 flex items-center justify-center gap-1.5 py-3 text-[11px] font-bold uppercase transition-all border-b-2 ${tool === t.id ? 'text-violet-400 border-violet-500 bg-zinc-800/60' : 'text-zinc-500 border-transparent hover:text-zinc-300 hover:bg-zinc-800/30'}`}
+                key={tab.id}
+                onClick={() => {
+                  if (tab.id === 'layers' && !activeId) return;
+                  setActiveTab(tab.id);
+                }}
+                disabled={tab.disabled}
+                className={`flex-1 flex flex-col items-center justify-center py-3.5 transition-all border-b-2 font-mono ${
+                  tab.disabled 
+                    ? 'opacity-20 cursor-not-allowed text-zinc-700 border-transparent' 
+                    : activeTab === tab.id 
+                    ? 'text-violet-400 border-violet-500 bg-zinc-800/40 font-extrabold' 
+                    : 'text-zinc-500 border-transparent hover:text-zinc-300 hover:bg-zinc-800/20'
+                }`}
               >
-                {t.icon}
-                <span className="hidden sm:inline">{t.label}</span>
+                <span className="text-[11px] font-bold uppercase tracking-wider">{tab.label}</span>
+                <span className="text-[8px] opacity-50 uppercase mt-0.5">{tab.desc}</span>
               </button>
             ))}
           </div>
 
-          <div className="flex-1 overflow-y-auto p-4 space-y-5">
+          {/* Tab Content Area */}
+          <div className="flex-1 overflow-y-auto p-5 space-y-6">
 
-            {/* ══ TEXT TOOL ══ */}
-            {tool === 'text' && (
-              <div className="space-y-4">
-                <div>
-                  <label className="text-[10px] text-zinc-500 uppercase tracking-widest block mb-1.5">YOUR TEXT</label>
-                  <input
-                    type="text"
-                    placeholder="Type your custom text..."
-                    value={textInput}
-                    onChange={e => setTextInput(e.target.value)}
-                    maxLength={30}
-                    onKeyDown={e => e.key === 'Enter' && addText()}
-                    className="w-full bg-zinc-800 border border-zinc-700 text-white text-sm px-3 py-3 rounded-xl focus:outline-none focus:border-violet-500 placeholder:text-zinc-600"
-                  />
+            {/* TAB 1: GARMENT OPTIONS */}
+            {activeTab === 'garment' && (
+              <div className="space-y-6">
+                {/* Size Swatches */}
+                <div className="space-y-2">
+                  <div className="flex justify-between items-center">
+                    <span className="text-[10px] text-zinc-500 uppercase tracking-widest font-bold">1. Select Size</span>
+                    {selectedSize && (
+                      <span className="text-[10px] text-violet-400 font-bold uppercase">SELECTED: {selectedSize}</span>
+                    )}
+                  </div>
+                  <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">
+                    {(product?.sizes || ['XS','S','M','L','XL','2XL']).map(s => {
+                      const stock = product ? getProductSizeStock(product, s) : 0;
+                      const isOut = stock <= 0;
+                      return (
+                        <button
+                          key={s}
+                          disabled={isOut}
+                          onClick={() => {
+                            setSelectedSize(s);
+                            const sStock = getProductSizeStock(product, s);
+                            setQty(q => Math.max(1, Math.min(q, sStock)));
+                          }}
+                          className={`py-3 text-[11px] font-bold rounded-xl border transition-all flex flex-col items-center justify-center gap-0.5 ${
+                            isOut
+                              ? 'border-zinc-800/80 text-zinc-600 line-through cursor-not-allowed opacity-35'
+                              : selectedSize === s
+                              ? 'bg-white text-black border-white shadow-xl scale-102'
+                              : 'border-zinc-800 text-zinc-400 hover:border-zinc-650 hover:text-white bg-zinc-950/20'
+                          }`}
+                        >
+                          <span>{s}</span>
+                          <span className="text-[7px] font-medium opacity-70">
+                            {isOut ? 'OUT' : (stock <= 5 ? `${stock} Left` : 'Available')}
+                          </span>
+                        </button>
+                      );
+                    })}
+                  </div>
                 </div>
 
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <label className="text-[10px] text-zinc-500 uppercase tracking-widest block mb-1.5">FONT</label>
-                    <select
-                      value={textFont}
-                      onChange={e => setTextFont(e.target.value)}
-                      className="w-full bg-zinc-800 border border-zinc-700 text-white text-xs px-2 py-2.5 rounded-xl focus:outline-none focus:border-violet-500"
-                    >
-                      {FONTS.map(f => <option key={f} value={f}>{f}</option>)}
-                    </select>
+                {/* Garment Colors */}
+                <div className="space-y-2">
+                  <span className="text-[10px] text-zinc-500 uppercase tracking-widest font-bold block">2. Garment Color</span>
+                  <div className="flex flex-wrap gap-3 p-3 bg-zinc-950/20 rounded-2xl border border-zinc-800/50">
+                    {availableColors.map(c => {
+                      const isSelected = garmentColor === c.hex;
+                      return (
+                        <button
+                          key={c.hex}
+                          onClick={() => setGarmentColor(c.hex)}
+                          title={c.name}
+                          className={`w-9 h-9 rounded-full border-2 transition-all relative ${isSelected ? 'border-violet-400 scale-110 shadow-lg shadow-violet-500/30' : 'border-zinc-800 hover:border-zinc-600 hover:scale-105'}`}
+                          style={{ backgroundColor: c.hex, boxShadow: isSelected ? undefined : (c.hex === '#FFFFFF' ? 'inset 0 0 0 1px #bbb' : undefined) }}
+                        >
+                          {isSelected && (
+                            <span className="absolute inset-0 flex items-center justify-center text-[10px] text-violet-400 drop-shadow-md">
+                              ✓
+                            </span>
+                          )}
+                        </button>
+                      );
+                    })}
                   </div>
+                </div>
+
+                {/* Quantity Caps */}
+                <div className="space-y-2 pt-2 border-t border-zinc-850">
+                  <span className="text-[10px] text-zinc-500 uppercase tracking-widest font-bold block">3. Adjust Quantity</span>
+                  <div className="flex items-center gap-4">
+                    <div className="flex items-center gap-1 bg-zinc-950/40 rounded-xl px-3 py-2 border border-zinc-800 w-32 justify-between">
+                      <button 
+                        onClick={() => setQty(q => Math.max(1, q - 1))} 
+                        className="text-zinc-500 hover:text-white font-bold w-6 h-6 flex items-center justify-center text-lg leading-none"
+                      >
+                        −
+                      </button>
+                      <span className="text-sm font-bold text-white font-mono">{qty}</span>
+                      <button 
+                        onClick={() => setQty(q => Math.min(selectedSizeStock, q + 1))} 
+                        className="text-zinc-500 hover:text-white font-bold w-6 h-6 flex items-center justify-center text-lg leading-none"
+                      >
+                        +
+                      </button>
+                    </div>
+                    {selectedSizeStock > 0 && selectedSizeStock <= 5 ? (
+                      <span className="text-[10px] text-amber-400 font-extrabold uppercase animate-pulse">
+                        ⚠️ Only {selectedSizeStock} items remaining!
+                      </span>
+                    ) : (
+                      <span className="text-[9px] text-zinc-600 uppercase">In stock and ready to custom-print</span>
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* TAB 2: DESIGN ADDERS */}
+            {activeTab === 'design' && (
+              <div className="space-y-6">
+                {/* Custom Text Layer */}
+                <div className="space-y-4 bg-zinc-950/10 border border-zinc-850 rounded-2xl p-4">
+                  <span className="text-[10px] text-zinc-500 uppercase tracking-wider font-bold block">A. Write Custom Text</span>
+                  
                   <div>
-                    <label className="text-[10px] text-zinc-500 uppercase tracking-widest block mb-1.5">SIZE</label>
+                    <input
+                      id="custom-text-input"
+                      type="text"
+                      placeholder="Type your custom text here..."
+                      value={textInput}
+                      onChange={e => setTextInput(e.target.value)}
+                      maxLength={30}
+                      onKeyDown={e => e.key === 'Enter' && addText()}
+                      className="w-full bg-zinc-850 border border-zinc-750 text-white text-sm px-3.5 py-3 rounded-xl focus:outline-none focus:border-violet-500 placeholder:text-zinc-650"
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="text-[9px] text-zinc-500 uppercase tracking-widest block mb-1">Font family</label>
+                      <select
+                        value={textFont}
+                        onChange={e => setTextFont(e.target.value)}
+                        className="w-full bg-zinc-850 border border-zinc-750 text-white text-xs px-3 py-2.5 rounded-xl focus:outline-none focus:border-violet-500"
+                      >
+                        {FONTS.map(f => <option key={f} value={f}>{f}</option>)}
+                      </select>
+                    </div>
+
+                    <div className="flex flex-col">
+                      <label className="text-[9px] text-zinc-500 uppercase tracking-widest block mb-1">Bold style</label>
+                      <button
+                        onClick={() => setTextBold(!textBold)}
+                        className={`w-full py-2.5 px-3 text-xs font-bold uppercase rounded-xl border transition-all ${textBold ? 'bg-violet-600 text-white border-violet-500' : 'border-zinc-750 text-zinc-400 hover:text-white bg-zinc-950/20'}`}
+                      >
+                        {textBold ? 'Bold ON <b>' : 'Normal'}
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Preset Colors */}
+                  <div>
+                    <label className="text-[9px] text-zinc-500 uppercase tracking-widest block mb-1.5">Preset Text Colors</label>
+                    <div className="flex flex-wrap gap-2 mb-3">
+                      {['#FFFFFF', '#000000', '#F59E0B', '#EF4444', '#3B82F6', '#10B981', '#EC4899', '#8B5CF6'].map(preset => (
+                        <button
+                          key={preset}
+                          onClick={() => setTextColor(preset)}
+                          className={`w-7 h-7 rounded-lg border-2 transition-all ${textColor === preset ? 'border-violet-400 scale-110 shadow' : 'border-zinc-855 hover:border-zinc-700'}`}
+                          style={{ backgroundColor: preset }}
+                        />
+                      ))}
+                    </div>
+                    
                     <div className="flex items-center gap-2">
-                      <button onClick={() => setTextSize(s => Math.max(12, s - 2))} className="w-8 h-8 bg-zinc-800 border border-zinc-700 rounded-xl text-zinc-300 hover:text-white flex items-center justify-center">−</button>
-                      <span className="flex-1 text-center text-sm font-bold">{textSize}</span>
-                      <button onClick={() => setTextSize(s => Math.min(50, s + 2))} className="w-8 h-8 bg-zinc-800 border border-zinc-700 rounded-xl text-zinc-300 hover:text-white flex items-center justify-center">+</button>
+                      <input
+                        type="color"
+                        value={textColor}
+                        onChange={e => setTextColor(e.target.value)}
+                        className="w-7 h-7 bg-transparent border-0 cursor-pointer"
+                      />
+                      <input
+                        type="text"
+                        value={textColor}
+                        onChange={e => setTextColor(e.target.value)}
+                        placeholder="#000000"
+                        className="flex-1 bg-zinc-850 border border-zinc-750 text-white text-[10px] font-mono px-3 py-1.5 rounded-lg text-center uppercase focus:outline-none"
+                      />
                     </div>
+                  </div>
+
+                  <button
+                    onClick={addText}
+                    className="w-full py-3 bg-violet-600 hover:bg-violet-500 text-white font-bold text-xs uppercase tracking-widest rounded-xl transition-all shadow-lg flex items-center justify-center gap-1.5"
+                  >
+                    <Type className="w-3.5 h-3.5" />
+                    Place Text on Shirt
+                  </button>
+                </div>
+
+                {/* Upload Image Sticker */}
+                <div className="space-y-4 bg-zinc-950/10 border border-zinc-850 rounded-2xl p-4">
+                  <span className="text-[10px] text-zinc-500 uppercase tracking-wider font-bold block">B. Upload Sticker Graphic</span>
+                  
+                  <button
+                    onClick={() => fileInputRef.current?.click()}
+                    className="w-full py-5 border-2 border-dashed border-zinc-800 hover:border-violet-500/50 bg-zinc-950/30 hover:bg-violet-950/5 text-zinc-400 hover:text-violet-300 rounded-2xl transition-all flex flex-col items-center justify-center gap-2"
+                  >
+                    <Upload className="w-7 h-7 text-zinc-500" />
+                    <div className="text-center">
+                      <p className="text-xs font-bold uppercase tracking-wider">Select Image File</p>
+                      <p className="text-[8px] opacity-50 mt-0.5">Supports PNG, JPG, JPEG, SVG</p>
+                    </div>
+                  </button>
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/*"
+                    onChange={handleImageUpload}
+                    className="hidden"
+                  />
+                  <div className="bg-zinc-950/20 border border-zinc-855 rounded-xl p-3 text-[9px] text-zinc-500 space-y-1">
+                    <p>✅ High-quality sticker auto-scaled to fit printable area</p>
+                    <p>✅ Crops & transparent backgrounds preserved perfectly</p>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* TAB 3: LAYER PROPERTIES */}
+            {activeTab === 'layers' && activeItem && (
+              <div className="space-y-6">
+                {/* Resize */}
+                <div className="bg-zinc-950/10 border border-zinc-850 rounded-2xl p-4 space-y-4">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[10px] text-zinc-500 uppercase tracking-widest font-bold">
+                      {activeItem.type === 'text' ? 'Text Size' : 'Sticker Scale'}
+                    </span>
+                    <span className="text-[10px] font-bold text-violet-400">
+                      {activeItem.type === 'text' ? `${activeItem.fontSize || 20}px` : `${activeItem.size || 80}px`}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => {
+                        if (activeItem.type === 'text') {
+                          setCurrentItems(prev => prev.map(it => it.id === activeId ? { ...it, fontSize: Math.max(10, (it.fontSize || 20) - 2) } : it));
+                        } else {
+                          resizeItem(activeItem.id, (activeItem.size || 80) - 10);
+                        }
+                      }}
+                      className="w-8 h-8 bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 rounded-lg text-white font-bold flex items-center justify-center text-lg leading-none"
+                    >−</button>
+                    <input
+                      type="range"
+                      min={activeItem.type === 'text' ? 10 : 30}
+                      max={activeItem.type === 'text' ? 80 : Math.min(zone.w, zone.h) - 4}
+                      value={activeItem.type === 'text' ? activeItem.fontSize || 20 : activeItem.size || 80}
+                      onChange={e => {
+                        const val = Number(e.target.value);
+                        if (activeItem.type === 'text') {
+                          setCurrentItems(prev => prev.map(it => it.id === activeId ? { ...it, fontSize: val } : it));
+                        } else {
+                          resizeItem(activeItem.id, val);
+                        }
+                      }}
+                      className="flex-1 h-1.5 accent-violet-500 cursor-pointer"
+                    />
+                    <button
+                      onClick={() => {
+                        if (activeItem.type === 'text') {
+                          setCurrentItems(prev => prev.map(it => it.id === activeId ? { ...it, fontSize: Math.min(80, (it.fontSize || 20) + 2) } : it));
+                        } else {
+                          resizeItem(activeItem.id, (activeItem.size || 80) + 10);
+                        }
+                      }}
+                      className="w-8 h-8 bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 rounded-lg text-white font-bold flex items-center justify-center text-lg leading-none"
+                    >+</button>
                   </div>
                 </div>
 
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <label className="text-[10px] text-zinc-500 uppercase tracking-widest block mb-1.5">COLOR</label>
-                    <div className="flex items-center gap-2 bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2">
-                      <input type="color" value={textColor} onChange={e => setTextColor(e.target.value)} className="w-6 h-6 cursor-pointer bg-transparent border-0 rounded" />
-                      <span className="text-xs text-zinc-400 font-mono">{textColor}</span>
-                    </div>
-                  </div>
-                  <div>
-                    <label className="text-[10px] text-zinc-500 uppercase tracking-widest block mb-1.5">STYLE</label>
-                    <button
-                      onClick={() => setTextBold(b => !b)}
-                      className={`w-full py-2 text-xs font-extrabold rounded-xl border transition-all ${textBold ? 'bg-violet-600 border-violet-500 text-white' : 'bg-zinc-800 border-zinc-700 text-zinc-400'}`}
+                {/* Arrow Nudge Keys for Touch / Fine Tuning */}
+                <div className="bg-zinc-950/10 border border-zinc-850 rounded-2xl p-4 space-y-4">
+                  <span className="text-[10px] text-zinc-500 uppercase tracking-widest block font-bold">Nudge Alignment</span>
+                  <div className="flex flex-col items-center gap-1.5">
+                    {/* Up */}
+                    <button 
+                      onClick={() => setCurrentItems(prev => prev.map(it => it.id === activeId ? { ...it, y: Math.max(zone.y, it.y - 2) } : it))}
+                      className="w-9 h-9 bg-zinc-800 hover:bg-zinc-750 border border-zinc-700 rounded-xl text-white flex items-center justify-center font-bold text-xs"
                     >
-                      B Bold
+                      ▲
+                    </button>
+                    {/* Left, Center, Right */}
+                    <div className="flex gap-4 items-center">
+                      <button 
+                        onClick={() => setCurrentItems(prev => prev.map(it => it.id === activeId ? { ...it, x: Math.max(zone.x, it.x - 2) } : it))}
+                        className="w-9 h-9 bg-zinc-800 hover:bg-zinc-750 border border-zinc-700 rounded-xl text-white flex items-center justify-center font-bold text-xs"
+                      >
+                        ◀
+                      </button>
+                      <button 
+                        onClick={() => setCurrentItems(prev => prev.map(it => it.id === activeId ? { ...it, x: cx } : it))}
+                        className="px-3 py-1 bg-violet-950/40 hover:bg-violet-900/60 border border-violet-850 text-violet-300 rounded-lg text-[9px] uppercase font-bold tracking-wider"
+                      >
+                        Center
+                      </button>
+                      <button 
+                        onClick={() => setCurrentItems(prev => prev.map(it => it.id === activeId ? { ...it, x: Math.min(zone.x + zone.w, it.x + 2) } : it))}
+                        className="w-9 h-9 bg-zinc-800 hover:bg-zinc-750 border border-zinc-700 rounded-xl text-white flex items-center justify-center font-bold text-xs"
+                      >
+                        ▶
+                      </button>
+                    </div>
+                    {/* Down */}
+                    <button 
+                      onClick={() => setCurrentItems(prev => prev.map(it => it.id === activeId ? { ...it, y: Math.min(zone.y + zone.h, it.y + 2) } : it))}
+                      className="w-9 h-9 bg-zinc-800 hover:bg-zinc-750 border border-zinc-700 rounded-xl text-white flex items-center justify-center font-bold text-xs"
+                    >
+                      ▼
                     </button>
                   </div>
                 </div>
 
-                <button
-                  onClick={addText}
-                  disabled={!textInput.trim()}
-                  className="w-full py-3 bg-violet-600 hover:bg-violet-500 disabled:opacity-40 text-white font-bold text-xs uppercase rounded-xl transition-all press"
-                >
-                  + ADD TEXT TO {view === 'front' ? 'CHEST' : 'BACK'}
-                </button>
-              </div>
-            )}
-
-            {/* ══ IMAGE UPLOAD TOOL ══ */}
-            {tool === 'image' && (
-              <div className="space-y-4">
-                <div
-                  className="border-2 border-dashed border-zinc-700 hover:border-violet-500 rounded-2xl p-6 flex flex-col items-center gap-3 cursor-pointer transition-colors"
-                  onClick={() => fileInputRef.current?.click()}
-                >
-                  <div className="w-12 h-12 bg-zinc-800 rounded-2xl flex items-center justify-center">
-                    <Upload className="w-6 h-6 text-zinc-500" />
-                  </div>
-                  <p className="text-sm text-zinc-300 font-bold text-center">Tap to upload image</p>
-                  <p className="text-[10px] text-zinc-600 uppercase tracking-widest text-center">PNG with transparent background</p>
+                {/* Alignment Actions */}
+                <div className="grid grid-cols-2 gap-3">
+                  <button
+                    onClick={() => {
+                      setCurrentItems(prev => prev.map(it => it.id === activeId ? { ...it, x: cx, y: cy } : it));
+                    }}
+                    className="py-3 bg-zinc-950/20 hover:bg-zinc-800 border border-zinc-800 text-zinc-300 text-[10px] font-bold uppercase rounded-xl transition-all"
+                  >
+                    🎯 Center Layer
+                  </button>
+                  <button
+                    onClick={fitActiveToZone}
+                    className="py-3 bg-zinc-950/20 hover:bg-zinc-800 border border-zinc-800 text-zinc-300 text-[10px] font-bold uppercase rounded-xl transition-all"
+                  >
+                    📐 Fit To Zone
+                  </button>
                 </div>
-                <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleImageUpload} />
-                {/* Fixed size note */}
-                <div className="bg-zinc-800/50 border border-zinc-700 rounded-xl p-3 text-[10px] text-zinc-500 space-y-1">
-                  <p>📐 Placed at fixed 80×80px on the shirt</p>
-                  <p>✅ PNG with transparent background recommended</p>
-                  <p>✅ Drag to reposition after placing</p>
+
+                {/* Delete button */}
+                <div className="pt-2 border-t border-zinc-855">
+                  <button
+                    onClick={deleteActive}
+                    className="w-full py-3 bg-red-950/30 hover:bg-red-900/60 border border-red-900/60 text-red-400 text-[10px] font-bold uppercase rounded-xl transition-all shadow-md flex items-center justify-center gap-1.5"
+                  >
+                    🗑 Delete Selected Element
+                  </button>
                 </div>
               </div>
             )}
 
-            {/* ══ Design Summary ══ */}
+            {/* TAB 3 Placeholder when no layer active */}
+            {activeTab === 'layers' && !activeItem && (
+              <div className="text-center py-12 space-y-2 text-zinc-500 bg-zinc-950/10 border border-zinc-850 border-dashed rounded-3xl p-5">
+                <p className="text-xs">⚠️ No Layer Selected</p>
+                <p className="text-[8px] uppercase tracking-wider">Tap a text or image layer on the shirt to edit it</p>
+              </div>
+            )}
+
+            {/* ── Design Side Breakdown ── */}
             {(frontItems.length > 0 || backItems.length > 0) && (
-              <div className="border-t border-white/10 pt-4 space-y-2">
-                <p className="text-[9px] text-zinc-500 uppercase tracking-widest">YOUR DESIGN</p>
-                {frontItems.length > 0 && (
-                  <div className="flex items-center justify-between bg-zinc-800 rounded-xl px-3 py-2 border border-zinc-700">
-                    <span className="text-xs text-zinc-300">👕 Chest: {frontItems.length} element{frontItems.length > 1 ? 's' : ''}</span>
-                    <button onClick={() => setView('front')} className="text-[10px] text-violet-400 font-bold uppercase hover:text-violet-300">EDIT</button>
+              <div className="border-t border-zinc-850 pt-5 space-y-2">
+                <span className="text-[9px] text-zinc-500 uppercase tracking-widest font-bold block">Design Composition</span>
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="flex items-center justify-between bg-zinc-950/20 rounded-xl px-3 py-2 border border-zinc-850">
+                    <span className="text-[10px] text-zinc-400">👕 Chest: {frontItems.length} items</span>
+                    <button onClick={() => setView('front')} className="text-[8px] text-violet-400 font-bold uppercase hover:text-violet-300">View</button>
                   </div>
-                )}
-                {backItems.length > 0 && (
-                  <div className="flex items-center justify-between bg-zinc-800 rounded-xl px-3 py-2 border border-zinc-700">
-                    <span className="text-xs text-zinc-300">🔄 Back: {backItems.length} element{backItems.length > 1 ? 's' : ''}</span>
-                    <button onClick={() => setView('back')} className="text-[10px] text-violet-400 font-bold uppercase hover:text-violet-300">EDIT</button>
+                  <div className="flex items-center justify-between bg-zinc-950/20 rounded-xl px-3 py-2 border border-zinc-850">
+                    <span className="text-[10px] text-zinc-400">🔄 Back: {backItems.length} items</span>
+                    <button onClick={() => setView('back')} className="text-[8px] text-violet-400 font-bold uppercase hover:text-violet-300">View</button>
                   </div>
-                )}
+                </div>
                 <button
                   onClick={() => { setCurrentItems([]); setActiveId(null); }}
-                  className="w-full py-1.5 text-[10px] text-zinc-600 hover:text-red-400 uppercase font-bold transition-colors"
+                  className="w-full py-1 text-[8px] text-zinc-600 hover:text-red-400 uppercase font-bold tracking-wider transition-colors text-center"
                 >
-                  Clear {view} design
+                  Clear Current side ({view}) layout
                 </button>
               </div>
             )}
 
-            {/* ══ Price Summary ══ */}
-            <div className="border-t border-white/10 pt-4">
-              <div className="bg-zinc-800/40 border border-zinc-700 rounded-xl p-4 space-y-2.5">
-                <div className="flex justify-between text-xs text-zinc-400">
-                  <span>Base price</span>
+            {/* ── Price Breakdown ── */}
+            <div className="border-t border-zinc-850 pt-5">
+              <div className="bg-zinc-950/30 border border-zinc-850 rounded-2xl p-4 space-y-2 text-[11px]">
+                <div className="flex justify-between text-zinc-400">
+                  <span>Garment Base Price</span>
                   <span className="font-bold text-white">₹{basePrice}</span>
                 </div>
-                <div className="flex justify-between text-xs text-zinc-400">
-                  <span>DTG print fee</span>
+                <div className="flex justify-between text-zinc-400">
+                  <span>DTG custom print fee</span>
                   <span className="font-bold text-violet-400">+₹{printFee}</span>
                 </div>
                 {qty > 1 && (
-                  <div className="flex justify-between text-xs text-zinc-400">
-                    <span>Qty × {qty}</span>
+                  <div className="flex justify-between text-zinc-400">
+                    <span>Order Quantity</span>
                     <span className="font-bold text-white">× {qty}</span>
                   </div>
                 )}
