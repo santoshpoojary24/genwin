@@ -177,15 +177,21 @@ export function CustomTshirtPreview({ customization, className = "w-full h-full"
                 {item.text}
               </text>
             )}
-            {item.type === 'image' && (
-              <image
-                href={item.src}
-                x={-(item.size || 70) / 2}
-                y={-(item.size || 70) / 2}
-                width={item.size || 70}
-                height={item.size || 70}
-              />
-            )}
+            {item.type === 'image' && (() => {
+              const size = item.size || 70;
+              const aspect = item.aspectRatio || 1;
+              const w = aspect > 1 ? size : size * aspect;
+              const h = aspect > 1 ? size / aspect : size;
+              return (
+                <image
+                  href={item.src}
+                  x={-w / 2}
+                  y={-h / 2}
+                  width={w}
+                  height={h}
+                />
+              );
+            })()}
           </g>
         ))}
       </svg>

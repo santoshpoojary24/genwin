@@ -293,12 +293,25 @@ function PrintLayer({ items, activeId, setActiveId, printZone, onMove }) {
     >
       {items.map(item => {
         const isActive = activeId === item.id;
+        let imgW = item.size || 70;
+        let imgH = item.size || 70;
+        if (item.type === 'image' && item.aspectRatio) {
+          const aspect = item.aspectRatio;
+          if (aspect > 1) {
+            imgW = item.size || 70;
+            imgH = (item.size || 70) / aspect;
+          } else {
+            imgH = item.size || 70;
+            imgW = (item.size || 70) * aspect;
+          }
+        }
+
         const hw = item.type === 'text'
           ? Math.max(44, (item.text?.length || 4) * (item.fontSize || 20) * 0.32)
-          : (item.size || 70) / 2 + 6;
+          : imgW / 2 + 6;
         const hh = item.type === 'text'
           ? (item.fontSize || 20) / 2 + 8
-          : (item.size || 70) / 2 + 6;
+          : imgH / 2 + 6;
 
         return (
           <g
@@ -327,10 +340,10 @@ function PrintLayer({ items, activeId, setActiveId, printZone, onMove }) {
             {item.type === 'image' && (
               <image
                 href={item.src}
-                x={-(item.size || 70) / 2}
-                y={-(item.size || 70) / 2}
-                width={item.size || 70}
-                height={item.size || 70}
+                x={-imgW / 2}
+                y={-imgH / 2}
+                width={imgW}
+                height={imgH}
                 style={{ pointerEvents: 'none' }}
               />
             )}
@@ -585,7 +598,7 @@ export default function Customizer() {
       let targetW = targetSize;
       let targetH = targetSize;
 
-      if (cropShape === 'original') {
+      if (cropShape !== 'circle') {
         const aspect = absW / absH;
         if (aspect > 1) {
           targetW = targetSize;
@@ -625,6 +638,7 @@ export default function Customizer() {
         x: cx,
         y: cy,
         size: initialSize,
+        aspectRatio: targetW / targetH
       }]);
 
       setCroppingImageSrc(null);
