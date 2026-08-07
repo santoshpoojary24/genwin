@@ -490,11 +490,6 @@ function HomepageHeroBanner({ customAds = [] }) {
                 </Link>
               );
             })()}
-
-            <Link to="/customizer"
-              className="press inline-flex items-center gap-2 px-8 py-4 bg-zinc-900 border border-zinc-800 text-white hover:border-zinc-500 font-bold text-xs uppercase tracking-widest transition-colors rounded-xl">
-              <Sparkles className="w-4 h-4 text-emerald-400" /> CUSTOM PRINT STUDIO
-            </Link>
           </div>
 
           {slides.length > 1 && (
