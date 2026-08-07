@@ -163,7 +163,7 @@ export function CustomTshirtPreview({ customization, className = "w-full h-full"
         {items.map(item => (
           <g
             key={item.id}
-            transform={`translate(${item.x},${item.y})`}
+            transform={`translate(${item.x},${item.y}) rotate(${item.rotation || 0})`}
           >
             {item.type === 'text' && (
               <text

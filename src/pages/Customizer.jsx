@@ -367,7 +367,7 @@ function PrintLayer({ items, activeId, setActiveId, printZone, onMove }) {
         return (
           <g
             key={item.id}
-            transform={`translate(${item.x},${item.y})`}
+            transform={`translate(${item.x},${item.y}) rotate(${item.rotation || 0})`}
             onMouseDown={e => handlePointerDown(e, item.id)}
             onTouchStart={e => handlePointerDown(e, item.id)}
             onDoubleClick={() => {
@@ -469,6 +469,7 @@ export default function Customizer() {
   const [cropShape, setCropShape] = useState('original');
   const [cropParams, setCropParams] = useState({ x: 15, y: 15, w: 70, h: 70 });
   const [cropRotation, setCropRotation] = useState(0);
+  const [imgAspectRatio, setImgAspectRatio] = useState(1);
 
   const selectedSizeStock = product ? getProductSizeStock(product, selectedSize) : 0;
   const isSelectedSizeOut = selectedSizeStock <= 0;
@@ -603,11 +604,16 @@ export default function Customizer() {
     if (!file) return;
     const reader = new FileReader();
     reader.onload = (ev) => {
-      setCroppingFile(file);
-      setCroppingImageSrc(ev.target.result);
-      setCropShape('original');
-      setCropParams({ x: 15, y: 15, w: 70, h: 70 });
-      setCropRotation(0);
+      const img = new Image();
+      img.onload = () => {
+        setImgAspectRatio(img.width / img.height);
+        setCroppingFile(file);
+        setCroppingImageSrc(ev.target.result);
+        setCropShape('original');
+        setCropParams({ x: 15, y: 15, w: 70, h: 70 });
+        setCropRotation(0);
+      };
+      img.src = ev.target.result;
     };
     reader.readAsDataURL(file);
     e.target.value = '';
@@ -678,33 +684,43 @@ export default function Customizer() {
     dragInfo.current.active = false;
   };
 
+  const rotateImage90 = (clockwise) => {
+    if (!croppingImageSrc) return;
+    const img = new Image();
+    img.onload = () => {
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+
+      canvas.width = img.height;
+      canvas.height = img.width;
+
+      if (clockwise) {
+        ctx.translate(img.height, 0);
+        ctx.rotate((90 * Math.PI) / 180);
+      } else {
+        ctx.translate(0, img.width);
+        ctx.rotate((-90 * Math.PI) / 180);
+      }
+
+      ctx.drawImage(img, 0, 0);
+      const rotatedSrc = canvas.toDataURL(croppingFile?.type || 'image/png');
+      setCroppingImageSrc(rotatedSrc);
+      setImgAspectRatio(img.height / img.width);
+    };
+    img.src = croppingImageSrc;
+  };
+
   const applyCrop = () => {
     if (!croppingImageSrc) return;
     const img = new Image();
     img.onload = () => {
-      const rotateCanvas = document.createElement('canvas');
-      const rotateCtx = rotateCanvas.getContext('2d');
-      
-      const rad = (cropRotation * Math.PI) / 180;
-      const absCos = Math.abs(Math.cos(rad));
-      const absSin = Math.abs(Math.sin(rad));
-      const rotW = img.width * absCos + img.height * absSin;
-      const rotH = img.width * absSin + img.height * absCos;
-      
-      rotateCanvas.width = rotW;
-      rotateCanvas.height = rotH;
-      
-      rotateCtx.translate(rotW / 2, rotH / 2);
-      rotateCtx.rotate(rad);
-      rotateCtx.drawImage(img, -img.width / 2, -img.height / 2);
-      
       const canvas = document.createElement('canvas');
       const ctx = canvas.getContext('2d');
       
-      const absX = (cropParams.x / 100) * rotW;
-      const absY = (cropParams.y / 100) * rotH;
-      const absW = (cropParams.w / 100) * rotW;
-      const absH = (cropParams.h / 100) * rotH;
+      const absX = (cropParams.x / 100) * img.width;
+      const absY = (cropParams.y / 100) * img.height;
+      const absW = (cropParams.w / 100) * img.width;
+      const absH = (cropParams.h / 100) * img.height;
 
       const targetSize = 650;
       let targetW = targetSize;
@@ -731,7 +747,7 @@ export default function Customizer() {
         ctx.clip();
       }
 
-      ctx.drawImage(rotateCanvas, absX, absY, absW, absH, 0, 0, targetW, targetH);
+      ctx.drawImage(img, absX, absY, absW, absH, 0, 0, targetW, targetH);
 
       const fileType = (cropShape === 'circle' || croppingFile?.type === 'image/png')
         ? 'image/png'
@@ -750,7 +766,8 @@ export default function Customizer() {
         x: cx,
         y: cy,
         size: initialSize,
-        aspectRatio: targetW / targetH
+        aspectRatio: targetW / targetH,
+        rotation: 0
       }]);
 
       setCroppingImageSrc(null);
@@ -1195,6 +1212,29 @@ export default function Customizer() {
                   </div>
                 </div>
 
+                {/* Rotate Layer */}
+                <div className="bg-zinc-950/10 border border-zinc-850 rounded-2xl p-4 space-y-4">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[10px] text-zinc-500 uppercase tracking-widest font-bold">
+                      Rotate Layer
+                    </span>
+                    <span className="text-[10px] font-bold text-violet-400">
+                      {activeItem.rotation || 0}°
+                    </span>
+                  </div>
+                  <input
+                    type="range"
+                    min="0"
+                    max="360"
+                    value={activeItem.rotation || 0}
+                    onChange={e => {
+                      const val = Number(e.target.value);
+                      setCurrentItems(prev => prev.map(it => it.id === activeId ? { ...it, rotation: val } : it));
+                    }}
+                    className="w-full h-1.5 accent-violet-500 cursor-pointer bg-zinc-800 rounded-lg appearance-none"
+                  />
+                </div>
+
                 {/* Arrow Nudge Keys for Touch / Fine Tuning */}
                 <div className="bg-zinc-950/10 border border-zinc-850 rounded-2xl p-4 space-y-4">
                   <span className="text-[10px] text-zinc-500 uppercase tracking-widest block font-bold">Nudge Alignment</span>
@@ -1369,13 +1409,13 @@ export default function Customizer() {
             {/* Image Preview Container with Interactive Crop Box */}
             <div 
               ref={containerRef}
-              className="relative w-full aspect-square bg-zinc-950 border border-zinc-850 rounded-xl overflow-hidden flex items-center justify-center pointer-events-auto cursor-crosshair"
+              className="relative w-full bg-zinc-950 border border-zinc-850 rounded-xl overflow-hidden flex items-center justify-center pointer-events-auto cursor-crosshair max-h-[55vh]"
+              style={{ aspectRatio: imgAspectRatio }}
             >
               <img 
                 src={croppingImageSrc} 
                 alt="Source to crop" 
-                className="max-w-full max-h-full object-contain pointer-events-none select-none transition-transform duration-100"
-                style={{ transform: `rotate(${cropRotation}deg)` }}
+                className="w-full h-full object-cover pointer-events-none select-none opacity-45"
               />
 
               {/* Draggable & Resizable Highlight Crop Area */}
@@ -1454,41 +1494,29 @@ export default function Customizer() {
 
             {/* Rotation Control */}
             <div className="space-y-1.5">
-              <div className="flex justify-between items-center text-[9px] text-zinc-500 uppercase font-bold">
-                <span>2. Rotate Sticker (Freestyle):</span>
-                <div className="flex gap-2">
+              <div className="flex flex-col text-[9px] text-zinc-500 uppercase font-bold">
+                <span>2. Rotate Sticker (90° Steps):</span>
+                <div className="flex gap-2 w-full mt-1">
                   <button
-                    onClick={() => setCropRotation(r => (r - 90 + 360) % 360)}
-                    className="px-2 py-0.5 bg-zinc-800 hover:bg-zinc-700 hover:text-white rounded text-[8px] font-bold"
+                    type="button"
+                    onClick={() => rotateImage90(false)}
+                    className="flex-1 py-2 bg-zinc-800 hover:bg-zinc-700 hover:text-white rounded-xl text-[10px] font-bold uppercase tracking-wider transition-colors"
                   >
-                    ↺ -90°
+                    ↺ Rotate Left (-90°)
                   </button>
                   <button
-                    onClick={() => setCropRotation(r => (r + 90) % 360)}
-                    className="px-2 py-0.5 bg-zinc-800 hover:bg-zinc-700 hover:text-white rounded text-[8px] font-bold"
+                    type="button"
+                    onClick={() => rotateImage90(true)}
+                    className="flex-1 py-2 bg-zinc-800 hover:bg-zinc-700 hover:text-white rounded-xl text-[10px] font-bold uppercase tracking-wider transition-colors"
                   >
-                    🔄 +90°
+                    🔄 Rotate Right (+90°)
                   </button>
                 </div>
-              </div>
-              <div className="flex items-center gap-3">
-                <input 
-                  type="range"
-                  min="-180"
-                  max="180"
-                  step="1"
-                  value={cropRotation > 180 ? cropRotation - 360 : cropRotation}
-                  onChange={e => setCropRotation(Number(e.target.value))}
-                  className="flex-1 accent-violet-500 cursor-pointer h-1.5 bg-zinc-800 rounded-lg appearance-none"
-                />
-                <span className="text-[10px] font-bold text-violet-400 w-10 text-right">
-                  {cropRotation}°
-                </span>
               </div>
             </div>
 
             <p className="text-[8px] text-zinc-500 text-center uppercase tracking-wider">
-              Drag corners of box to crop · drag center to move · slide to rotate
+              Drag corners of box to crop · drag center to move · tap rotation buttons to rotate
             </p>
 
             {/* Actions */}
