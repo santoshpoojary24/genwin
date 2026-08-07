@@ -74,7 +74,7 @@ export default function Navbar() {
           <div className="flex items-center gap-4 sm:gap-5">
             <button
               onClick={() => setMobileMenuOpen(true)}
-              className="p-1 text-black hover:text-zinc-600 transition-colors"
+              className="p-1 text-black hover:text-zinc-600 transition-colors md:hidden"
               aria-label="Open Menu"
             >
               <Menu className="w-6 h-6 stroke-[2.2]" />
@@ -98,12 +98,36 @@ export default function Navbar() {
 
           {/* Right Action Icons: Wishlist + Shopping Cart */}
           <div className="flex items-center gap-4 sm:gap-5">
-            {/* Desktop Quick Nav Links */}
-            <nav className="hidden lg:flex items-center gap-6 mr-2">
-              <NavLink to="/shop" className={navLinkClass}>SHOP</NavLink>
-              <NavLink to="/shop?category=t-shirts" className={navLinkClass}>TEES</NavLink>
-              <NavLink to="/shop?category=hoodies" className={navLinkClass}>HOODIES</NavLink>
-            </nav>
+            {/* Desktop Account / Sign In Button */}
+            <div className="hidden md:flex items-center gap-2 mr-2 font-mono">
+              {user ? (
+                <Link
+                  to="/account"
+                  className="p-1 text-black hover:text-zinc-600 transition-colors flex items-center gap-1.5"
+                  title="My Account"
+                >
+                  {user.photoURL ? (
+                    <img
+                      src={user.photoURL}
+                      alt={user.name}
+                      className="w-6 h-6 rounded-full object-cover border border-zinc-350"
+                    />
+                  ) : (
+                    <User className="w-6 h-6 stroke-[2.2]" />
+                  )}
+                  <span className="text-[10px] font-black uppercase tracking-wider hidden xl:inline-block max-w-[80px] truncate">{user.name.split(' ')[0]}</span>
+                </Link>
+              ) : (
+                <button
+                  onClick={() => setIsLoginOpen(true)}
+                  className="p-1 text-black hover:text-zinc-600 transition-colors flex items-center gap-1.5"
+                  title="Sign In"
+                >
+                  <User className="w-6 h-6 stroke-[2.2]" />
+                  <span className="text-[10px] font-black uppercase tracking-wider hidden xl:inline-block">SIGN IN</span>
+                </button>
+              )}
+            </div>
 
             {/* Wishlist / Heart Icon */}
             <Link
