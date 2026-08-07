@@ -44,6 +44,10 @@ export const AuthProvider = ({ children }) => {
             const merged = { ...parsed, ...cloudData };
             setUser(merged);
             localStorage.setItem(LOCAL_USER_KEY, JSON.stringify(merged));
+            if (cloudData.wishlist) {
+              setWishlist(cloudData.wishlist);
+              localStorage.setItem(LOCAL_WISHLIST_KEY, JSON.stringify(cloudData.wishlist));
+            }
           }
         }).catch(err => console.error('Silent user profile sync failed:', err));
       }
@@ -73,12 +77,17 @@ export const AuthProvider = ({ children }) => {
         };
         setUser(mergedUser);
         localStorage.setItem(LOCAL_USER_KEY, JSON.stringify(mergedUser));
+        if (cloudData.wishlist) {
+          setWishlist(cloudData.wishlist);
+          localStorage.setItem(LOCAL_WISHLIST_KEY, JSON.stringify(cloudData.wishlist));
+        }
         return mergedUser;
       } else {
-        await setDoc(userRef, defaultData);
-        setUser(defaultData);
-        localStorage.setItem(LOCAL_USER_KEY, JSON.stringify(defaultData));
-        return defaultData;
+        const initialProfile = { ...defaultData, wishlist: wishlist || [] };
+        await setDoc(userRef, initialProfile);
+        setUser(initialProfile);
+        localStorage.setItem(LOCAL_USER_KEY, JSON.stringify(initialProfile));
+        return initialProfile;
       }
     } catch (err) {
       console.error('Error fetching/creating user profile:', err);
@@ -194,11 +203,21 @@ export const AuthProvider = ({ children }) => {
   };
 
   const toggleWishlist = (productId) => {
-    setWishlist(prev =>
-      prev.includes(productId)
+    setWishlist(prev => {
+      const updated = prev.includes(productId)
         ? prev.filter(id => id !== productId)
-        : [...prev, productId]
-    );
+        : [...prev, productId];
+
+      localStorage.setItem(LOCAL_WISHLIST_KEY, JSON.stringify(updated));
+
+      if (user) {
+        const updatedUser = { ...user, wishlist: updated };
+        setUser(updatedUser);
+        localStorage.setItem(LOCAL_USER_KEY, JSON.stringify(updatedUser));
+        syncUserToCloud(updatedUser);
+      }
+      return updated;
+    });
   };
 
   // ── Full Address Book Management ──────────────────────────────────────────

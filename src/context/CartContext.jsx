@@ -1,5 +1,8 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { FirebaseService } from '../services/firebaseService';
+import { db } from '../config/firebase';
+import { doc, getDoc, setDoc } from 'firebase/firestore';
+import { useAuth } from './AuthContext';
 
 const CartContext = createContext();
 
@@ -39,13 +42,65 @@ export const CartProvider = ({ children }) => {
     }
   });
 
+  const { user } = useAuth();
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [appliedCoupon, setAppliedCoupon] = useState(null);
   const [discountAmount, setDiscountAmount] = useState(0);
 
+  // Sync cart items to Firestore
+  const syncCartToCloud = async (items) => {
+    if (!user || !user.uid) return;
+    try {
+      await setDoc(doc(db, 'carts', user.uid), { items }, { merge: true });
+    } catch (err) {
+      console.error('Failed to sync cart to Firestore:', err);
+    }
+  };
+
+  // Sync cart from Firestore when user changes/logs in
+  useEffect(() => {
+    if (!user || !user.uid) return;
+
+    const loadCloudCart = async () => {
+      try {
+        const cartRef = doc(db, 'carts', user.uid);
+        const cartSnap = await getDoc(cartRef);
+        if (cartSnap.exists()) {
+          const cloudItems = cartSnap.data().items || [];
+          setCartItems(prev => {
+            const merged = [...cloudItems];
+            prev.forEach(localItem => {
+              const match = merged.find(c => c.cartItemId === localItem.cartItemId);
+              if (match) {
+                match.quantity = Math.max(match.quantity, localItem.quantity);
+              } else {
+                merged.push(localItem);
+              }
+            });
+            // Update cloud with merged version
+            setDoc(doc(db, 'carts', user.uid), { items: merged }, { merge: true }).catch(() => {});
+            return merged;
+          });
+        } else {
+          if (cartItems.length > 0) {
+            await setDoc(cartRef, { items: cartItems });
+          }
+        }
+      } catch (err) {
+        console.error('Error loading cloud cart:', err);
+      }
+    };
+
+    loadCloudCart();
+  }, [user]);
+
+  // Sync local cart to LocalStorage and Cloud when cartItems or user changes
   useEffect(() => {
     localStorage.setItem(LOCAL_CART_KEY, JSON.stringify(cartItems));
-  }, [cartItems]);
+    if (user && user.uid) {
+      syncCartToCloud(cartItems);
+    }
+  }, [cartItems, user]);
 
   const addToCart = (product, selectedSize = 'M', selectedColor = 'Default', quantity = 1, customization = null) => {
     if (!product) return;
