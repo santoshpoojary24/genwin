@@ -471,10 +471,42 @@ export default function Customizer() {
     if (!file) return;
     const reader = new FileReader();
     reader.onload = (ev) => {
-      setCurrentItems(prev => [...prev, {
-        id: Date.now(), type: 'image', src: ev.target.result,
-        x: cx, y: cy, size: 80,
-      }]);
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        const MAX_WIDTH = 850;
+        const MAX_HEIGHT = 850;
+        let width = img.width;
+        let height = img.height;
+
+        if (width > height) {
+          if (width > MAX_WIDTH) {
+            height = Math.round((height * MAX_WIDTH) / width);
+            width = MAX_WIDTH;
+          }
+        } else {
+          if (height > MAX_HEIGHT) {
+            width = Math.round((width * MAX_HEIGHT) / height);
+            height = MAX_HEIGHT;
+          }
+        }
+
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, width, height);
+
+        // Keep transparency for PNG files, compress others as JPEG
+        const compressedDataUrl = file.type === 'image/png' 
+          ? canvas.toDataURL('image/png') 
+          : canvas.toDataURL('image/jpeg', 0.8);
+
+        setCurrentItems(prev => [...prev, {
+          id: Date.now(), type: 'image', src: compressedDataUrl,
+          x: cx, y: cy, size: 80,
+        }]);
+      };
+      img.src = ev.target.result;
     };
     reader.readAsDataURL(file);
     e.target.value = '';

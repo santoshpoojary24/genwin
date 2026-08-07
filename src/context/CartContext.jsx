@@ -96,7 +96,11 @@ export const CartProvider = ({ children }) => {
 
   // Sync local cart to LocalStorage and Cloud when cartItems or user changes
   useEffect(() => {
-    localStorage.setItem(LOCAL_CART_KEY, JSON.stringify(cartItems));
+    try {
+      localStorage.setItem(LOCAL_CART_KEY, JSON.stringify(cartItems));
+    } catch (err) {
+      console.warn('LocalStorage quota exceeded. Cart items synced to cloud.', err);
+    }
     if (user && user.uid) {
       syncCartToCloud(cartItems);
     }
